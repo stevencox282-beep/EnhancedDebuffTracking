@@ -13,26 +13,21 @@ public class UIPanelHooksStart
         // Monster Debuffs
         if (__instance.name == "Panel_OffensiveTarget")
         {
-            ModMain.DebugOffensiveTargetPanel(__instance);
+            ModMain.InitOffensiveTargetPanel(__instance);
         }
 
         if (__instance.name == "Panel_DefensiveTarget")
         {
-            //ModMain.DebugDefensiveTargetPanel(__instance);
         }
 
         // Player Debuffs
         if (__instance.name == "Player")
         {
-            //ModMain.PlayerDebug(__instance);
-
         }
 
         // Party Debuffs
         if (__instance.name == "GroupMembers")
         {
-            // Do something in here to make the debuff icons bigger so people without bionic eyes can see them
-            //ModMain.GroupPanelDebug(__instance);
         }
     }
 }

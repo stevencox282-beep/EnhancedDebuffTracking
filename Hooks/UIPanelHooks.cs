@@ -5,7 +5,7 @@ using Il2Cpp;
 namespace EnhancedDebuffTracking.Hooks;
 
 [HarmonyPatch(typeof(UIWindowPanel), nameof(UIWindowPanel.Start))]
-public class UIPanelHooks
+public class UIPanelHooksStart
 {
     // Make changes to the layout of existing Panels using these hooks
     private static void Postfix(UIWindowPanel __instance)
@@ -18,7 +18,7 @@ public class UIPanelHooks
 
         if (__instance.name == "Panel_DefensiveTarget")
         {
-            ModMain.DebugDefensiveTargetPanel(__instance);
+            //ModMain.DebugDefensiveTargetPanel(__instance);
         }
 
         // Player Debuffs
@@ -28,12 +28,10 @@ public class UIPanelHooks
 
         }
 
-
         // Party Debuffs
         if (__instance.name == "GroupMembers")
         {
             // Do something in here to make the debuff icons bigger so people without bionic eyes can see them
-            var buffBarPool = __instance.GetComponentsInChildren<UIBuffBar>(true);
             //ModMain.GroupPanelDebug(__instance);
         }
     }

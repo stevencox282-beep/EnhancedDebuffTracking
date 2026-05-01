@@ -16,8 +16,14 @@ public static class EntityManager
 
     public static List<DebuffData> GetEnemyDebuffList(string targetNetworkId)
     {
+        // We have no target selected
+        if (targetNetworkId == null)
+        {
+            return null;
+        }
+
         // If we have a valid key, return the list, else null
-        if ( gDebuffDictionary.ContainsKey(targetNetworkId))
+        if (gDebuffDictionary.ContainsKey(targetNetworkId))
         {
             return gDebuffDictionary[targetNetworkId];
         }
@@ -25,6 +31,18 @@ public static class EntityManager
         {
             MelonLogger.Error($"GetEnemyDebuffList() - Could not find casterid {targetNetworkId} in dictionary");
             return null;
+        }
+    }
+
+    public static void UpdateAllDurationTimers()
+    {
+        for (int i = 0; i < gDebuffDictionary.Count(); i++)
+        {
+            List<DebuffData> list = gDebuffDictionary.ElementAt(i).Value;
+            foreach(DebuffData debuff in list)
+            {
+                debuff.debuffDurationRemaining = debuff.debuffDurationRemaining - 1;
+            }
         }
     }
 

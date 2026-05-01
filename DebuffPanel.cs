@@ -2,6 +2,9 @@
 using Il2CppTMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UIElements;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace EnhancedDebuffTracking
 {
@@ -167,24 +170,24 @@ namespace EnhancedDebuffTracking
                 {
                     if (index == 0)
                     {
-                        leftText = debuff.debuffName;
+                        leftText = debuff.debuffName + " " + debuff.debuffDurationRemaining + "s";
                     }
                     else if (index == 1)
                     {
-                        middleText = debuff.debuffName;
+                        middleText = debuff.debuffName + " " + debuff.debuffDurationRemaining + "s";
                     }
                     else if (index == 2)
                     {
-                        rightText = debuff.debuffName;
+                        rightText = debuff.debuffName + " " + debuff.debuffDurationRemaining + "s";
                     }
                     index++;
                 }
-leftGameObject.GetComponent<TextMeshProUGUI>().text = leftText;
+                leftGameObject.GetComponent<TextMeshProUGUI>().text = leftText;
                 rightGameObject.GetComponent<TextMeshProUGUI>().text = rightText;
                 middleGameObject.GetComponent<TextMeshProUGUI>().text = middleText;
             }
         }
-        
+
         // Called by the closing of the offensive target window
         public void HideDebuffPanel()
         {

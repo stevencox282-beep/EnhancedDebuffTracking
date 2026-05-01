@@ -94,9 +94,6 @@ namespace EnhancedDebuffTracking
             // Right now we do not want buffs that go onto players even if those are from monsters to players
             if (!buff.Target.Info.AccessLevel.Equals(AccessLevel.Player))
             {
-                MelonLogger.Warning($"==================");
-                MelonLogger.Warning($"OnRemoveBuff buff.BuffData.DisplayName.ToString(); = {buff.BuffData.DisplayName.ToString()}");
-
                 // Find which debuff we are and remove it
                 int index = 0;
                 foreach (var debuff in gDebuffList)
@@ -104,14 +101,21 @@ namespace EnhancedDebuffTracking
                     // We must remove a specific debuff for a specific target cast by a specific person
                     if((debuff.casterNetworkId == buff.Caster.NetworkId.ToString()) && (debuff.targetNetworkId == buff.Target.NetworkId.ToString()) && (debuff.debuffName == buff.BuffData.DisplayName.ToString()))
                     {
-                        // We must exift from the for loop before we remove the entry as we can not change the size of the list we are currently iterating over
+                        // We must exift from the loop before we remove the entry as we can not change the size of the list we are currently iterating over
                         break;
-
                     }
                     index++;
                 }
-                MelonLogger.Warning($"remove debuff at index {index}");
-                gDebuffList.RemoveAt(index);
+                // Remove the entry, if something has gone wrong with the list then it might exception
+                try
+                {
+                    gDebuffList.RemoveAt(index);
+                }
+                catch (Exception e)
+                {
+                    MelonLogger.Error($"OnRemoveBuff - EXCEPTION when removinbg debuff {buff.BuffData?.DisplayName.ToString()} from list");
+                }
+                
 
                 // Tidy up the UI
                 var textComponent = gTextGO.GetComponent<TextMeshProUGUI>();

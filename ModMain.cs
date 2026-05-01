@@ -33,9 +33,6 @@ namespace EnhancedDebuffTracking
 
     public class ModMain : MelonMod
     {
-        // Global to hold the list of all debuffs for a monster, it accesses a List of debuffs via a unique monster id
-        public static Dictionary<string, List<DebuffData>> gDebuffDictionary = new Dictionary<string, List<DebuffData>>();
-        public static List<DebuffData> gDebuffList = new List<DebuffData>();
         private static GameObject gTextGO = null;
 
         public override void OnInitializeMelon()
@@ -47,7 +44,7 @@ namespace EnhancedDebuffTracking
         {
             // TODO - Update here when we want better tracking of Player Debuffs! This is how we detect them and send them on to the modified UI elements
             // Right now we do not want buffs that go onto players even if those are from monsters to players
-            if(!buff.Target.Info.AccessLevel.Equals(AccessLevel.Player))
+            if (!buff.Target.Info.AccessLevel.Equals(AccessLevel.Player))
             {
                 MelonLogger.Warning($"==================");
                 MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.ObjectClass = {buff.Target.ObjectClass }");
@@ -69,6 +66,15 @@ namespace EnhancedDebuffTracking
                 MelonLogger.Warning($"OnAddOrRefreshBuff buff.BuffData.DisplayName.ToString(); = {buff.BuffData.DisplayName.ToString()}");
                 MelonLogger.Warning($"OnAddOrRefreshBuff buff.BuffData.DesignerId.ToString(); = {buff.BuffData.DesignerId.ToString()}");
 
+                // Get the list for the current enemy
+                List<DebuffData> debuffList = EntityManager.GetEnemyDebuffList(buff.Target.NetworkId.ToString());
+
+                // If we can not find the list log a warning and exit
+                if (debuffList == null)
+                {
+                    MelonLogger.Warning($"OnAddOrRefreshBuff unable to find debuff list for enemy {buff.Caster.NetworkId.ToString()}");
+                    return;
+                }
                 DebuffData newDebuff = new DebuffData();
                 newDebuff.casterName = buff.Caster.Nameplate.nameText.text;
                 newDebuff.casterNetworkId = buff.Caster.NetworkId.ToString();
@@ -81,10 +87,12 @@ namespace EnhancedDebuffTracking
                 newDebuff.maxStacks = buff.BuffData.MaxStacks;
                 newDebuff.numTicks = buff.BuffData.Ticks;
                 newDebuff.tickIntervalS = buff.BuffData.TickInterval;
-                gDebuffList.Add(newDebuff);
+                // Add this specific debuff
+                debuffList.Add(newDebuff);
 
+                // TODO - DEBUG ONLY REMOVE LATER ON
                 var textComponent = gTextGO.GetComponent<TextMeshProUGUI>();
-                textComponent.text = buff.BuffData.DisplayName.ToString();
+                textComponent.text = debuffList.Count.ToString();
             }
         }
 
@@ -94,9 +102,18 @@ namespace EnhancedDebuffTracking
             // Right now we do not want buffs that go onto players even if those are from monsters to players
             if (!buff.Target.Info.AccessLevel.Equals(AccessLevel.Player))
             {
-                // Find which debuff we are and remove it
+                // Find the debuff lst for this specific enemy
+                List<DebuffData> debuffList = EntityManager.GetEnemyDebuffList(buff.Target.NetworkId.ToString());
+                // If we can not find the list log a warning and exit
+                if (debuffList == null)
+                {
+                    MelonLogger.Warning($"OnRemoveBuff unable to find debuff list for enemy {buff.Caster.NetworkId.ToString()}");
+                    return;
+                }
+
+                // Remove this specific debuff from the list
                 int index = 0;
-                foreach (var debuff in gDebuffList)
+                foreach (var debuff in debuffList)
                 {
                     // We must remove a specific debuff for a specific target cast by a specific person
                     if((debuff.casterNetworkId == buff.Caster.NetworkId.ToString()) && (debuff.targetNetworkId == buff.Target.NetworkId.ToString()) && (debuff.debuffName == buff.BuffData.DisplayName.ToString()))
@@ -109,17 +126,16 @@ namespace EnhancedDebuffTracking
                 // Remove the entry, if something has gone wrong with the list then it might exception
                 try
                 {
-                    gDebuffList.RemoveAt(index);
+                    debuffList.RemoveAt(index);
                 }
                 catch (Exception e)
                 {
-                    MelonLogger.Error($"OnRemoveBuff - EXCEPTION when removinbg debuff {buff.BuffData?.DisplayName.ToString()} from list");
+                    MelonLogger.Error($"OnRemoveBuff - Failed to remove debuff {buff.BuffData?.DisplayName.ToString()} from list");
                 }
-                
 
-                // Tidy up the UI
+                // TODO - DEBUG ONLY - Remove LATER - update UI with number of debuffs in the list
                 var textComponent = gTextGO.GetComponent<TextMeshProUGUI>();
-                textComponent.text = "";
+                textComponent.text = debuffList.Count.ToString();
             }
         }
 
@@ -179,11 +195,16 @@ namespace EnhancedDebuffTracking
         }
 
         // TODO - Almost everything in here probably isnt needed but it does tell us where everything is located inside the Offensive Target Panel
-        public static void OffensiveTargetSelected(Targets.Logic TargetLogic)
+        public static void OffensiveTargetSelected(Targets.Logic targetLogic)
         {
             MelonLogger.Warning($"OffensiveTargetSelected()++");
+
+            // Identify the new target, make sure we have a row in the dictionary for it, this is an explicit handling of a weakness in the detect of new NPC entities that misses enemys that are 
+            // "in-range" when you load into the game or into a zone as as such do not trigger teh Hook in Entity NPC Game Hooks to cretae their required rows
+            EntityManager.AddMonsterIfMissing(targetLogic.Offensive.NetworkId.ToString());
+
             // Entity seems to be my character
-            var entity = TargetLogic.Entity;
+            var entity = targetLogic.Entity;
             if (entity != null)
             {
                 var statemachine = entity.StateMachine;
@@ -210,12 +231,12 @@ namespace EnhancedDebuffTracking
                 }
             }
 
-            if (TargetLogic.Offensive == null)
+            if (targetLogic.Offensive == null)
             {
                 return;
             }
 
-            IEntity offensive = TargetLogic.Offensive;
+            IEntity offensive = targetLogic.Offensive;
             if (offensive != null && offensive?.Buffs != null)
             {
                 var activeBuffsOnMe = offensive.Buffs.activeBuffsOnMe;

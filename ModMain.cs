@@ -1,7 +1,9 @@
 ﻿using Harmony;
 using Il2Cpp;
 using Il2CppLogicalGraphNodes;
+using Il2CppPantheonPersist;
 using Il2CppServiceStack;
+using Il2CppServiceStack.Text;
 using Il2CppTMPro;
 using MelonLoader;
 using UnityEngine;
@@ -40,8 +42,14 @@ namespace EnhancedDebuffTracking
             LoggerInstance.Msg("Enhanced Debuff Tracking Initialized.");
         }
 
+        // This function is called in the following conditions (at least)
+        // 1) When you add a buff to an enemy you already have targetted
+        // 2) A buff expires on an enemy you already have targetted
+        // 3) When you change target to a new target that already has debuffs on it
+        // Make sure we dont re-add an existing buff to the buff list and you handle all the different conditions it can be called
         public static void OnAddOrRefreshBuff(double time, ActiveBuff buff, bool inBackground, bool isRefresh, bool isItemBuff)
         {
+            MelonLogger.Warning($"OnAddOrRefreshBuff()++");
             // TODO - Update here when we want better tracking of Player Debuffs! This is how we detect them and send them on to the modified UI elements
             // Right now we do not want buffs that go onto players even if those are from monsters to players
             if (!buff.Target.Info.AccessLevel.Equals(AccessLevel.Player))
@@ -65,6 +73,11 @@ namespace EnhancedDebuffTracking
                 MelonLogger.Warning($"OnAddOrRefreshBuff buff.BuffData.Id.ToString() = {buff.BuffData.Id.ToString()}");
                 MelonLogger.Warning($"OnAddOrRefreshBuff buff.BuffData.DisplayName.ToString(); = {buff.BuffData.DisplayName.ToString()}");
                 MelonLogger.Warning($"OnAddOrRefreshBuff buff.BuffData.DesignerId.ToString(); = {buff.BuffData.DesignerId.ToString()}");
+                MelonLogger.Warning($"OnAddOrRefreshBuff inBackground; = {inBackground}");
+                MelonLogger.Warning($"OnAddOrRefreshBuff isRefresh = {isRefresh}");
+
+                // Get the Text field game object
+                var textComponent = gTextGO.GetComponent<TextMeshProUGUI>();
 
                 // Get the list for the current enemy
                 List<DebuffData> debuffList = EntityManager.GetEnemyDebuffList(buff.Target.NetworkId.ToString());
@@ -73,8 +86,30 @@ namespace EnhancedDebuffTracking
                 if (debuffList == null)
                 {
                     MelonLogger.Warning($"OnAddOrRefreshBuff unable to find debuff list for enemy {buff.Caster.NetworkId.ToString()}");
+                    textComponent.text = "0";
                     return;
                 }
+
+                // This function is also called on change of offefnsive target, so we can't assume this is actually a new buff or a refresh of a buff
+                // If we are not a refresh and have a the same buff already, do nothing
+                if (isRefresh == true)
+                {
+                    MelonLogger.Warning($"OnAddOrRefreshBuff() REFRESH DETECTED, DOING NOTHING");
+                    textComponent.text = debuffList.Count.ToString();
+                    return;
+                }
+
+                foreach (var item in debuffList)
+                {
+                    if ((item.casterNetworkId == buff.Caster.NetworkId.ToString()) && (item.targetNetworkId == buff.Target.NetworkId.ToString()) && (item.debuffName == buff.BuffData.DisplayName.ToString()))
+                    {
+                        MelonLogger.Warning($"OnAddOrRefreshBuff() TARGET SWITCH DETECTED, DOING NOTHING");
+                        textComponent.text = debuffList.Count.ToString();
+                        return;
+                    }
+                }
+
+                MelonLogger.Warning($"OnAddOrRefreshBuff() NEW BUFF DETECTED.  CONTINUING");
                 DebuffData newDebuff = new DebuffData();
                 newDebuff.casterName = buff.Caster.Nameplate.nameText.text;
                 newDebuff.casterNetworkId = buff.Caster.NetworkId.ToString();
@@ -90,24 +125,30 @@ namespace EnhancedDebuffTracking
                 // Add this specific debuff
                 debuffList.Add(newDebuff);
 
-                // TODO - DEBUG ONLY REMOVE LATER ON
-                var textComponent = gTextGO.GetComponent<TextMeshProUGUI>();
+                //  Set it to the real number
                 textComponent.text = debuffList.Count.ToString();
             }
         }
 
+        // This function is called in the following conditions (at least)
+        // 1) When a debuff expires an enemy you already have targetted
+        // 2) When a debuff expires an enemy you do not have targetted
         public static void OnRemoveBuff(double time, ActiveBuff buff, bool moveToBackground, bool isRefresh)
         {
-            // TODO - Update here when we want better tracking of Player Debuffs! This is how we detect them and send them on to the modified UI elements
+            MelonLogger.Warning($"OnRemoveBuff()++");
             // Right now we do not want buffs that go onto players even if those are from monsters to players
             if (!buff.Target.Info.AccessLevel.Equals(AccessLevel.Player))
             {
+                // TODO - Handle the consequtive target chance use case here so we dont add the same debuff multiple times
                 // Find the debuff lst for this specific enemy
                 List<DebuffData> debuffList = EntityManager.GetEnemyDebuffList(buff.Target.NetworkId.ToString());
+                var textComponent = gTextGO.GetComponent<TextMeshProUGUI>();
+                textComponent.text = "0";
                 // If we can not find the list log a warning and exit
                 if (debuffList == null)
                 {
-                    MelonLogger.Warning($"OnRemoveBuff unable to find debuff list for enemy {buff.Caster.NetworkId.ToString()}");
+                    MelonLogger.Warning($"OnRemoveBuff() unable to find debuff list for enemy {buff.Caster.NetworkId.ToString()}");
+                    textComponent.text = "0";
                     return;
                 }
 
@@ -119,6 +160,7 @@ namespace EnhancedDebuffTracking
                     if((debuff.casterNetworkId == buff.Caster.NetworkId.ToString()) && (debuff.targetNetworkId == buff.Target.NetworkId.ToString()) && (debuff.debuffName == buff.BuffData.DisplayName.ToString()))
                     {
                         // We must exift from the loop before we remove the entry as we can not change the size of the list we are currently iterating over
+                        textComponent.text = debuffList.Count.ToString();
                         break;
                     }
                     index++;
@@ -130,182 +172,95 @@ namespace EnhancedDebuffTracking
                 }
                 catch (Exception e)
                 {
-                    MelonLogger.Error($"OnRemoveBuff - Failed to remove debuff {buff.BuffData?.DisplayName.ToString()} from list");
+                    MelonLogger.Error($"OnRemoveBuff() - Failed to remove debuff {buff.BuffData?.DisplayName.ToString()} from list");
+                    textComponent.text = debuffList.Count.ToString();
                 }
 
                 // TODO - DEBUG ONLY - Remove LATER - update UI with number of debuffs in the list
-                var textComponent = gTextGO.GetComponent<TextMeshProUGUI>();
                 textComponent.text = debuffList.Count.ToString();
             }
+            MelonLogger.Warning($"OnRemoveBuff()--");
         }
 
         public static void InitOffensiveTargetPanel(UIWindowPanel OffensiveTargetPanel)
         {
-//            MelonLogger.Warning($"DebugOffensiveTargetPanel OffensiveTargetPanel.transform.childCount = {OffensiveTargetPanel.transform.childCount}");
-
-            for (int i = 0; i < OffensiveTargetPanel.transform.childCount; i++)
-            {
-                UnityEngine.Transform iTransform = OffensiveTargetPanel.transform.GetChild(i);
-//                MelonLogger.Warning($"DebugOffensiveTargetPanel: iTransform[{i}].GetName() = {iTransform.GetName()}");
-//                MelonLogger.Warning($"DebugOffensiveTargetPanel: iTransform[{i}].GetType().ToString() = {iTransform.GetType().ToString()}");
-
-                for (int j = 0; j < iTransform.transform.childCount; j++)
-                {
-                    UnityEngine.Transform jTransform = iTransform.transform.GetChild(j);
-//                    MelonLogger.Warning($"DebugOffensiveTargetPanel: jTransform[{i},{j}].GetName() = {jTransform.GetName()}");
-//                    MelonLogger.Warning($"DebugOffensiveTargetPanel: jTransform[{i},{j}].GetType().ToString() = {jTransform.GetType().ToString()}");
-
-                    // Child 4 is the Debuff bar
-                    if (j == 4)
-                    {
-//                        MelonLogger.Warning($"DebugOffensiveTargetPanel: 0,4 jTransform.childCount = {jTransform.childCount}");
-                        
-                        // Add some text to the debuff bar to prove we can change what is on the screen as we apply buffs
-                        var textGO = new GameObject("EDT_CustomTextGO_EDT");
-                        textGO.transform.SetParent(jTransform.transform);
-                        var textComponent = textGO.AddComponent<TextMeshProUGUI>();
-                        textComponent.text = "Dux Is The Best";
-                        textComponent.fontSize = 16;
-                        textComponent.alignment = TextAlignmentOptions.Left;
-                        var textRect = textGO.GetComponent<RectTransform>();
-                        textRect.sizeDelta = new Vector2(100, 20);
-                        textRect.anchoredPosition = new Vector2(0, 0);
-                        textRect.anchorMin = new Vector2(0f, 0f);
-                        textRect.anchorMax = new Vector2(0f, 0f);
-                        textRect.pivot = new Vector2(0f, 0f);
-                        // Update the gloabl GO that holds the text to update (CAN BE DELETED LATER WHEN OUT OF PROOF OF CONCEPT)
-                        gTextGO = textGO;
-                    }
-
-                    for (int k = 0; k < jTransform.transform.childCount; k++)
-                    {
-                        UnityEngine.Transform kTransform = jTransform.transform.GetChild(k);
-//                        MelonLogger.Warning($"InitOffensiveTargetPanel: kTransform[{i},{j},{k}].GetName() = {kTransform.GetName()}");
-//                        MelonLogger.Warning($"InitOffensiveTargetPanel: kTransform[{i},{j},{k}].GetType().ToString() = {kTransform.GetType().ToString()}");
-
-                        for (int l = 0; l < kTransform.transform.childCount; l++)
-                        {
-                            UnityEngine.Transform lTransform = kTransform.transform.GetChild(l);
-//                            MelonLogger.Warning($"InitOffensiveTargetPanel: lTransform[{i},{j},{k},{l}].GetName() = {lTransform.GetName()}");
-//                            MelonLogger.Warning($"InitOffensiveTargetPanel: lTransform[{i},{j},{k},{l}].GetType().ToString() = {lTransform.GetType().ToString()}");
-                        }
-                    }
-                }
-            }
+            MelonLogger.Warning($"InitOffensiveTargetPanel()++");
+            UnityEngine.Transform iTransform = OffensiveTargetPanel.transform.GetChild(0);
+            UnityEngine.Transform jTransform = iTransform.transform.GetChild(4);
+            // Add some text to the debuff bar to prove we can change what is on the screen as we apply buffs
+            var textGO = new GameObject("EDT_CustomTextGO_EDT");
+            textGO.transform.SetParent(jTransform.transform);
+            var textComponent = textGO.AddComponent<TextMeshProUGUI>();
+            textComponent.text = "Dux Is The Best";
+            textComponent.fontSize = 16;
+            textComponent.alignment = TextAlignmentOptions.Left;
+            var textRect = textGO.GetComponent<RectTransform>();
+            textRect.sizeDelta = new Vector2(100, 20);
+            textRect.anchoredPosition = new Vector2(0, 0);
+            textRect.anchorMin = new Vector2(0f, 0f);
+            textRect.anchorMax = new Vector2(0f, 0f);
+            textRect.pivot = new Vector2(0f, 0f);
+            // Update the gloabl GO that holds the text to update (CAN BE DELETED LATER WHEN OUT OF PROOF OF CONCEPT)
+            gTextGO = textGO;
+            MelonLogger.Warning($"InitOffensiveTargetPanel()--");
         }
 
-        // TODO - Almost everything in here probably isnt needed but it does tell us where everything is located inside the Offensive Target Panel
+        // This fires on at least the following conditions
+        // 1) User selects a new target
+        // 2) Current selected moster despawns 
         public static void OffensiveTargetSelected(Targets.Logic targetLogic)
         {
-            MelonLogger.Warning($"OffensiveTargetSelected()++");
-
-            // Identify the new target, make sure we have a row in the dictionary for it, this is an explicit handling of a weakness in the detect of new NPC entities that misses enemys that are 
-            // "in-range" when you load into the game or into a zone as as such do not trigger teh Hook in Entity NPC Game Hooks to cretae their required rows
-            EntityManager.AddMonsterIfMissing(targetLogic.Offensive.NetworkId.ToString());
-
-            // Entity seems to be my character
-            var entity = targetLogic.Entity;
-            if (entity != null)
+            var textComponent = gTextGO.GetComponent<TextMeshProUGUI>();
+            // Offensive gpoes to null when a monster despawns
+            if (targetLogic.Offensive == null)
             {
-                var statemachine = entity.StateMachine;
-                var entityBuffs = entity.Buffs;
-
-                if (entityBuffs == null )
-                {
-                    return;
-                }
-                var myActiveBuffsList = entityBuffs.myActiveBuffs;
-                if (myActiveBuffsList == null)
-                {
-                    return;
-                }
-
-                // HERE ARE MY BUFFS
-                foreach (var buff in myActiveBuffsList)
-                {
-                    var caster = buff.Caster;
-                    var casterName = caster.Nameplate.nameText.text;
-                    AbilityData castBySpell = buff.CreatedByAbility;
-                    EntityAction actionType = castBySpell.ActionType;
-                    BuffData buffData = buff.BuffData;
-                }
+                // Set to zero, this covers off the case where a monster dies that you are not targetting but you put debuffs on it
+                textComponent.text = "0";
+                return;
             }
 
-            if (targetLogic.Offensive == null)
+            // Identify the new target, make sure we have a row in the dictionary for it, this is an explicit handling of a weakness in the detect of new NPC entities that sometimes misses entries
+            EntityManager.AddMonsterIfMissing(targetLogic.Offensive.NetworkId.ToString());
+            List<DebuffData> debuffList = EntityManager.GetEnemyDebuffList(targetLogic.Offensive.NetworkId.ToString());
+            if (debuffList == null)
             {
                 return;
             }
 
-            IEntity offensive = targetLogic.Offensive;
-            if (offensive != null && offensive?.Buffs != null)
+            // This should be zero on a new element, or a known element should be the correct number of buffs
+            textComponent.text = debuffList.Count.ToString();
+
+            // For reasons unclear, sometimes pantheon provides a valid offensive target with a null Pools, nothing to do but just return
+            if (targetLogic.Offensive.Pools == null)
             {
-                var activeBuffsOnMe = offensive.Buffs.activeBuffsOnMe;
+                return;
+            }
+            // For reasons unclear, sometimes pantheon provides a valid offensive target with a null Pools, nothing to do but just return
+            if (targetLogic.Offensive.Pools.pools == null)
+            {
+                return;
+            }
 
-                // DEBUFFS ON ENEMY
-                foreach (var buff in activeBuffsOnMe)
-                {
-                    var caster = buff.Caster;
-                    var casterName = caster.Nameplate.nameText.text;
-                    AbilityData castBySpell = buff.CreatedByAbility;
-                    if (castBySpell != null)
-                    {
-                        EntityAction actionType = castBySpell.ActionType;
-                    }
-                    BuffData buffData = buff.BuffData;
-                    var buffGroupsList = buffData.buffGroups;
-                    DebuffData currentDebuff = new DebuffData();
-                    currentDebuff.debuffIconName = buffData.Icon.IconName.ToString();
-                    currentDebuff.debuffName = buffData.DisplayName.ToString();
-                    currentDebuff.debuffDuration = buffData.Duration;
-                    currentDebuff.targetName = buff.Target.Nameplate.nameText.text;
-                    currentDebuff.casterName = casterName;
-                    currentDebuff.numStacks = 0;
-                    currentDebuff.debuffDuration = buffData.Duration;
-                    currentDebuff.numTicks = buffData.Ticks;
-                    currentDebuff.tickIntervalS = buffData.TickInterval;
-                }
-
-
-                if (offensive.Buffs == null)
-                {
+            // I can not find a isDead property in TargetLogic, so check the HP bar and if it is zero it must be dead
+            var pools = targetLogic.Offensive.Pools.pools;
+            foreach (Pool pool in pools)
+            {
+                // For reasons unclear, sometimes pantheon provides a valid offensive target with a null Pools, nothing to do but just return
+                if (pool == null) {
                     return;
                 }
-
-                if (offensive.Buffs.myActiveBuffs == null) {
-                    return;
-                }
-
-                // ENEMY ACTIONS
-                var offensiveABL = offensive.Buffs.myActiveBuffs;
-                foreach (var buff in offensiveABL)
+                if (pool.InternalPoolType.Equals(PoolType.Health))
                 {
-                    var caster = buff.Caster;
-                    if (caster != null)
+                    if (pool.Current.Equals(0f))
                     {
-                        var casterName = caster.Nameplate.nameText.text;
-                        AbilityData castBySpell = buff.CreatedByAbility;
-                        if (castBySpell != null)
-                        {
-                            EntityAction actionType = castBySpell.ActionType;
-                            BuffData buffData = buff.BuffData;
-                        }
+                        textComponent.text = "0";
+                        return;
                     }
-                    
                 }
             }
 
-            for (int i = 0; i < offensive.Transform.childCount; i++)
-            {
-                UnityEngine.Transform iTransform = offensive.Transform.GetChild(i);
-                for (int j = 0; j < iTransform.transform.childCount; j++)
-                {
-                    UnityEngine.Transform jTransform = iTransform.transform.GetChild(j);
-                    for (int k = 0; k < jTransform.transform.childCount; k++)
-                    {
-                        UnityEngine.Transform kTransform = jTransform.transform.GetChild(k);
-                    }
-                }
-            }
+            // Set the debuff count to the actual count
+            textComponent.text = debuffList.Count.ToString();
         }
     }
 }

@@ -2,6 +2,7 @@
 using Il2Cpp;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Il2CppViNL;
+using MelonLoader;
 
 namespace EnhancedDebuffTracking.Hooks;
 

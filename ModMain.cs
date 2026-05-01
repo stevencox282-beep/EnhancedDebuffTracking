@@ -35,11 +35,23 @@ namespace EnhancedDebuffTracking
 
     public class ModMain : MelonMod
     {
+        // UI Elements
+        private const float UpdateInterval = 1.0f; // Update interval in seconds
+        private static float _timeSinceLastUpdate;
+        private static DebuffPanel gDebuffBox = new DebuffPanel();
+        private static List<DebuffData> EMPTY_LIST = new List<DebuffData>();
+
         private static GameObject gTextGO = null;
 
         public override void OnInitializeMelon()
         {
             LoggerInstance.Msg("Enhanced Debuff Tracking Initialized.");
+        }
+
+        // Called on hiding of the offensive target frame
+        public static void HideDebuffPanel()
+        {
+            gDebuffBox.HideDebuffPanel();
         }
 
         // This function is called in the following conditions (at least)
@@ -51,7 +63,7 @@ namespace EnhancedDebuffTracking
         {
             MelonLogger.Warning($"OnAddOrRefreshBuff()++");
             // TODO - Update here when we want better tracking of Player Debuffs! This is how we detect them and send them on to the modified UI elements
-            // Right now we do not want buffs that go onto players even if those are from monsters to players
+            // We do not want buffs that go onto players even if those are from monsters to players
             if (!buff.Target.Info.AccessLevel.Equals(AccessLevel.Player))
             {
                 MelonLogger.Warning($"==================");
@@ -86,6 +98,8 @@ namespace EnhancedDebuffTracking
                 if (debuffList == null)
                 {
                     MelonLogger.Warning($"OnAddOrRefreshBuff unable to find debuff list for enemy {buff.Caster.NetworkId.ToString()}");
+                    // update the debuff list
+                    gDebuffBox.UpdateDebuffPanel(EMPTY_LIST);
                     textComponent.text = "0";
                     return;
                 }
@@ -96,9 +110,12 @@ namespace EnhancedDebuffTracking
                 {
                     MelonLogger.Warning($"OnAddOrRefreshBuff() REFRESH DETECTED, DOING NOTHING");
                     textComponent.text = debuffList.Count.ToString();
+                    // update the debuff list
+                    gDebuffBox.UpdateDebuffPanel(debuffList);
                     return;
                 }
 
+                // TODO - Make this check a common function we do it multiple times 
                 foreach (var item in debuffList)
                 {
                     if ((item.casterNetworkId == buff.Caster.NetworkId.ToString()) && (item.targetNetworkId == buff.Target.NetworkId.ToString()) && (item.debuffName == buff.BuffData.DisplayName.ToString()))
@@ -127,6 +144,8 @@ namespace EnhancedDebuffTracking
 
                 //  Set it to the real number
                 textComponent.text = debuffList.Count.ToString();
+                // update the debuff list
+                gDebuffBox.UpdateDebuffPanel(debuffList);
             }
         }
 
@@ -143,12 +162,14 @@ namespace EnhancedDebuffTracking
                 // Find the debuff lst for this specific enemy
                 List<DebuffData> debuffList = EntityManager.GetEnemyDebuffList(buff.Target.NetworkId.ToString());
                 var textComponent = gTextGO.GetComponent<TextMeshProUGUI>();
-                textComponent.text = "0";
+                
                 // If we can not find the list log a warning and exit
                 if (debuffList == null)
                 {
                     MelonLogger.Warning($"OnRemoveBuff() unable to find debuff list for enemy {buff.Caster.NetworkId.ToString()}");
                     textComponent.text = "0";
+                    // update the debuff list
+                    gDebuffBox.UpdateDebuffPanel(EMPTY_LIST);
                     return;
                 }
 
@@ -161,6 +182,8 @@ namespace EnhancedDebuffTracking
                     {
                         // We must exift from the loop before we remove the entry as we can not change the size of the list we are currently iterating over
                         textComponent.text = debuffList.Count.ToString();
+                        // update the debuff list
+                        gDebuffBox.UpdateDebuffPanel(debuffList);
                         break;
                     }
                     index++;
@@ -178,6 +201,8 @@ namespace EnhancedDebuffTracking
 
                 // TODO - DEBUG ONLY - Remove LATER - update UI with number of debuffs in the list
                 textComponent.text = debuffList.Count.ToString();
+                // update the debuff list
+                gDebuffBox.UpdateDebuffPanel(debuffList);
             }
             MelonLogger.Warning($"OnRemoveBuff()--");
         }
@@ -202,6 +227,10 @@ namespace EnhancedDebuffTracking
             textRect.pivot = new Vector2(0f, 0f);
             // Update the gloabl GO that holds the text to update (CAN BE DELETED LATER WHEN OUT OF PROOF OF CONCEPT)
             gTextGO = textGO;
+
+            // Build the panel, attach it to the offensive target panel
+            gDebuffBox.DisplayPanel("EDT_DebuffPanel_EDT", UIPanelRoots.Instance.Mid.transform, new Vector2(Globals.PanelWidth, Globals.PanelMeshHeight));
+
             MelonLogger.Warning($"InitOffensiveTargetPanel()--");
         }
 
@@ -210,6 +239,9 @@ namespace EnhancedDebuffTracking
         // 2) Current selected moster despawns 
         public static void OffensiveTargetSelected(Targets.Logic targetLogic)
         {
+            // always show the panel on target change
+            gDebuffBox.ShowDebuffPanel();
+
             var textComponent = gTextGO.GetComponent<TextMeshProUGUI>();
             // Offensive gpoes to null when a monster despawns
             if (targetLogic.Offensive == null)

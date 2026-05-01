@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
@@ -531,6 +531,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Include="DebuffPanel.cs" />
 		<Compile Include="EntityManager.cs" />
 		<Compile Include="Globals.cs" />
 		<Compile Include="Hooks\EntityNpcGameObjectHooks.cs" />

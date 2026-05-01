@@ -14,10 +14,13 @@ namespace EnhancedDebuffTracking
     public class DebuffDataToRender()
     {
         public string casterName;
-        public string debuffTargetName;
+        public string casterType;
+        public string casterNetworkid;
+        public string targetName;
+        public string targetType; // Player or Monster
 
         public string debuffName;
-        public string buffIconName;
+        public string debuffIconName;
 
         public float debuffDuration;
         public float tickIntervalS;
@@ -25,7 +28,6 @@ namespace EnhancedDebuffTracking
 
         public int maxStacks;
         public int currentStacks;
-        
     }
 
 
@@ -35,21 +37,33 @@ namespace EnhancedDebuffTracking
         public static List<DebuffDataToRender> debuffDataToRenderList = new List<DebuffDataToRender>();
         public static DebuffDataToRender gDebuffDataToRender = new DebuffDataToRender();
         private static GameObject gTextGO = null;
-        private static string gLatestName = "";
 
         public override void OnInitializeMelon()
         {
-            LoggerInstance.Msg("Initialized.");
+            LoggerInstance.Msg("Enhanced Debuff Tracking Initialized.");
         }
 
         public static void OnAddOrRefreshBuff(double time, ActiveBuff buff, bool inBackground, bool isRefresh, bool isItemBuff)
         {
-            MelonLogger.Warning($"OnAddOrRefreshBuff()++");
-            var textComponent = gTextGO.GetComponent<TextMeshProUGUI>();
-            MelonLogger.Warning($"OnAddOrRefreshBuff() Old Value = textComponent = {textComponent.text}");
-            textComponent.text = buff.BuffData.DisplayName.ToString();
-            MelonLogger.Warning($"OnAddOrRefreshBuff() New Value = textComponent.text {textComponent.text}");
-            MelonLogger.Warning($"OnAddOrRefreshBuff()--");
+            // TODO - Update here when we want better tracking of Player Debuffs! This is how we detect them and send them on to the modified UI elements
+            // Right now we do not want buffs that go onto players even if those are from monsters to players
+            if(!buff.Target.Info.AccessLevel.Equals(AccessLevel.Player))
+            {
+                AccessLevel temp = buff.Target.Info.AccessLevel;
+                MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.ObjectClass = {buff.Target.ObjectClass }");
+                MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.Nameplate.isDead = {buff.Target.Nameplate.isDead }");
+                MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.Nameplate.nameText.text = {buff.Target.Nameplate.nameText.text}");
+                MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.Currency.Current.Total.ToString() = {buff.Target.Currency.Current.Total.ToString()}");
+                MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.Info.Class.ToString() = {buff.Target.Info.Class.ToString()}");
+                MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.Info.AccountName.ToString() = {buff.Target.Info.AccountName.ToString() }");
+                MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.Info.Kind.ToString() = {buff.Target.Info.Kind.ToString()}");
+                MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.Info.AccessLevel.ToString() = {buff.Target.Info.AccessLevel.ToString()}");
+
+                var textComponent = gTextGO.GetComponent<TextMeshProUGUI>();
+                textComponent.text = buff.BuffData.DisplayName.ToString();
+            }
+
+
         }
 
         public static void InitOffensiveTargetPanel(UIWindowPanel OffensiveTargetPanel)
@@ -74,8 +88,7 @@ namespace EnhancedDebuffTracking
 //                        MelonLogger.Warning($"DebugOffensiveTargetPanel: 0,4 jTransform.childCount = {jTransform.childCount}");
                         
                         // Add some text to the debuff bar to prove we can change what is on the screen as we apply buffs
-                        var textGO = new GameObject("mopCustomTextGO");
-                        
+                        var textGO = new GameObject("EDT_CustomTextGO_EDT");
                         textGO.transform.SetParent(jTransform.transform);
                         var textComponent = textGO.AddComponent<TextMeshProUGUI>();
                         textComponent.text = "Dux Is The Best";
@@ -87,13 +100,9 @@ namespace EnhancedDebuffTracking
                         textRect.anchorMin = new Vector2(0f, 0f);
                         textRect.anchorMax = new Vector2(0f, 0f);
                         textRect.pivot = new Vector2(0f, 0f);
-
-                        var debuffs = jTransform.GetComponent<Image>;
-                        MelonLogger.Warning($"InitOffensiveTargetPanel() setting gTextGOs to textGO");
+                        // Update the gloabl GO that holds the text to update (CAN BE DELETED LATER WHEN OUT OF PROOF OF CONCEPT)
                         gTextGO = textGO;
                     }
-                    
-                    
 
                     for (int k = 0; k < jTransform.transform.childCount; k++)
                     {
@@ -112,6 +121,7 @@ namespace EnhancedDebuffTracking
             }
         }
 
+        // TODO - Almost everything in here probably isnt needed but it does tell us where everything is located inside the Offensive Target Panel
         public static void OffensiveTargetSelected(Targets.Logic TargetLogic)
         {
             MelonLogger.Warning($"OffensiveTargetSelected()++");
@@ -166,20 +176,15 @@ namespace EnhancedDebuffTracking
                     BuffData buffData = buff.BuffData;
                     var buffGroupsList = buffData.buffGroups;
                     DebuffDataToRender currentDebuff = new DebuffDataToRender();
-                    currentDebuff.buffIconName = buffData.Icon.IconName.ToString();
+                    currentDebuff.debuffIconName = buffData.Icon.IconName.ToString();
                     currentDebuff.debuffName = buffData.DisplayName.ToString();
                     currentDebuff.debuffDuration = buffData.Duration;
-                    currentDebuff.debuffTargetName = buff.Target.Nameplate.nameText.text;
+                    currentDebuff.targetName = buff.Target.Nameplate.nameText.text;
                     currentDebuff.casterName = casterName;
                     currentDebuff.currentStacks = 0;
                     currentDebuff.debuffDuration = buffData.Duration;
                     currentDebuff.numTicks = buffData.Ticks;
                     currentDebuff.tickIntervalS = buffData.TickInterval;
-
-                    MelonLogger.Warning($"OffensiveTargetSelected() Setting gLatestName to {currentDebuff.debuffName}");
-                    gLatestName = currentDebuff.debuffName;
-
-                    debuffDataToRenderList.Add(currentDebuff);
                 }
 
 
@@ -192,7 +197,7 @@ namespace EnhancedDebuffTracking
                     return;
                 }
 
-                // Enemy Actions
+                // ENEMY ACTIONS
                 var offensiveABL = offensive.Buffs.myActiveBuffs;
                 foreach (var buff in offensiveABL)
                 {

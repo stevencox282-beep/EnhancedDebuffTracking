@@ -1,4 +1,6 @@
-﻿using Il2Cpp;
+﻿using Harmony;
+using Il2Cpp;
+using Il2CppLogicalGraphNodes;
 using Il2CppServiceStack;
 using Il2CppTMPro;
 using MelonLoader;
@@ -11,31 +13,29 @@ using UnityEngine.UIElements;
 namespace EnhancedDebuffTracking
 {
     // This class will be used to store all the information required to display the debuff data in the debuff panel
-    public class DebuffDataToRender()
+    public class DebuffData()
     {
-        public string casterName;
-        public string casterType;
-        public string casterNetworkid;
-        public string targetName;
-        public string targetType; // Player or Monster
+        public string casterName; // Nameplate name of the caster
+        public string casterNetworkId; // Unique ID of the caster
+        public string targetName; // Nameplate name of the target
+        public string targetNetworkId; // Unique ID of the target
 
-        public string debuffName;
-        public string debuffIconName;
+        public string debuffName; // Base name of the debuff
+        public string debuffIconName; // Debuff Icon
 
-        public float debuffDuration;
-        public float tickIntervalS;
-        public int numTicks;
-
-        public int maxStacks;
-        public int currentStacks;
+        public float debuffDuration; // Debuff duration
+        public int numTicks; // Number of ticks
+        public float tickIntervalS; // Interval between Ticks
+        public int numStacks; // Number of stacks
+        public int maxStacks; // Max stacks
     }
 
 
     public class ModMain : MelonMod
     {
-        // Global to hold the list of all
-        public static List<DebuffDataToRender> debuffDataToRenderList = new List<DebuffDataToRender>();
-        public static DebuffDataToRender gDebuffDataToRender = new DebuffDataToRender();
+        // Global to hold the list of all debuffs for a monster, it accesses a List of debuffs via a unique monster id
+        public static Dictionary<string, List<DebuffData>> gDebuffDictionary = new Dictionary<string, List<DebuffData>>();
+        public static List<DebuffData> gDebuffList = new List<DebuffData>();
         private static GameObject gTextGO = null;
 
         public override void OnInitializeMelon()
@@ -49,7 +49,7 @@ namespace EnhancedDebuffTracking
             // Right now we do not want buffs that go onto players even if those are from monsters to players
             if(!buff.Target.Info.AccessLevel.Equals(AccessLevel.Player))
             {
-                AccessLevel temp = buff.Target.Info.AccessLevel;
+                MelonLogger.Warning($"==================");
                 MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.ObjectClass = {buff.Target.ObjectClass }");
                 MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.Nameplate.isDead = {buff.Target.Nameplate.isDead }");
                 MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.Nameplate.nameText.text = {buff.Target.Nameplate.nameText.text}");
@@ -58,12 +58,65 @@ namespace EnhancedDebuffTracking
                 MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.Info.AccountName.ToString() = {buff.Target.Info.AccountName.ToString() }");
                 MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.Info.Kind.ToString() = {buff.Target.Info.Kind.ToString()}");
                 MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.Info.AccessLevel.ToString() = {buff.Target.Info.AccessLevel.ToString()}");
+                MelonLogger.Warning($"OnAddOrRefreshBuff buff.Caster.NetworkView.NetworkId.ToString() = {buff.Caster.NetworkView.NetworkId.ToString()}");
+                MelonLogger.Warning($"OnAddOrRefreshBuff buff.Caster.Info.CharacterId = {buff.Caster.Info.CharacterId.ToString() }");
+                MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.Info.CharacterId = {buff.Target.Info.CharacterId.ToString()}");
+                MelonLogger.Warning($"OnAddOrRefreshBuff buff.buff.Caster.NetworkId = {buff.Caster.NetworkId}");
+                MelonLogger.Warning($"OnAddOrRefreshBuff buff.buff.Target.NetworkId = {buff.Target.NetworkId}");
+                MelonLogger.Warning($"OnAddOrRefreshBuff buff.buff.Caster.NetworkId.Tostring() = {buff.Caster.NetworkId.ToString()}");
+                MelonLogger.Warning($"OnAddOrRefreshBuff buff.buff.Target.NetworkId.ToString() = {buff.Target.NetworkId.ToString()}");
+                MelonLogger.Warning($"OnAddOrRefreshBuff buff.BuffData.Id.ToString() = {buff.BuffData.Id.ToString()}");
+                MelonLogger.Warning($"OnAddOrRefreshBuff buff.BuffData.DisplayName.ToString(); = {buff.BuffData.DisplayName.ToString()}");
+                MelonLogger.Warning($"OnAddOrRefreshBuff buff.BuffData.DesignerId.ToString(); = {buff.BuffData.DesignerId.ToString()}");
+
+                DebuffData newDebuff = new DebuffData();
+                newDebuff.casterName = buff.Caster.Nameplate.nameText.text;
+                newDebuff.casterNetworkId = buff.Caster.NetworkId.ToString();
+                newDebuff.targetName = buff.Target.Nameplate.nameText.text;
+                newDebuff.targetNetworkId = buff.Target.NetworkId.ToString();
+                newDebuff.debuffName = buff.BuffData.DisplayName.ToString();
+                newDebuff.debuffDuration = buff.BuffData.Duration;
+                newDebuff.debuffIconName = buff.BuffData.Icon.IconName.ToString();
+                newDebuff.numStacks = 1;
+                newDebuff.maxStacks = buff.BuffData.MaxStacks;
+                newDebuff.numTicks = buff.BuffData.Ticks;
+                newDebuff.tickIntervalS = buff.BuffData.TickInterval;
+                gDebuffList.Add(newDebuff);
 
                 var textComponent = gTextGO.GetComponent<TextMeshProUGUI>();
                 textComponent.text = buff.BuffData.DisplayName.ToString();
             }
+        }
 
+        public static void OnRemoveBuff(double time, ActiveBuff buff, bool moveToBackground, bool isRefresh)
+        {
+            // TODO - Update here when we want better tracking of Player Debuffs! This is how we detect them and send them on to the modified UI elements
+            // Right now we do not want buffs that go onto players even if those are from monsters to players
+            if (!buff.Target.Info.AccessLevel.Equals(AccessLevel.Player))
+            {
+                MelonLogger.Warning($"==================");
+                MelonLogger.Warning($"OnRemoveBuff buff.BuffData.DisplayName.ToString(); = {buff.BuffData.DisplayName.ToString()}");
 
+                // Find which debuff we are and remove it
+                int index = 0;
+                foreach (var debuff in gDebuffList)
+                {
+                    // We must remove a specific debuff for a specific target cast by a specific person
+                    if((debuff.casterNetworkId == buff.Caster.NetworkId.ToString()) && (debuff.targetNetworkId == buff.Target.NetworkId.ToString()) && (debuff.debuffName == buff.BuffData.DisplayName.ToString()))
+                    {
+                        // We must exift from the for loop before we remove the entry as we can not change the size of the list we are currently iterating over
+                        break;
+
+                    }
+                    index++;
+                }
+                MelonLogger.Warning($"remove debuff at index {index}");
+                gDebuffList.RemoveAt(index);
+
+                // Tidy up the UI
+                var textComponent = gTextGO.GetComponent<TextMeshProUGUI>();
+                textComponent.text = "";
+            }
         }
 
         public static void InitOffensiveTargetPanel(UIWindowPanel OffensiveTargetPanel)
@@ -175,13 +228,13 @@ namespace EnhancedDebuffTracking
                     }
                     BuffData buffData = buff.BuffData;
                     var buffGroupsList = buffData.buffGroups;
-                    DebuffDataToRender currentDebuff = new DebuffDataToRender();
+                    DebuffData currentDebuff = new DebuffData();
                     currentDebuff.debuffIconName = buffData.Icon.IconName.ToString();
                     currentDebuff.debuffName = buffData.DisplayName.ToString();
                     currentDebuff.debuffDuration = buffData.Duration;
                     currentDebuff.targetName = buff.Target.Nameplate.nameText.text;
                     currentDebuff.casterName = casterName;
-                    currentDebuff.currentStacks = 0;
+                    currentDebuff.numStacks = 0;
                     currentDebuff.debuffDuration = buffData.Duration;
                     currentDebuff.numTicks = buffData.Ticks;
                     currentDebuff.tickIntervalS = buffData.TickInterval;

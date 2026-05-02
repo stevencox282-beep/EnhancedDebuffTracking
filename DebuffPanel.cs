@@ -5,15 +5,24 @@ using UnityEngine.Events;
 using UnityEngine.UIElements;
 using System.Collections.Generic;
 using System.Linq;
+using MelonLoader;
 
 namespace EnhancedDebuffTracking
 {
     // Box on the screen with 3 labels inside it
     public class DebuffPanel : MonoBehaviour
     {
-        private static string LeftGameObjectName = "EDT_leftTextObject_EDT";
-        private static string RightGameObjectName = "EDT_rightTextObject_EDT";
-        private static string MiddleGameObjectName = "EDT_middleTextObject_EDT";
+        // Generic names to be used by any object, helps with calls to Find()
+        private static string nameOne = "EDT_NameOne_EDT";
+        private static string nameTwo = "EDT_NameTwo_EDT";
+        private static string nameThree = "EDT_NameThree_EDT";
+        private static string nameFour = "EDT_NameFour_EDT";
+        private static string nameFive = "EDT_NameFive_EDT";
+        private static string nameSix = "EDT_NameSix_EDT";
+        private static string nameSeven = "EDT_NameSeven_EDT";
+        private static string nameEight = "EDT_NameEight_EDT";
+        private static string nameNine = "EDT_NameNine_EDT";
+        private static string nameTen = "EDT_NameTen_EDT";
 
         // Holds the panel
         private static UIWindowPanel gUiWindowPanel  = null;
@@ -94,104 +103,189 @@ namespace EnhancedDebuffTracking
             })));
         }
 
+        // Builder function to create a default TextMesh
+        private TextMeshProUGUI BuildTextMeshProUGUI(GameObject gameObject)
+        {
+            // Add and configure the TextMeshPros for rendering the time data
+            TextMeshProUGUI textMesh = gameObject.AddComponent<TextMeshProUGUI>();
+            textMesh.alignment = TextAlignmentOptions.Left;
+            textMesh.fontSize = Globals.FontSize;
+            textMesh.color = Color.yellow;
+            textMesh.text = "";
+
+            return textMesh;
+        }
+
         // Setup the text meshs inside the panel that will display the data we want
         private void BuildTextMeshs()
         {
-            // Create new GameObjects for the time display
-            GameObject _leftGameObject = new GameObject(LeftGameObjectName);
-            GameObject _middleGameObject = new GameObject(MiddleGameObjectName);
-            GameObject _rightGameObject = new GameObject(RightGameObjectName);
+            // Create new GameObjects for the debuff display
+            GameObject gameObjectOne = new GameObject(nameOne);
+            GameObject gameObjectTwo = new GameObject(nameTwo);
+            GameObject gameObjectThree = new GameObject(nameThree);
+            GameObject gameObjectFour = new GameObject(nameFour);
+            GameObject gameObjectFive = new GameObject(nameFive);
+            GameObject gameObjectSix = new GameObject(nameSix);
+            GameObject gameObjectSeven = new GameObject(nameSeven);
+            GameObject gameObjectEight = new GameObject(nameEight);
+            GameObject gameObjectNine = new GameObject(nameNine);
+            GameObject gameObjectTen = new GameObject(nameTen);
+
             // Set its parent to the new window panel (which is parented to Mid)
-            _leftGameObject.transform.SetParent(gUiWindowPanel.transform, false);
-            _middleGameObject.transform.SetParent(gUiWindowPanel.transform, false);
-            _rightGameObject.transform.SetParent(gUiWindowPanel.transform, false);
+            gameObjectOne.transform.SetParent(gUiWindowPanel.transform, false);
+            gameObjectTwo.transform.SetParent(gUiWindowPanel.transform, false);
+            gameObjectThree.transform.SetParent(gUiWindowPanel.transform, false);
+            gameObjectFour.transform.SetParent(gUiWindowPanel.transform, false);
+            gameObjectFive.transform.SetParent(gUiWindowPanel.transform, false);
+            gameObjectSix.transform.SetParent(gUiWindowPanel.transform, false);
+            gameObjectSeven.transform.SetParent(gUiWindowPanel.transform, false);
+            gameObjectEight.transform.SetParent(gUiWindowPanel.transform, false);
+            gameObjectNine.transform.SetParent(gUiWindowPanel.transform, false);
+            gameObjectTen.transform.SetParent(gUiWindowPanel.transform, false);
 
-            // Add and configure the TextMeshPros for rendering the time data
-            TextMeshProUGUI _leftTextMeshPro = _leftGameObject.AddComponent<TextMeshProUGUI>();
-            _leftTextMeshPro.alignment = TextAlignmentOptions.Left;
-            _leftTextMeshPro.fontSize = Globals.FontSize;
-            _leftTextMeshPro.color = Color.yellow;
-            _leftTextMeshPro.text = "";
-
-            TextMeshProUGUI _middleTextMeshPro = _middleGameObject.AddComponent<TextMeshProUGUI>();
-            _middleTextMeshPro.alignment = TextAlignmentOptions.Left;
-            _middleTextMeshPro.fontSize = Globals.FontSize;
-            _middleTextMeshPro.color = Color.yellow;
-            _middleTextMeshPro.text = "";
-
-            TextMeshProUGUI _rightTextMeshPro = _rightGameObject.AddComponent<TextMeshProUGUI>();
-            _rightTextMeshPro.alignment = TextAlignmentOptions.Left;
-            _rightTextMeshPro.fontSize = Globals.FontSize;
-            _rightTextMeshPro.color = Color.yellow;
-            _rightTextMeshPro.text = "";
+            TextMeshProUGUI textMeshProOne = BuildTextMeshProUGUI(gameObjectOne);
+            TextMeshProUGUI textMeshProTwo = BuildTextMeshProUGUI(gameObjectTwo);
+            TextMeshProUGUI textMeshProThree = BuildTextMeshProUGUI(gameObjectThree);
+            TextMeshProUGUI textMeshProFour = BuildTextMeshProUGUI(gameObjectFour);
+            TextMeshProUGUI textMeshProFive = BuildTextMeshProUGUI(gameObjectFive);
+            TextMeshProUGUI textMeshProSix = BuildTextMeshProUGUI(gameObjectSix);
+            TextMeshProUGUI textMeshProSeven = BuildTextMeshProUGUI(gameObjectSeven);
+            TextMeshProUGUI textMeshProEight = BuildTextMeshProUGUI(gameObjectEight);
+            TextMeshProUGUI textMeshProNine = BuildTextMeshProUGUI(gameObjectNine);
+            TextMeshProUGUI textMeshProTen = BuildTextMeshProUGUI(gameObjectTen);
 
             // Set up the RectTransform to position the texts correctly
-            var leftTextRectTransform = _leftTextMeshPro.rectTransform;
-            leftTextRectTransform.sizeDelta = new Vector2(Globals.MeshWidth, Globals.PanelMeshHeight);
-            leftTextRectTransform.anchorMin = new Vector2(0.1f, 0f); // Just off Left Center
-            leftTextRectTransform.anchorMax = new Vector2(0.1f, 0f); // Just off Left Center
-            leftTextRectTransform.anchoredPosition = new Vector2(0f, 0f);
-            leftTextRectTransform.pivot = new Vector2(0f, 0f);
+            var textRectTransformOne = textMeshProOne.rectTransform;
+            textRectTransformOne.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
+            textRectTransformOne.anchorMin = new Vector2(0.05f, 0.9f); // Just off Bottom Left
+            textRectTransformOne.anchorMax = new Vector2(0.05f, 0.9f); // Just off Bottom Left 
+            textRectTransformOne.anchoredPosition = new Vector2(0f, 0f);
+            textRectTransformOne.pivot = new Vector2(0f, 0f);
 
-            var middleTextRectTransform = _middleTextMeshPro.rectTransform;
-            middleTextRectTransform.sizeDelta = new Vector2(Globals.MeshWidth, Globals.PanelMeshHeight);
-            middleTextRectTransform.anchorMin = new Vector2(0.40f, 0f); // Middle Center
-            middleTextRectTransform.anchorMax = new Vector2(0.40f, 0f); // Middle Center
-            middleTextRectTransform.anchoredPosition = new Vector2(0, 0);
-            middleTextRectTransform.pivot = new Vector2(0f, 0f);
+            var textRectTransformTwo = textMeshProTwo.rectTransform;
+            textRectTransformTwo.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
+            textRectTransformTwo.anchorMin = new Vector2(0.05f, 0.8f); // Bottom Middle 
+            textRectTransformTwo.anchorMax = new Vector2(0.05f, 0.8f); // Bottom Middle 
+            textRectTransformTwo.anchoredPosition = new Vector2(0, 0);
+            textRectTransformTwo.pivot = new Vector2(0f, 0f);
 
-            var rightTextRectTransform = _rightTextMeshPro.rectTransform;
-            rightTextRectTransform.sizeDelta = new Vector2(Globals.MeshWidth, Globals.PanelMeshHeight);
-            rightTextRectTransform.anchorMin = new Vector2(0.70f, 0f); // Right Center
-            rightTextRectTransform.anchorMax = new Vector2(0.70f, 0f); // Right Center
-            rightTextRectTransform.anchoredPosition = new Vector2(0, 0);
-            rightTextRectTransform.pivot = new Vector2(0f, 0f);
+            var textRectTransformThree = textMeshProThree.rectTransform;
+            textRectTransformThree.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
+            textRectTransformThree.anchorMin = new Vector2(0.05f, 0.7f); // Bottom Right 
+            textRectTransformThree.anchorMax = new Vector2(0.05f, 0.7f); // Bottom Right
+            textRectTransformThree.anchoredPosition = new Vector2(0, 0);
+            textRectTransformThree.pivot = new Vector2(0f, 0f);
+
+            var textRectTransformFour = textMeshProFour.rectTransform;
+            textRectTransformFour.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
+            textRectTransformFour.anchorMin = new Vector2(0.05f, 0.6f); // Bottom Right 
+            textRectTransformFour.anchorMax = new Vector2(0.05f, 0.6f); // Bottom Right
+            textRectTransformFour.anchoredPosition = new Vector2(0, 0);
+            textRectTransformFour.pivot = new Vector2(0f, 0f);
+
+            var textRectTransformFive = textMeshProFive.rectTransform;
+            textRectTransformFive.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
+            textRectTransformFive.anchorMin = new Vector2(0.05f, 0.5f); // Bottom Right 
+            textRectTransformFive.anchorMax = new Vector2(0.05f, 0.5f); // Bottom Right
+            textRectTransformFive.anchoredPosition = new Vector2(0, 0);
+            textRectTransformFive.pivot = new Vector2(0f, 0f);
+
+            var textRectTransformSix = textMeshProSix.rectTransform;
+            textRectTransformSix.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
+            textRectTransformSix.anchorMin = new Vector2(0.05f, 0.4f); // Bottom Right 
+            textRectTransformSix.anchorMax = new Vector2(0.05f, 0.4f); // Bottom Right
+            textRectTransformSix.anchoredPosition = new Vector2(0, 0);
+            textRectTransformSix.pivot = new Vector2(0f, 0f);
+
+            var textRectTransformSeven = textMeshProSeven.rectTransform;
+            textRectTransformSeven.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
+            textRectTransformSeven.anchorMin = new Vector2(0.05f, 0.3f); // Bottom Right 
+            textRectTransformSeven.anchorMax = new Vector2(0.05f, 0.3f); // Bottom Right
+            textRectTransformSeven.anchoredPosition = new Vector2(0, 0);
+            textRectTransformSeven.pivot = new Vector2(0f, 0f);
+
+            var textRectTransformEight = textMeshProEight.rectTransform;
+            textRectTransformEight.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
+            textRectTransformEight.anchorMin = new Vector2(0.05f, 0.2f); // Bottom Right 
+            textRectTransformEight.anchorMax = new Vector2(0.05f, 0.2f); // Bottom Right
+            textRectTransformEight.anchoredPosition = new Vector2(0, 0);
+            textRectTransformEight.pivot = new Vector2(0f, 0f);
+
+            var textRectTransformNine = textMeshProNine.rectTransform;
+            textRectTransformNine.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
+            textRectTransformNine.anchorMin = new Vector2(0.05f, 0.1f); // Bottom Right 
+            textRectTransformNine.anchorMax = new Vector2(0.05f, 0.1f); // Bottom Right
+            textRectTransformNine.anchoredPosition = new Vector2(0, 0);
+            textRectTransformNine.pivot = new Vector2(0f, 0f);
+
+            var textRectTransformTen = textMeshProTen.rectTransform;
+            textRectTransformTen.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
+            textRectTransformTen.anchorMin = new Vector2(0.05f, 0f); // Bottom Right 
+            textRectTransformTen.anchorMax = new Vector2(0.05f, 0f); // Bottom Right
+            textRectTransformTen.anchoredPosition = new Vector2(0, 0);
+            textRectTransformTen.pivot = new Vector2(0f, 0f);
         }
 
-        //Update the text displayed in the Clock Box
+
+        //Update the text displayed in the Debuff Box
+        public void ResetDebuffPanel()
+        {
+            // Try and stop unwanted access to the panel to prevent exceptions
+            if (gUiWindowPanel.isActiveAndEnabled && gUiWindowPanel.IsVisible)
+            {
+                // Create list that holds all the Tranforms for every TextMesh
+                List<Transform> transformList = new List<Transform>() {
+                    {gUiWindowPanel.transform.Find(nameOne)},   {gUiWindowPanel.transform.Find(nameTwo)},
+                    {gUiWindowPanel.transform.Find(nameThree)}, {gUiWindowPanel.transform.Find(nameFour)},
+                    {gUiWindowPanel.transform.Find(nameFive)},  {gUiWindowPanel.transform.Find(nameSix)},
+                    {gUiWindowPanel.transform.Find(nameSeven)}, {gUiWindowPanel.transform.Find(nameEight)},
+                    {gUiWindowPanel.transform.Find(nameNine)},  {gUiWindowPanel.transform.Find(nameTen)}
+                };
+
+                // List the string values for all MaxDisplayableDebuffs debuffs
+                List<string> displayedTextList = new List<string>()
+                {
+                    { "Unset 1" }, { "Unset 2" }, { "Unset 3" }, { "Unset 4" }, { "Unset 5" },
+                    { "Unset 6" }, { "Unset 7" }, { "Unset 8" }, { "Unset 9" }, { "Unset 10" },
+                };
+
+                // Parse the list of all debuffs on the current target and display the first MaxDisplayableDebuffs
+                for (int i = 0; (i < displayedTextList.Count && i < Globals.MaxDisplayableDebuffs); i++)
+                {
+                    // reset to an clean list
+                    transformList[i].GetComponent<TextMeshProUGUI>().text = displayedTextList[i];
+                }
+            }
+        }
+
+        //Update the text displayed in the Debuff Box
         public void UpdateDebuffPanel(List<DebuffData> debuffList)
         {
             // Try and stop unwanted access to the panel to prevent exceptions
             if (gUiWindowPanel.isActiveAndEnabled && gUiWindowPanel.IsVisible)
             {
-                // Update the panel data
-                Transform leftGameObject = gUiWindowPanel.transform.Find(LeftGameObjectName);
-                Transform rightGameObject = gUiWindowPanel.transform.Find(RightGameObjectName);
-                Transform middleGameObject = gUiWindowPanel.transform.Find(MiddleGameObjectName);
+                // Create list that holds all the Tranforms for every TextMesh
+                List<Transform> transformList = new List<Transform>() {
+                    {gUiWindowPanel.transform.Find(nameOne)},   {gUiWindowPanel.transform.Find(nameTwo)},
+                    {gUiWindowPanel.transform.Find(nameThree)}, {gUiWindowPanel.transform.Find(nameFour)},
+                    {gUiWindowPanel.transform.Find(nameFive)},  {gUiWindowPanel.transform.Find(nameSix)},
+                    {gUiWindowPanel.transform.Find(nameSeven)}, {gUiWindowPanel.transform.Find(nameEight)},
+                    {gUiWindowPanel.transform.Find(nameNine)},  {gUiWindowPanel.transform.Find(nameTen)}
+                };
 
-                // Update the screen
-                string leftText = "Unset 1";
-                string middleText = "Unset 2";
-                string rightText = "Unset 3";
-
-                // TEST DATA FOR NOW
-                int index = 0;
-                foreach (var debuff in debuffList)
+                // Parse the list of all debuffs on the current target and display the first MaxDisplayableDebuffs
+                for (int i = 0; (i < debuffList.Count && i < Globals.MaxDisplayableDebuffs) ; i++)
                 {
-                    if (index == 0)
-                    {
-                        leftText = debuff.debuffName + " " + debuff.debuffDurationRemaining + "s";
-                    }
-                    else if (index == 1)
-                    {
-                        middleText = debuff.debuffName + " " + debuff.debuffDurationRemaining + "s";
-                    }
-                    else if (index == 2)
-                    {
-                        rightText = debuff.debuffName + " " + debuff.debuffDurationRemaining + "s";
-                    }
-                    index++;
+                    // Update the displayed string "DebuffName 22s"
+                    transformList[i].GetComponent<TextMeshProUGUI>().text = debuffList[i].debuffName + " " + debuffList[i].debuffDurationRemaining + "s";
                 }
-                leftGameObject.GetComponent<TextMeshProUGUI>().text = leftText;
-                rightGameObject.GetComponent<TextMeshProUGUI>().text = rightText;
-                middleGameObject.GetComponent<TextMeshProUGUI>().text = middleText;
             }
         }
 
         // Called by the closing of the offensive target window
         public void HideDebuffPanel()
         {
-            gUiWindowPanel.Show();
+            gUiWindowPanel.Hide();
         }
 
         // Called by the /debuff command and on offensive target select

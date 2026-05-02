@@ -1,14 +1,9 @@
-﻿using Harmony;
-using Il2Cpp;
-using Il2CppLogicalGraphNodes;
+﻿using Il2Cpp;
 using Il2CppPantheonPersist;
-using Il2CppServiceStack;
-using Il2CppServiceStack.Text;
 using Il2CppTMPro;
 using MelonLoader;
-using Microsoft.VisualBasic;
 using UnityEngine;
-using UnityEngine.UIElements;
+
 
 [assembly: MelonInfo(typeof(EnhancedDebuffTracking.ModMain), "EnhancedDebuffTracking", "1.0.0", "Anonymous", null)]
 [assembly: MelonGame("Visionary Realms", "Pantheon")]
@@ -39,17 +34,14 @@ namespace EnhancedDebuffTracking
     {
         // UI Elements
         private static DebuffPanel gDebuffPanel = new DebuffPanel();
-        private static List<DebuffData> EMPTY_LIST = new List<DebuffData>();
         private static string gCurrentTargetNetworkId = null;
         private const float UpdateInterval = 1.0f; // Update interval in seconds
         private static float _timeSinceLastUpdate;
 
         private static GameObject gTextGO = null;
+        private static string debuffPanelName = "EDT_DebuffPanel_EDT";
 
-        public override void OnInitializeMelon()
-        {
-            LoggerInstance.Msg("Enhanced Debuff Tracking Initialized.");
-        }
+        public override void OnInitializeMelon() { }
 
         // Updates the duration timers on the panel.
         // WARNING:  This could be a problem if we get other process Hooks firing whilst updating the Lists through OnUpdate
@@ -60,16 +52,20 @@ namespace EnhancedDebuffTracking
             {
                 // We only need update granularity of 1 second, save the CPU cycles
                 _timeSinceLastUpdate += Time.deltaTime;
-                if( (_timeSinceLastUpdate >= UpdateInterval) && (gCurrentTargetNetworkId != null))
+                if (_timeSinceLastUpdate >= UpdateInterval)
                 {
                     // Call the entitiy manager and get it to update all the timers
                     EntityManager.UpdateAllDurationTimers();
 
-                    // Update the text values in the panel
-                    List<DebuffData> debuffList = EntityManager.GetEnemyDebuffList(gCurrentTargetNetworkId);
-                    if (debuffList != null)
+                    // If gCurrentTargetNetworkId is there is no point updating the display
+                    if (gCurrentTargetNetworkId != null)
                     {
-                        gDebuffPanel.UpdateDebuffPanel(debuffList);
+                        // Update the text values in the panel
+                        List<DebuffData> debuffList = EntityManager.GetEnemyDebuffList(gCurrentTargetNetworkId);
+                        if (debuffList != null)
+                        {
+                            gDebuffPanel.UpdateDebuffPanel(debuffList);
+                        }
                     }
                     _timeSinceLastUpdate = 0f;
                 }
@@ -115,6 +111,12 @@ namespace EnhancedDebuffTracking
                 MelonLogger.Warning($"OnAddOrRefreshBuff inBackground; = {inBackground}");
                 MelonLogger.Warning($"OnAddOrRefreshBuff isRefresh = {isRefresh}");
 
+                // TODO Make this an blacklist
+                // Do not process any Traits
+                if (buff.BuffData.DisplayName.ToString().Contains("Trait:"))
+                {
+                    return;
+                }
                 // Get the Text field game object
                 var textComponent = gTextGO.GetComponent<TextMeshProUGUI>();
 
@@ -125,9 +127,9 @@ namespace EnhancedDebuffTracking
                 // If we can not find the list log a warning and exit
                 if (debuffList == null)
                 {
-                    MelonLogger.Warning($"OnAddOrRefreshBuff unable to find debuff list for enemy {buff.Caster.NetworkId.ToString()}");
+                    MelonLogger.Error($"OnAddOrRefreshBuff unable to find debuff list for enemy {buff.Caster.NetworkId.ToString()}");
                     // update the debuff list to be empty
-                    gDebuffPanel.UpdateDebuffPanel(EMPTY_LIST);
+                    gDebuffPanel.ResetDebuffPanel();
                     textComponent.text = "0";
                     return;
                 }
@@ -136,7 +138,7 @@ namespace EnhancedDebuffTracking
                 // If we are not a refresh and have a the same buff already, do nothing
                 if (isRefresh == true)
                 {
-                    MelonLogger.Warning($"OnAddOrRefreshBuff() REFRESH DETECTED, DOING NOTHING");
+                    MelonLogger.Warning($"OnAddOrRefreshBuff() REFRESH DETECTED");
                     textComponent.text = debuffList.Count.ToString();
                     // update the debuff list
                     gDebuffPanel.UpdateDebuffPanel(debuffList);
@@ -148,13 +150,13 @@ namespace EnhancedDebuffTracking
                 {
                     if ((item.casterNetworkId == buff.Caster.NetworkId.ToString()) && (item.targetNetworkId == buff.Target.NetworkId.ToString()) && (item.debuffName == buff.BuffData.DisplayName.ToString()))
                     {
-                        MelonLogger.Warning($"OnAddOrRefreshBuff() TARGET SWITCH DETECTED, DOING NOTHING");
+                        MelonLogger.Warning($"OnAddOrRefreshBuff() TARGET SWITCH DETECTED");
                         textComponent.text = debuffList.Count.ToString();
                         return;
                     }
                 }
 
-                MelonLogger.Warning($"OnAddOrRefreshBuff() NEW BUFF DETECTED.  CONTINUING");
+                MelonLogger.Warning($"OnAddOrRefreshBuff() NEW BUFF DETECTED.");
                 DebuffData newDebuff = new DebuffData();
                 newDebuff.casterName = buff.Caster.Nameplate.nameText.text;
                 newDebuff.casterNetworkId = buff.Caster.NetworkId.ToString();
@@ -183,7 +185,7 @@ namespace EnhancedDebuffTracking
         // 2) When a debuff expires an enemy you do not have targetted
         public static void OnRemoveBuff(double time, ActiveBuff buff, bool moveToBackground, bool isRefresh)
         {
-            // Right now we do not want buffs that go onto players even if those are from monsters to players
+            // Right now we do not want buffs that go onto players
             if (!buff.Target.Info.AccessLevel.Equals(AccessLevel.Player))
             {
                 // TODO - Handle the consequtive target chance use case here so we dont add the same debuff multiple times
@@ -195,10 +197,10 @@ namespace EnhancedDebuffTracking
                 // If we can not find the list log a warning and exit
                 if (debuffList == null)
                 {
-                    MelonLogger.Warning($"OnRemoveBuff() unable to find debuff list for enemy {buff.Caster.NetworkId.ToString()}");
+                    MelonLogger.Error($"OnRemoveBuff() unable to find debuff list for enemy {buff.Caster.NetworkId.ToString()}");
                     textComponent.text = "0";
                     // update the debuff list
-                    gDebuffPanel.UpdateDebuffPanel(EMPTY_LIST);
+                    gDebuffPanel.ResetDebuffPanel();
                     return;
                 }
 
@@ -209,7 +211,7 @@ namespace EnhancedDebuffTracking
                     // We must remove a specific debuff for a specific target cast by a specific person
                     if((debuff.casterNetworkId == buff.Caster.NetworkId.ToString()) && (debuff.targetNetworkId == buff.Target.NetworkId.ToString()) && (debuff.debuffName == buff.BuffData.DisplayName.ToString()))
                     {
-                        // We must exift from the loop before we remove the entry as we can not change the size of the list we are currently iterating over
+                        // We must exit from the loop before we remove the entry as we can not change the size of the list we are currently iterating over
                         textComponent.text = debuffList.Count.ToString();
                         // update the debuff list
                         gDebuffPanel.UpdateDebuffPanel(debuffList);
@@ -237,7 +239,6 @@ namespace EnhancedDebuffTracking
 
         public static void InitOffensiveTargetPanel(UIWindowPanel OffensiveTargetPanel)
         {
-            MelonLogger.Warning($"InitOffensiveTargetPanel()++");
             UnityEngine.Transform iTransform = OffensiveTargetPanel.transform.GetChild(0);
             UnityEngine.Transform jTransform = iTransform.transform.GetChild(4);
             // Add some text to the debuff bar to prove we can change what is on the screen as we apply buffs
@@ -257,9 +258,32 @@ namespace EnhancedDebuffTracking
             gTextGO = textGO;
 
             // Build the panel, attach it to the offensive target panel
-            gDebuffPanel.DisplayPanel("EDT_DebuffPanel_EDT", UIPanelRoots.Instance.Mid.transform, new Vector2(Globals.PanelWidth, Globals.PanelMeshHeight));
+            gDebuffPanel.DisplayPanel(debuffPanelName, UIPanelRoots.Instance.Mid.transform, new Vector2(Globals.PanelWidth, Globals.PanelHeight));
+        }
 
-            MelonLogger.Warning($"InitOffensiveTargetPanel()--");
+        private static bool CheckIfMonsterIsDead(Pools.Logic Pools)
+        {
+            // For reasons unclear, sometimes pantheon provides a valid offensive target with a null Pools, nothing to do but just return
+            if ((Pools != null) && (Pools.pools != null))
+            {
+                // I can not find an isDead() property in TargetLogic, so check the HP bar and if it is zero it must be dead
+                foreach (Pool pool in Pools.pools)
+                {
+                    // Pantheon can provide a valid offensive target with an e null pool (possibly a resource type that is not applicable to a given class, say Wratch on a DireLord)
+                    if (pool != null)
+                    {
+                        if (pool.InternalPoolType.Equals(PoolType.Health))
+                        {
+                            // Current health is zero, monster is dead
+                            if (pool.Current.Equals(0f))
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
         }
 
         // This fires on at least the following conditions
@@ -270,64 +294,38 @@ namespace EnhancedDebuffTracking
             MelonLogger.Warning($"OffensiveTargetSelected");
             // always show the panel on target change
             gDebuffPanel.ShowDebuffPanel();
-            gDebuffPanel.UpdateDebuffPanel(EMPTY_LIST);
-
+            gDebuffPanel.ResetDebuffPanel();
 
             var textComponent = gTextGO.GetComponent<TextMeshProUGUI>();
       
-            // Offensive gpoes to null when a monster despawns
+            // Offensive goes to null when a monster despawns
             if (targetLogic.Offensive == null)
             {
-                // Set to zero, this covers off the case where a monster dies that you are not targetting but you put debuffs on it
+                // Set to zero, this covers off the case where a monster dies that you are not targetting but you put debuffs on it and you click on after
                 textComponent.text = "0";
-                gDebuffPanel.UpdateDebuffPanel(EMPTY_LIST);
+                gDebuffPanel.ResetDebuffPanel();
                 return;
             }
 
-            // Identify the new target, make sure we have a row in the dictionary for it, this is an explicit handling of a weakness in the detect of new NPC entities that sometimes misses entries
-            EntityManager.AddMonsterIfMissing(targetLogic.Offensive.NetworkId.ToString());
+            // Identify the new target, make sure we have a row in the dictionary for it, this is an explicit handling of a weakness in the detect of new NPC entities
             gCurrentTargetNetworkId = targetLogic.Offensive.NetworkId.ToString();
+            EntityManager.AddMonsterIfMissing(gCurrentTargetNetworkId);
             List<DebuffData> debuffList = EntityManager.GetEnemyDebuffList(gCurrentTargetNetworkId);
             if (debuffList == null)
             {
                 return;
             }
 
-            // This should be zero on a new element, or a known element should be the correct number of buffs
+            // This should be zero on a new element, or on a known element should be the correct number of buffs
             textComponent.text = debuffList.Count.ToString();
             gDebuffPanel.UpdateDebuffPanel(debuffList);
-
-
-            // For reasons unclear, sometimes pantheon provides a valid offensive target with a null Pools, nothing to do but just return
-            if (targetLogic.Offensive.Pools == null)
+            bool isDead = CheckIfMonsterIsDead(targetLogic.Offensive.Pools);
+            if (isDead)
             {
-                return;
+                textComponent.text = "0";
+                gDebuffPanel.ResetDebuffPanel();
             }
-            // For reasons unclear, sometimes pantheon provides a valid offensive target with a null Pools, nothing to do but just return
-            if (targetLogic.Offensive.Pools.pools == null)
-            {
-                return;
-            }
-
-            // I can not find a isDead property in TargetLogic, so check the HP bar and if it is zero it must be dead
-            var pools = targetLogic.Offensive.Pools.pools;
-            foreach (Pool pool in pools)
-            {
-                // For reasons unclear, sometimes pantheon provides a valid offensive target with a null Pools, nothing to do but just return
-                if (pool == null) {
-                    return;
-                }
-                if (pool.InternalPoolType.Equals(PoolType.Health))
-                {
-                    if (pool.Current.Equals(0f))
-                    {
-                        textComponent.text = "0";
-                        gDebuffPanel.UpdateDebuffPanel(EMPTY_LIST);
-                        return;
-                    }
-                }
-            }
-
+            
             // Set the debuff count to the actual count
             textComponent.text = debuffList.Count.ToString();
             gDebuffPanel.UpdateDebuffPanel(debuffList);

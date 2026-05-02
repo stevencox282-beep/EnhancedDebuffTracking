@@ -37,6 +37,7 @@ namespace EnhancedDebuffTracking
         private static string gCurrentTargetNetworkId = null;
         private const float UpdateInterval = 1.0f; // Update interval in seconds
         private static float _timeSinceLastUpdate;
+        private static int gLastStacks = 0;
 
         private static string debuffPanelName = "EDT_DebuffPanel_EDT";
 
@@ -84,7 +85,7 @@ namespace EnhancedDebuffTracking
         // Make sure we dont re-add an existing buff to the buff list and you handle all the different conditions it can be called
         public static void OnAddOrRefreshBuff(double time, ActiveBuff buff, bool inBackground, bool isRefresh, bool isItemBuff)
         {
-            MelonLogger.Warning($"OnAddOrRefreshBuff 1 isRefresh = {isRefresh}");
+            MelonLogger.Warning($"OnAddOrRefreshBuff 1 isRefresh = {isRefresh}, inBackground = {inBackground}, isItemBuff = {isItemBuff}");
             // TODO - Update here when we want better tracking of Player Debuffs! This is how we detect them and send them on to the modified UI elements
             // We do not want buffs that go onto players even if those are from monsters to players
             if (!buff.Target.Info.AccessLevel.Equals(AccessLevel.Player))
@@ -115,12 +116,16 @@ namespace EnhancedDebuffTracking
                     // If this is the correct buff from teh correct caster to the correct target
                     if ((debuff.casterNetworkId == buff.Caster.NetworkId.ToString()) && (debuff.targetNetworkId == buff.Target.NetworkId.ToString()) && (debuff.debuffName == buff.BuffData.DisplayName.ToString()))
                     {
+                        MelonLogger.Warning($"OnAddOrRefreshBuff() buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}");
+                        MelonLogger.Warning($"OnAddOrRefreshBuff() debuff.numStacks = {debuff.numStacks}, debuff.maxStacks = {debuff.maxStacks}");
+
                         // This function is also called on change of offensive target, so we can't assume this is actually a new buff or a refresh of a buff
                         // If we are not a refresh and have a the same buff already, do nothing
                         if (isRefresh == true)
                         {
                             MelonLogger.Warning($"OnAddOrRefreshBuff() REFRESH DETECTED");
                             debuff.debuffDurationRemaining = debuff.debuffDuration;
+
                             // update the debuff list
                             gDebuffPanel.UpdateDebuffPanel(debuffList);
                             return;
@@ -133,6 +138,7 @@ namespace EnhancedDebuffTracking
                     }
                 }
 
+                // We do not have a debuff of this type in the list, make a new one
                 MelonLogger.Warning($"OnAddOrRefreshBuff() NEW BUFF DETECTED.");
                 DebuffData newDebuff = new DebuffData();
                 newDebuff.casterName = buff.Caster.Nameplate.nameText.text;
@@ -147,6 +153,14 @@ namespace EnhancedDebuffTracking
                 newDebuff.maxStacks = buff.BuffData.MaxStacks;
                 newDebuff.numTicks = buff.BuffData.Ticks;
                 newDebuff.tickIntervalS = buff.BuffData.TickInterval;
+
+                // STACKS are process by the game by deleting the original debuff, then creating a new one but with isRefresh set to true
+                if (isRefresh == true && newDebuff.numStacks < newDebuff.maxStacks)
+                {
+                    newDebuff.numStacks = gLastStacks+1; // HOW DO YOU KNOW THE LAST NUMBER OF STACKS?
+                    newDebuff.debuffDurationRemaining = newDebuff.debuffDuration;
+                }
+
                 // Add this specific debuff
                 debuffList.Add(newDebuff);
 
@@ -160,7 +174,7 @@ namespace EnhancedDebuffTracking
         // 2) When a debuff expires an enemy you do not have targetted
         public static void OnRemoveBuff(double time, ActiveBuff buff, bool moveToBackground, bool isRefresh)
         {
-            MelonLogger.Warning($"OnRemoveBuff()");
+            MelonLogger.Warning($"OnRemoveBuff() isRefresh = {isRefresh}, moveToBackground = {moveToBackground}");
             // Right now we do not want buffs that go onto players
             if (!buff.Target.Info.AccessLevel.Equals(AccessLevel.Player))
             {
@@ -193,6 +207,10 @@ namespace EnhancedDebuffTracking
                     // We must remove a specific debuff for a specific target cast by a specific person
                     if ((debuff.casterNetworkId == buff.Caster.NetworkId.ToString()) && (debuff.targetNetworkId == buff.Target.NetworkId.ToString()) && (debuff.debuffName == buff.BuffData.DisplayName.ToString()))
                     {
+                        MelonLogger.Warning($"OnRemoveBuff() buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}");
+                        MelonLogger.Warning($"OnRemoveBuff() debuff.numStacks = {debuff.numStacks}, debuff.maxStacks = {debuff.maxStacks}");
+                        gLastStacks = debuff.numStacks;
+
                         // There should be no duplicates
                         // Remove the entry, if something has gone wrong with the list then it might exception
                         try
@@ -230,20 +248,6 @@ namespace EnhancedDebuffTracking
             // TODO - Is this good enough, or should we do a Find()?
             UnityEngine.Transform iTransform = OffensiveTargetPanel.transform.GetChild(0);
             UnityEngine.Transform jTransform = iTransform.transform.GetChild(4);
-            // Add some text to the debuff bar to prove we can change what is on the screen as we apply buffs
-            GameObject textGO = new GameObject("EDT_CustomTextGO_EDT");
-            textGO.transform.SetParent(jTransform.transform);
-            TextMeshProUGUI textComponent = textGO.AddComponent<TextMeshProUGUI>();
-            textComponent.text = "Dux Is The Best";
-            textComponent.fontSize = 16;
-            textComponent.alignment = TextAlignmentOptions.Left;
-            RectTransform textRect = textGO.GetComponent<RectTransform>();
-            textRect.sizeDelta = new Vector2(100, 20);
-            textRect.anchoredPosition = new Vector2(0, 0);
-            textRect.anchorMin = new Vector2(0f, 0f);
-            textRect.anchorMax = new Vector2(0f, 0f);
-            textRect.pivot = new Vector2(0f, 0f);
-
             // Build the panel, attach it to the offensive target panel
             gDebuffPanel.DisplayPanel(debuffPanelName, UIPanelRoots.Instance.Mid.transform, new Vector2(Globals.PanelWidth, Globals.PanelHeight));
         }

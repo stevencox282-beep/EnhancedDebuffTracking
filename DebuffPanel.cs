@@ -2,6 +2,7 @@
 using Il2CppTMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UIElements;
 
 namespace EnhancedDebuffTracking
 {
@@ -110,6 +111,12 @@ namespace EnhancedDebuffTracking
             textMesh.text = "";
 
             return textMesh;
+        }
+
+        // Builder function to create a default TextMesh
+        private void BuildProgressBar(GameObject gameObject)
+        {
+            //ProgressBar progressBar = gameObject.AddComponent<Il2CppTMPro.ProgressBar>();
         }
 
         // Setup the text meshs inside the panel that will display the data we want
@@ -279,8 +286,10 @@ namespace EnhancedDebuffTracking
                 // Parse the list of all debuffs on the current target and display the first MaxDisplayableDebuffs
                 for (int i = 0; (i < debuffList.Count && i < Globals.MaxDisplayableDebuffs) ; i++)
                 {
+                    DebuffData debuff = debuffList[i];
                     // use the default list, this means any buffs that just expired are tidied up and removed from displayUpdate the reset list, as this is necessary 
-                    displayedTextList[i] = debuffList[i].debuffName + " " + debuffList[i].debuffDurationRemaining + "s"; ;
+                    displayedTextList[i] = $"{debuff.debuffName}, {debuff.debuffDurationRemaining}s, {debuff.numStacks}/{debuff.maxStacks} Stacks ({debuff.casterName})";
+                    ; 
                     // Update the displayed string "DebuffName 22s"
                     transformList[i].GetComponent<TextMeshProUGUI>().text = displayedTextList[i];
                 }

@@ -22,14 +22,14 @@ public static class EntityManager
             return null;
         }
 
-        // If we have a valid key, return the list, else null
+        // EntityManager will remove entries from the Dictionary on death, not on despawn, so for now we just have to ignore all failures to find an enemy in the database
+        // Not ideal as this will mask genuine problems but there is nothing we can do about it, it is how the hook for managing NPCs works
         if (gDebuffDictionary.ContainsKey(targetNetworkId))
         {
             return gDebuffDictionary[targetNetworkId];
         }
         else
         {
-            MelonLogger.Error($"GetEnemyDebuffList() - Could not find casterid {targetNetworkId} in dictionary");
             return null;
         }
     }
@@ -126,11 +126,12 @@ public static class EntityManager
         //  Remove an entry from the dictionary based on the network id
         try
         {
+            MelonLogger.Warning($"OnNpcRemoved() TRY Removing entry {entityNpcGameObject.NetworkId.ToString()}");
             gDebuffDictionary.Remove(entityNpcGameObject.NetworkId.ToString());
         }
         catch (Exception e)
         {
-            MelonLogger.Warning($"OnNpcRemoved() Tried to remove entry {entityNpcGameObject.NetworkId.ToString()} but it did not exist");
+            MelonLogger.Warning($"OnNpcRemoved() CATCH Remove entry {entityNpcGameObject.NetworkId.ToString()} but it does not exist");
         }
         
     }

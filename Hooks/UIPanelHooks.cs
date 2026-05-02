@@ -10,10 +10,10 @@ public class UIPanelHooksStart
     // Make changes to the layout of existing Panels using these hooks
     private static void Postfix(UIWindowPanel __instance)
     {
-        // Monster Debuffs
+        // Monster Debuffs window can now be added to the UI
         if (__instance.name == "Panel_OffensiveTarget")
         {
-            ModMain.InitOffensiveTargetPanel(__instance);
+            ModMain.AddDebuffPanelToUI(__instance);
         }
 
         if (__instance.name == "Panel_DefensiveTarget")

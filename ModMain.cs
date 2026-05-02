@@ -85,34 +85,13 @@ namespace EnhancedDebuffTracking
         // Make sure we dont re-add an existing buff to the buff list and you handle all the different conditions it can be called
         public static void OnAddOrRefreshBuff(double time, ActiveBuff buff, bool inBackground, bool isRefresh, bool isItemBuff)
         {
+            MelonLogger.Warning($"OnAddOrRefreshBuff 1");
             // TODO - Update here when we want better tracking of Player Debuffs! This is how we detect them and send them on to the modified UI elements
             // We do not want buffs that go onto players even if those are from monsters to players
             if (!buff.Target.Info.AccessLevel.Equals(AccessLevel.Player))
             {
-                MelonLogger.Warning($"==================");
-                MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.ObjectClass = {buff.Target.ObjectClass }");
-                MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.Nameplate.isDead = {buff.Target.Nameplate.isDead }");
-                MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.Nameplate.nameText.text = {buff.Target.Nameplate.nameText.text}");
-                MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.Currency.Current.Total.ToString() = {buff.Target.Currency.Current.Total.ToString()}");
-                MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.Info.Class.ToString() = {buff.Target.Info.Class.ToString()}");
-                MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.Info.AccountName.ToString() = {buff.Target.Info.AccountName.ToString() }");
-                MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.Info.Kind.ToString() = {buff.Target.Info.Kind.ToString()}");
-                MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.Info.AccessLevel.ToString() = {buff.Target.Info.AccessLevel.ToString()}");
-                MelonLogger.Warning($"OnAddOrRefreshBuff buff.Caster.NetworkView.NetworkId.ToString() = {buff.Caster.NetworkView.NetworkId.ToString()}");
-                MelonLogger.Warning($"OnAddOrRefreshBuff buff.Caster.Info.CharacterId = {buff.Caster.Info.CharacterId.ToString() }");
-                MelonLogger.Warning($"OnAddOrRefreshBuff buff.Target.Info.CharacterId = {buff.Target.Info.CharacterId.ToString()}");
-                MelonLogger.Warning($"OnAddOrRefreshBuff buff.buff.Caster.NetworkId = {buff.Caster.NetworkId}");
-                MelonLogger.Warning($"OnAddOrRefreshBuff buff.buff.Target.NetworkId = {buff.Target.NetworkId}");
-                MelonLogger.Warning($"OnAddOrRefreshBuff buff.buff.Caster.NetworkId.Tostring() = {buff.Caster.NetworkId.ToString()}");
-                MelonLogger.Warning($"OnAddOrRefreshBuff buff.buff.Target.NetworkId.ToString() = {buff.Target.NetworkId.ToString()}");
-                MelonLogger.Warning($"OnAddOrRefreshBuff buff.BuffData.Id.ToString() = {buff.BuffData.Id.ToString()}");
-                MelonLogger.Warning($"OnAddOrRefreshBuff buff.BuffData.DisplayName.ToString(); = {buff.BuffData.DisplayName.ToString()}");
-                MelonLogger.Warning($"OnAddOrRefreshBuff buff.BuffData.DesignerId.ToString(); = {buff.BuffData.DesignerId.ToString()}");
-                MelonLogger.Warning($"OnAddOrRefreshBuff inBackground; = {inBackground}");
-                MelonLogger.Warning($"OnAddOrRefreshBuff isRefresh = {isRefresh}");
-
-                // TODO Make this an blacklist
-                // Do not process any Traits
+                // TODO Make this a blacklist
+                // Do not process Traits
                 if (buff.BuffData.DisplayName.ToString().Contains("Trait:"))
                 {
                     return;
@@ -185,50 +164,69 @@ namespace EnhancedDebuffTracking
         // 2) When a debuff expires an enemy you do not have targetted
         public static void OnRemoveBuff(double time, ActiveBuff buff, bool moveToBackground, bool isRefresh)
         {
+            MelonLogger.Warning($"OnRemoveBuff()");
             // Right now we do not want buffs that go onto players
             if (!buff.Target.Info.AccessLevel.Equals(AccessLevel.Player))
             {
+                // TODO Make this a blacklist
+                // Do not process Traits
+                if (buff.BuffData.DisplayName.ToString().Contains("Trait:"))
+                {
+                    return;
+                }
+
                 // TODO - Handle the consequtive target chance use case here so we dont add the same debuff multiple times
                 // Find the debuff lst for this specific enemy
                 gCurrentTargetNetworkId = buff.Target.NetworkId.ToString();
                 List<DebuffData> debuffList = EntityManager.GetEnemyDebuffList(gCurrentTargetNetworkId);
                 var textComponent = gTextGO.GetComponent<TextMeshProUGUI>();
-                
-                // If we can not find the list log a warning and exit
+
+                // Reset the debuff list
+                gDebuffPanel.ResetDebuffPanel();
+                textComponent.text = "0";
+
+                 // If we can not find the list log a warning and exit
                 if (debuffList == null)
                 {
                     MelonLogger.Error($"OnRemoveBuff() unable to find debuff list for enemy {buff.Caster.NetworkId.ToString()}");
-                    textComponent.text = "0";
-                    // update the debuff list
-                    gDebuffPanel.ResetDebuffPanel();
                     return;
                 }
 
                 // Remove this specific debuff from the list
-                int index = 0;
-                foreach (var debuff in debuffList)
+                for (int i = 0; i < debuffList.Count; i++)
                 {
+                    DebuffData debuff = debuffList[i];
                     // We must remove a specific debuff for a specific target cast by a specific person
-                    if((debuff.casterNetworkId == buff.Caster.NetworkId.ToString()) && (debuff.targetNetworkId == buff.Target.NetworkId.ToString()) && (debuff.debuffName == buff.BuffData.DisplayName.ToString()))
+                    if ((debuff.casterNetworkId == buff.Caster.NetworkId.ToString()) && (debuff.targetNetworkId == buff.Target.NetworkId.ToString()) && (debuff.debuffName == buff.BuffData.DisplayName.ToString()))
                     {
-                        // We must exit from the loop before we remove the entry as we can not change the size of the list we are currently iterating over
-                        textComponent.text = debuffList.Count.ToString();
-                        // update the debuff list
+                        // There should be no duplicates
+                        // Remove the entry, if something has gone wrong with the list then it might exception
+                        try
+                        {
+                            // This invalidates debuff, we just deleted ourselves, so DO NOT USE debuff from this point forward
+                            debuffList.RemoveAt(i);
+                        }
+                        catch (Exception e)
+                        {
+                            MelonLogger.Error($"OnRemoveBuff() - Failed to remove debuff {buff.BuffData?.DisplayName.ToString()} from list");
+                        }
+
+                        // Update the debuff list
                         gDebuffPanel.UpdateDebuffPanel(debuffList);
+                        textComponent.text = debuffList.Count.ToString();
+
+                        MelonLogger.Error($"OnRemoveBuff() - debuffList.Count {debuffList.Count}");
+                        // Check the number of debuffs left, if none, reset the panel.  This will also catch dead enemies as Target.Nameplate.isDead is False when this trigger fires and as such is unusable here
+                        if (debuffList.Count == 0)
+                        {
+                            gDebuffPanel.ResetDebuffPanel();
+                            textComponent.text = "0";
+                        }
+                        // Only process the first one
                         break;
                     }
-                    index++;
                 }
-                // Remove the entry, if something has gone wrong with the list then it might exception
-                try
-                {
-                    debuffList.RemoveAt(index);
-                }
-                catch (Exception e)
-                {
-                    MelonLogger.Error($"OnRemoveBuff() - Failed to remove debuff {buff.BuffData?.DisplayName.ToString()} from list");
-                    textComponent.text = debuffList.Count.ToString();
-                }
+
 
                 // TODO - DEBUG ONLY - Remove LATER - update UI with number of debuffs in the list
                 textComponent.text = debuffList.Count.ToString();
@@ -237,18 +235,20 @@ namespace EnhancedDebuffTracking
             }
         }
 
-        public static void InitOffensiveTargetPanel(UIWindowPanel OffensiveTargetPanel)
+        // This function adds the new debuff panel to the UI
+        public static void AddDebuffPanelToUI(UIWindowPanel OffensiveTargetPanel)
         {
+            // TODO - Is this good enough, or should we do a Find()?
             UnityEngine.Transform iTransform = OffensiveTargetPanel.transform.GetChild(0);
             UnityEngine.Transform jTransform = iTransform.transform.GetChild(4);
             // Add some text to the debuff bar to prove we can change what is on the screen as we apply buffs
-            var textGO = new GameObject("EDT_CustomTextGO_EDT");
+            GameObject textGO = new GameObject("EDT_CustomTextGO_EDT");
             textGO.transform.SetParent(jTransform.transform);
-            var textComponent = textGO.AddComponent<TextMeshProUGUI>();
+            TextMeshProUGUI textComponent = textGO.AddComponent<TextMeshProUGUI>();
             textComponent.text = "Dux Is The Best";
             textComponent.fontSize = 16;
             textComponent.alignment = TextAlignmentOptions.Left;
-            var textRect = textGO.GetComponent<RectTransform>();
+            RectTransform textRect = textGO.GetComponent<RectTransform>();
             textRect.sizeDelta = new Vector2(100, 20);
             textRect.anchoredPosition = new Vector2(0, 0);
             textRect.anchorMin = new Vector2(0f, 0f);
@@ -261,30 +261,13 @@ namespace EnhancedDebuffTracking
             gDebuffPanel.DisplayPanel(debuffPanelName, UIPanelRoots.Instance.Mid.transform, new Vector2(Globals.PanelWidth, Globals.PanelHeight));
         }
 
+        // Returns is a current target is dead or not
         private static bool CheckIfMonsterIsDead(Pools.Logic Pools)
         {
-            // For reasons unclear, sometimes pantheon provides a valid offensive target with a null Pools, nothing to do but just return
-            if ((Pools != null) && (Pools.pools != null))
-            {
-                // I can not find an isDead() property in TargetLogic, so check the HP bar and if it is zero it must be dead
-                foreach (Pool pool in Pools.pools)
-                {
-                    // Pantheon can provide a valid offensive target with an e null pool (possibly a resource type that is not applicable to a given class, say Wratch on a DireLord)
-                    if (pool != null)
-                    {
-                        if (pool.InternalPoolType.Equals(PoolType.Health))
-                        {
-                            // Current health is zero, monster is dead
-                            if (pool.Current.Equals(0f))
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-            return false;
+            // Get the isDead status
+            return (Pools.Entity.Nameplate.isDead == true) ? true : false;            
         }
+
 
         // This fires on at least the following conditions
         // 1) User selects a new target
@@ -292,7 +275,7 @@ namespace EnhancedDebuffTracking
         public static void OffensiveTargetSelected(Targets.Logic targetLogic)
         {
             MelonLogger.Warning($"OffensiveTargetSelected");
-            // always show the panel on target change
+            // TODO - Show the debuff panel right now, maybe remove later
             gDebuffPanel.ShowDebuffPanel();
             gDebuffPanel.ResetDebuffPanel();
 
@@ -301,7 +284,6 @@ namespace EnhancedDebuffTracking
             // Offensive goes to null when a monster despawns
             if (targetLogic.Offensive == null)
             {
-                // Set to zero, this covers off the case where a monster dies that you are not targetting but you put debuffs on it and you click on after
                 textComponent.text = "0";
                 gDebuffPanel.ResetDebuffPanel();
                 return;
@@ -319,6 +301,8 @@ namespace EnhancedDebuffTracking
             // This should be zero on a new element, or on a known element should be the correct number of buffs
             textComponent.text = debuffList.Count.ToString();
             gDebuffPanel.UpdateDebuffPanel(debuffList);
+
+            // Check if we are dead, if we are clear the panel
             bool isDead = CheckIfMonsterIsDead(targetLogic.Offensive.Pools);
             if (isDead)
             {

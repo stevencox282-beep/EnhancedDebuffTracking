@@ -2,10 +2,6 @@
 using Il2CppTMPro;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.UIElements;
-using System.Collections.Generic;
-using System.Linq;
-using MelonLoader;
 
 namespace EnhancedDebuffTracking
 {
@@ -273,11 +269,20 @@ namespace EnhancedDebuffTracking
                     {gUiWindowPanel.transform.Find(nameNine)},  {gUiWindowPanel.transform.Find(nameTen)}
                 };
 
+                // List the string values for all MaxDisplayableDebuffs debuffs
+                List<string> displayedTextList = new List<string>()
+                {
+                    { "Unset 1" }, { "Unset 2" }, { "Unset 3" }, { "Unset 4" }, { "Unset 5" },
+                    { "Unset 6" }, { "Unset 7" }, { "Unset 8" }, { "Unset 9" }, { "Unset 10" },
+                };
+
                 // Parse the list of all debuffs on the current target and display the first MaxDisplayableDebuffs
                 for (int i = 0; (i < debuffList.Count && i < Globals.MaxDisplayableDebuffs) ; i++)
                 {
+                    // use the default list, this means any buffs that just expired are tidied up and removed from displayUpdate the reset list, as this is necessary 
+                    displayedTextList[i] = debuffList[i].debuffName + " " + debuffList[i].debuffDurationRemaining + "s"; ;
                     // Update the displayed string "DebuffName 22s"
-                    transformList[i].GetComponent<TextMeshProUGUI>().text = debuffList[i].debuffName + " " + debuffList[i].debuffDurationRemaining + "s";
+                    transformList[i].GetComponent<TextMeshProUGUI>().text = displayedTextList[i];
                 }
             }
         }

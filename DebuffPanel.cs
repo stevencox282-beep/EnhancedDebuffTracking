@@ -130,13 +130,13 @@ namespace EnhancedDebuffTracking
         }
 
         // Builder function to create a default TextMesh
-        private TextMeshProUGUI BuildTextMeshProUGUI(GameObject gameObject)
+        private TextMeshProUGUI BuildTextMesh(GameObject gameObject)
         {
             // Add and configure the TextMeshPros for rendering the time data
             TextMeshProUGUI textMesh = gameObject.AddComponent<TextMeshProUGUI>();
             textMesh.alignment = TextAlignmentOptions.Left;
             textMesh.fontSize = Globals.FontSize;
-            textMesh.color = Color.yellow;
+            textMesh.color = Color.white;
             textMesh.text = "";
 
             return textMesh;
@@ -200,71 +200,71 @@ namespace EnhancedDebuffTracking
 
             var rectTransformOne = imageOne.rectTransform;
             rectTransformOne.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformOne.anchorMin = new Vector2(0.025f, 0.9f); // Just off Bottom Left
-            rectTransformOne.anchorMax = new Vector2(0.025f, 0.9f); // Just off Bottom Left 
+            rectTransformOne.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightOne);
+            rectTransformOne.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightOne);
             rectTransformOne.anchoredPosition = new Vector2(0f, 0f);
             rectTransformOne.pivot = new Vector2(0f, 0f);
             
             var rectTransformTwo = imageTwo.rectTransform;
             rectTransformTwo.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformTwo.anchorMin = new Vector2(0.025f, 0.8f); // Bottom Middle 
-            rectTransformTwo.anchorMax = new Vector2(0.025f, 0.8f); // Bottom Middle 
+            rectTransformTwo.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightTwo);
+            rectTransformTwo.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightTwo);
             rectTransformTwo.anchoredPosition = new Vector2(0, 0);
             rectTransformTwo.pivot = new Vector2(0f, 0f);
 
             var rectTransformThree = imageThree.rectTransform;
             rectTransformThree.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformThree.anchorMin = new Vector2(0.025f, 0.7f); // Bottom Right 
-            rectTransformThree.anchorMax = new Vector2(0.025f, 0.7f); // Bottom Right
+            rectTransformThree.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightThree);
+            rectTransformThree.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightThree);
             rectTransformThree.anchoredPosition = new Vector2(0, 0);
             rectTransformThree.pivot = new Vector2(0f, 0f);
 
             var rectTransformFour = imageFour.rectTransform;
             rectTransformFour.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformFour.anchorMin = new Vector2(0.025f, 0.6f); // Bottom Right 
-            rectTransformFour.anchorMax = new Vector2(0.025f, 0.6f); // Bottom Right
+            rectTransformFour.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightFour);
+            rectTransformFour.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightFour);
             rectTransformFour.anchoredPosition = new Vector2(0, 0);
             rectTransformFour.pivot = new Vector2(0f, 0f);
 
             var rectTransformFive = imageFive.rectTransform;
             rectTransformFive.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformFive.anchorMin = new Vector2(0.025f, 0.5f); // Bottom Right 
-            rectTransformFive.anchorMax = new Vector2(0.025f, 0.5f); // Bottom Right
+            rectTransformFive.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightFive);
+            rectTransformFive.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightFive);
             rectTransformFive.anchoredPosition = new Vector2(0, 0);
             rectTransformFive.pivot = new Vector2(0f, 0f);
 
             var rectTransformSix = imageSix.rectTransform;
             rectTransformSix.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformSix.anchorMin = new Vector2(0.025f, 0.4f); // Bottom Right 
-            rectTransformSix.anchorMax = new Vector2(0.025f, 0.4f); // Bottom Right
+            rectTransformSix.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightSix);
+            rectTransformSix.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightSix);
             rectTransformSix.anchoredPosition = new Vector2(0, 0);
             rectTransformSix.pivot = new Vector2(0f, 0f);
 
             var rectTransformSeven = imageSeven.rectTransform;
             rectTransformSeven.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformSeven.anchorMin = new Vector2(0.025f, 0.3f); // Bottom Right 
-            rectTransformSeven.anchorMax = new Vector2(0.025f, 0.3f); // Bottom Right
+            rectTransformSeven.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightSeven);
+            rectTransformSeven.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightSeven);
             rectTransformSeven.anchoredPosition = new Vector2(0, 0);
             rectTransformSeven.pivot = new Vector2(0f, 0f);
 
             var rectTransformEight = imageEight.rectTransform;
             rectTransformEight.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformEight.anchorMin = new Vector2(0.025f, 0.2f); // Bottom Right 
-            rectTransformEight.anchorMax = new Vector2(0.025f, 0.2f); // Bottom Right
+            rectTransformEight.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightEight);
+            rectTransformEight.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightEight);
             rectTransformEight.anchoredPosition = new Vector2(0, 0);
             rectTransformEight.pivot = new Vector2(0f, 0f);
 
             var rectTransformNine = imageNine.rectTransform;
             rectTransformNine.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformNine.anchorMin = new Vector2(0.025f, 0.1f); // Bottom Right 
-            rectTransformNine.anchorMax = new Vector2(0.025f, 0.1f); // Bottom Right
+            rectTransformNine.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightNine);
+            rectTransformNine.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightNine);
             rectTransformNine.anchoredPosition = new Vector2(0, 0);
             rectTransformNine.pivot = new Vector2(0f, 0f);
 
             var rectTransformTen = imageTen.rectTransform;
             rectTransformTen.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformTen.anchorMin = new Vector2(0.025f, 0f); // Bottom Right 
-            rectTransformTen.anchorMax = new Vector2(0.025f, 0f); // Bottom Right
+            rectTransformTen.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightTen);
+            rectTransformTen.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightTen);
             rectTransformTen.anchoredPosition = new Vector2(0, 0);
             rectTransformTen.pivot = new Vector2(0f, 0f);
         }
@@ -297,85 +297,85 @@ namespace EnhancedDebuffTracking
             gameObjectTen.transform.SetParent(gUiWindowPanel.transform, false);
 
             // Build all the required TextMeshs
-            TextMeshProUGUI textMeshOne = BuildTextMeshProUGUI(gameObjectOne);
-            TextMeshProUGUI textMeshTwo = BuildTextMeshProUGUI(gameObjectTwo);
-            TextMeshProUGUI textMeshThree = BuildTextMeshProUGUI(gameObjectThree);
-            TextMeshProUGUI textMeshFour = BuildTextMeshProUGUI(gameObjectFour);
-            TextMeshProUGUI textMeshFive = BuildTextMeshProUGUI(gameObjectFive);
-            TextMeshProUGUI textMeshSix = BuildTextMeshProUGUI(gameObjectSix);
-            TextMeshProUGUI textMeshSeven = BuildTextMeshProUGUI(gameObjectSeven);
-            TextMeshProUGUI textMeshEight = BuildTextMeshProUGUI(gameObjectEight);
-            TextMeshProUGUI textMeshNine = BuildTextMeshProUGUI(gameObjectNine);
-            TextMeshProUGUI textMeshTen = BuildTextMeshProUGUI(gameObjectTen);
+            TextMeshProUGUI textMeshOne = BuildTextMesh(gameObjectOne);
+            TextMeshProUGUI textMeshTwo = BuildTextMesh(gameObjectTwo);
+            TextMeshProUGUI textMeshThree = BuildTextMesh(gameObjectThree);
+            TextMeshProUGUI textMeshFour = BuildTextMesh(gameObjectFour);
+            TextMeshProUGUI textMeshFive = BuildTextMesh(gameObjectFive);
+            TextMeshProUGUI textMeshSix = BuildTextMesh(gameObjectSix);
+            TextMeshProUGUI textMeshSeven = BuildTextMesh(gameObjectSeven);
+            TextMeshProUGUI textMeshEight = BuildTextMesh(gameObjectEight);
+            TextMeshProUGUI textMeshNine = BuildTextMesh(gameObjectNine);
+            TextMeshProUGUI textMeshTen = BuildTextMesh(gameObjectTen);
 
             // Set up the RectTransform to position the texts correctly
             var rectTransformOne = textMeshOne.rectTransform;
             rectTransformOne.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformOne.anchorMin = new Vector2(0.05f, 0.9f); // Just off Bottom Left
-            rectTransformOne.anchorMax = new Vector2(0.05f, 0.9f); // Just off Bottom Left 
+            rectTransformOne.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightOne); 
+            rectTransformOne.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightOne); 
             rectTransformOne.anchoredPosition = new Vector2(0f, 0f);
             rectTransformOne.pivot = new Vector2(0f, 0f);
 
             var rectTransformTwo = textMeshTwo.rectTransform;
             rectTransformTwo.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformTwo.anchorMin = new Vector2(0.05f, 0.8f); // Bottom Middle 
-            rectTransformTwo.anchorMax = new Vector2(0.05f, 0.8f); // Bottom Middle 
+            rectTransformTwo.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightTwo);
+            rectTransformTwo.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightTwo);
             rectTransformTwo.anchoredPosition = new Vector2(0, 0);
             rectTransformTwo.pivot = new Vector2(0f, 0f);
 
             var rectTransformThree = textMeshThree.rectTransform;
             rectTransformThree.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformThree.anchorMin = new Vector2(0.05f, 0.7f); // Bottom Right 
-            rectTransformThree.anchorMax = new Vector2(0.05f, 0.7f); // Bottom Right
+            rectTransformThree.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightThree);
+            rectTransformThree.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightThree);
             rectTransformThree.anchoredPosition = new Vector2(0, 0);
             rectTransformThree.pivot = new Vector2(0f, 0f);
 
             var rectTransformFour = textMeshFour.rectTransform;
             rectTransformFour.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformFour.anchorMin = new Vector2(0.05f, 0.6f); // Bottom Right 
-            rectTransformFour.anchorMax = new Vector2(0.05f, 0.6f); // Bottom Right
+            rectTransformFour.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightFour);
+            rectTransformFour.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightFour);
             rectTransformFour.anchoredPosition = new Vector2(0, 0);
             rectTransformFour.pivot = new Vector2(0f, 0f);
 
             var rectTransformFive = textMeshFive.rectTransform;
             rectTransformFive.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformFive.anchorMin = new Vector2(0.05f, 0.5f); // Bottom Right 
-            rectTransformFive.anchorMax = new Vector2(0.05f, 0.5f); // Bottom Right
+            rectTransformFive.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightFive);
+            rectTransformFive.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightFive);
             rectTransformFive.anchoredPosition = new Vector2(0, 0);
             rectTransformFive.pivot = new Vector2(0f, 0f);
 
             var rectTransformSix = textMeshSix.rectTransform;
             rectTransformSix.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformSix.anchorMin = new Vector2(0.05f, 0.4f); // Bottom Right 
-            rectTransformSix.anchorMax = new Vector2(0.05f, 0.4f); // Bottom Right
+            rectTransformSix.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightSix);
+            rectTransformSix.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightSix);
             rectTransformSix.anchoredPosition = new Vector2(0, 0);
             rectTransformSix.pivot = new Vector2(0f, 0f);
 
             var rectTransformSeven = textMeshSeven.rectTransform;
             rectTransformSeven.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformSeven.anchorMin = new Vector2(0.05f, 0.3f); // Bottom Right 
-            rectTransformSeven.anchorMax = new Vector2(0.05f, 0.3f); // Bottom Right
+            rectTransformSeven.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightSeven);
+            rectTransformSeven.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightSeven);
             rectTransformSeven.anchoredPosition = new Vector2(0, 0);
             rectTransformSeven.pivot = new Vector2(0f, 0f);
 
             var rectTransformEight = textMeshEight.rectTransform;
             rectTransformEight.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformEight.anchorMin = new Vector2(0.05f, 0.2f); // Bottom Right 
-            rectTransformEight.anchorMax = new Vector2(0.05f, 0.2f); // Bottom Right
+            rectTransformEight.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightEight);
+            rectTransformEight.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightEight);
             rectTransformEight.anchoredPosition = new Vector2(0, 0);
             rectTransformEight.pivot = new Vector2(0f, 0f);
 
             var rectTransformNine = textMeshNine.rectTransform;
             rectTransformNine.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformNine.anchorMin = new Vector2(0.05f, 0.1f); // Bottom Right 
-            rectTransformNine.anchorMax = new Vector2(0.05f, 0.1f); // Bottom Right
+            rectTransformNine.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightNine);
+            rectTransformNine.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightNine);
             rectTransformNine.anchoredPosition = new Vector2(0, 0);
             rectTransformNine.pivot = new Vector2(0f, 0f);
 
             var rectTransformTen = textMeshTen.rectTransform;
             rectTransformTen.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformTen.anchorMin = new Vector2(0.05f, 0f); // Bottom Right 
-            rectTransformTen.anchorMax = new Vector2(0.05f, 0f); // Bottom Right
+            rectTransformTen.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightTen);
+            rectTransformTen.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightTen);
             rectTransformTen.anchoredPosition = new Vector2(0, 0);
             rectTransformTen.pivot = new Vector2(0f, 0f);
         }

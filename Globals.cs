@@ -18,10 +18,25 @@ public static class Globals
     public static int MaxDisplayableDebuffs = 10;
 
     // Panel / TextMesh Constants
-    public static int PanelHeight = 470;
-    public static int PanelWidth = 480;
-    public static int MeshWidth = 450;
-    public static int MeshHeight = 40;
+    public static float LeftMargin = 0.05f;
+    public static int PanelHeight = 300;
+    public static int PanelWidth = 400;
+    public static int MeshWidth = (PanelWidth-50);
+    public static int MeshHeight = 20;
     public static int FontSize = 14;
+
+    // Progress Bar Display Co-ordinates
+    public static float TopMargin = 0.15f;
+    public static float InterBarOffset = 0.09f;
+    public static float HeightOne   = 1f - TopMargin;
+    public static float HeightTwo   = HeightOne - InterBarOffset;
+    public static float HeightThree = HeightTwo - InterBarOffset;
+    public static float HeightFour  = HeightThree - InterBarOffset;
+    public static float HeightFive  = HeightFour - InterBarOffset;
+    public static float HeightSix   = HeightFive - InterBarOffset;
+    public static float HeightSeven = HeightSix - InterBarOffset; 
+    public static float HeightEight = HeightSeven - InterBarOffset; 
+    public static float HeightNine  = HeightEight - InterBarOffset;
+    public static float HeightTen   = HeightNine - InterBarOffset;
 }
 

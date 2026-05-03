@@ -18,10 +18,10 @@ public static class Globals
     public static int MaxDisplayableDebuffs = 10;
 
     // Panel / TextMesh Constants
-    public static int PanelHeight = 500;
-    public static int PanelWidth = 500;
+    public static int PanelHeight = 470;
+    public static int PanelWidth = 480;
     public static int MeshWidth = 450;
     public static int MeshHeight = 40;
-    public static int FontSize = 12;
+    public static int FontSize = 14;
 }
 

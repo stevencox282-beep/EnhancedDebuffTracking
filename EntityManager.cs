@@ -41,6 +41,7 @@ public static class EntityManager
             List<DebuffData> list = gDebuffDictionary.ElementAt(i).Value;
             foreach(DebuffData debuff in list)
             {
+                // Update the time remaining and the size of the progress bar
                 debuff.debuffDurationRemaining = debuff.debuffDurationRemaining - 1;
             }
         }

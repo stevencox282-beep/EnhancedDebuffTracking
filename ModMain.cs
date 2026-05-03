@@ -1,4 +1,5 @@
 ﻿using Il2Cpp;
+using Il2CppLogicalGraphNodes;
 using Il2CppPantheonPersist;
 using Il2CppTMPro;
 using MelonLoader;
@@ -20,6 +21,7 @@ namespace EnhancedDebuffTracking
 
         public string debuffName; // Base name of the debuff
         public string debuffIconName; // Debuff Icon
+        public string debuffType; // Debuff type, used to select what colour bar to display
 
         public float debuffDuration; // Debuff duration
         public float debuffDurationRemaining; // Used in the panel to keep track of remaining duration
@@ -60,7 +62,7 @@ namespace EnhancedDebuffTracking
                     // If gCurrentTargetNetworkId is there is no point updating the display
                     if (gCurrentTargetNetworkId != null)
                     {
-                        // Update the text values in the panel
+                        // If we have a valid debuff list for the current target, update the screen
                         List<DebuffData> debuffList = EntityManager.GetEnemyDebuffList(gCurrentTargetNetworkId);
                         if (debuffList != null)
                         {
@@ -146,6 +148,7 @@ namespace EnhancedDebuffTracking
                 newDebuff.targetName = buff.Target.Nameplate.nameText.text;
                 newDebuff.targetNetworkId = buff.Target.NetworkId.ToString();
                 newDebuff.debuffName = buff.BuffData.DisplayName.ToString();
+                newDebuff.debuffType = buff.BuffData.CategoryType.ToString(); // Not especially useful but its something at least
                 newDebuff.debuffDuration = buff.BuffData.Duration;
                 newDebuff.debuffDurationRemaining = buff.BuffData.Duration;
                 newDebuff.debuffIconName = buff.BuffData.Icon.IconName.ToString();
@@ -153,6 +156,7 @@ namespace EnhancedDebuffTracking
                 newDebuff.maxStacks = buff.BuffData.MaxStacks;
                 newDebuff.numTicks = buff.BuffData.Ticks;
                 newDebuff.tickIntervalS = buff.BuffData.TickInterval;
+
 
                 // STACKS are process by the game by deleting the original debuff, then creating a new one but with isRefresh set to true
                 if (isRefresh == true && newDebuff.numStacks < newDebuff.maxStacks)

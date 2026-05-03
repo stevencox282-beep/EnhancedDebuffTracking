@@ -37,15 +37,20 @@ namespace EnhancedDebuffTracking
         // List the string values for all MaxDisplayableDebuffs debuffs
         private static List<string> cleanTextList = new List<string>()
         {
-            { "Unset 1" }, { "Unset 2" }, { "Unset 3" }, { "Unset 4" }, { "Unset 5" },
-            { "Unset 6" }, { "Unset 7" }, { "Unset 8" }, { "Unset 9" }, { "Unset 10" },
+            { "" }, { "" }, { "" }, { "" }, { "" },
+            { "" }, { "" }, { "" }, { "" }, { "" },
         };
 
         private static List<Color> barColours = new List<Color>()
         {
-            { Color.blue}, { Color.green}, { Color.purple }, { Color.white }, { Color.red },
-            { Color.blue}, { Color.green}, { Color.purple }, { Color.white }, { Color.red },
+            { Color.blue}, { Color.green}, { Color.purple }, { Color.brown }, { Color.red },
+            { Color.blue}, { Color.green}, { Color.purple }, { Color.brown }, { Color.red },
         };
+
+        // Setup lists to aid in the accessing of transform data later on
+        List<Transform> textMeshObjects = new List<Transform>();
+        List<Transform> imageObjects = new List<Transform>();
+        
 
         // Holds the panel
         private static UIWindowPanel gUiWindowPanel  = null;
@@ -130,7 +135,7 @@ namespace EnhancedDebuffTracking
         }
 
         // Builder function to create a default TextMesh
-        private TextMeshProUGUI BuildTextMesh(GameObject gameObject)
+        private TextMeshProUGUI BuildTextMeshComponent(GameObject gameObject)
         {
             // Add and configure the TextMeshPros for rendering the time data
             TextMeshProUGUI textMesh = gameObject.AddComponent<TextMeshProUGUI>();
@@ -142,8 +147,39 @@ namespace EnhancedDebuffTracking
             return textMesh;
         }
 
+
+        private void BuildTextMesh(string name, float panelHeightOffset)
+        {
+            GameObject gameObject = new GameObject(name);
+            // Set its parent to the new window panel (which is parented to Mid)
+            gameObject.transform.SetParent(gUiWindowPanel.transform, false);
+
+            TextMeshProUGUI textMesh = BuildTextMeshComponent(gameObject);
+            var rectTransformOne = textMesh.rectTransform;
+            rectTransformOne.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
+            rectTransformOne.anchorMin = new Vector2(Globals.LeftMargin, panelHeightOffset);
+            rectTransformOne.anchorMax = new Vector2(Globals.LeftMargin, panelHeightOffset);
+            rectTransformOne.anchoredPosition = new Vector2(0f, 0f);
+            rectTransformOne.pivot = new Vector2(0f, 0f);
+        }
+
+        private void BuildImage(string name, float panelHeightOffset)
+        {
+            GameObject gameObject = new GameObject(name);
+            // Set its parent to the new window panel (which is parented to Mid)
+            gameObject.transform.SetParent(gUiWindowPanel.transform, false);
+            Image image = BuildImageComponent(gameObject);
+
+            var transform = image.rectTransform;
+            transform.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
+            transform.anchorMin = new Vector2(Globals.LeftMargin, panelHeightOffset);
+            transform.anchorMax = new Vector2(Globals.LeftMargin, panelHeightOffset);
+            transform.anchoredPosition = new Vector2(0f, 0f);
+            transform.pivot = new Vector2(0f, 0f);
+        }
+
         // Builder function to create a default image
-        private UnityEngine.UI.Image BuildImage(GameObject gameObject)
+        private UnityEngine.UI.Image BuildImageComponent(GameObject gameObject)
         {
             Texture2D tex = new Texture2D(1, 1);
             tex.SetPixel(0, 0, Color.pink);
@@ -162,222 +198,55 @@ namespace EnhancedDebuffTracking
 
         private void BuildImages() 
         {
-            // Create new GameObjects for the debuff display
-            GameObject gameObjectOne = new GameObject(imageNameOne);
-            GameObject gameObjectTwo = new GameObject(imageNameTwo);
-            GameObject gameObjectThree = new GameObject(imageNameThree);
-            GameObject gameObjectFour = new GameObject(imageNameFour);
-            GameObject gameObjectFive = new GameObject(imageNameFive);
-            GameObject gameObjectSix = new GameObject(imageNameSix);
-            GameObject gameObjectSeven = new GameObject(imageNameSeven);
-            GameObject gameObjectEight = new GameObject(imageNameEight);
-            GameObject gameObjectNine = new GameObject(imageNameNine);
-            GameObject gameObjectTen = new GameObject(imageNameTen);
+            BuildImage(imageNameOne,   Globals.HeightOneOffset);
+            BuildImage(imageNameTwo,   Globals.HeightTwoOffset);
+            BuildImage(imageNameThree, Globals.HeightThreeOffset);
+            BuildImage(imageNameFour,  Globals.HeightFourOffset);
+            BuildImage(imageNameFive,  Globals.HeightFiveOffset);
+            BuildImage(imageNameSix,   Globals.HeightSixOffset);
+            BuildImage(imageNameSeven, Globals.HeightSevenOffset);
+            BuildImage(imageNameEight, Globals.HeightEightOffset);
+            BuildImage(imageNameNine,  Globals.HeightNineOffset);
+            BuildImage(imageNameTen,   Globals.HeightTenOffset);
 
-            // Set its parent to the new window panel (which is parented to Mid)
-            gameObjectOne.transform.SetParent(gUiWindowPanel.transform, false);
-            gameObjectTwo.transform.SetParent(gUiWindowPanel.transform, false);
-            gameObjectThree.transform.SetParent(gUiWindowPanel.transform, false);
-            gameObjectFour.transform.SetParent(gUiWindowPanel.transform, false);
-            gameObjectFive.transform.SetParent(gUiWindowPanel.transform, false);
-            gameObjectSix.transform.SetParent(gUiWindowPanel.transform, false);
-            gameObjectSeven.transform.SetParent(gUiWindowPanel.transform, false);
-            gameObjectEight.transform.SetParent(gUiWindowPanel.transform, false);
-            gameObjectNine.transform.SetParent(gUiWindowPanel.transform, false);
-            gameObjectTen.transform.SetParent(gUiWindowPanel.transform, false);
-
-            // Build all the required TextMeshs
-            UnityEngine.UI.Image imageOne = BuildImage(gameObjectOne);
-            UnityEngine.UI.Image imageTwo = BuildImage(gameObjectTwo);
-            UnityEngine.UI.Image imageThree = BuildImage(gameObjectThree);
-            UnityEngine.UI.Image imageFour = BuildImage(gameObjectFour);
-            UnityEngine.UI.Image imageFive = BuildImage(gameObjectFive);
-            UnityEngine.UI.Image imageSix = BuildImage(gameObjectSix);
-            UnityEngine.UI.Image imageSeven = BuildImage(gameObjectSeven);
-            UnityEngine.UI.Image imageEight = BuildImage(gameObjectEight);
-            UnityEngine.UI.Image imageNine = BuildImage(gameObjectNine);
-            UnityEngine.UI.Image imageTen = BuildImage(gameObjectTen);
-
-            var rectTransformOne = imageOne.rectTransform;
-            rectTransformOne.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformOne.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightOne);
-            rectTransformOne.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightOne);
-            rectTransformOne.anchoredPosition = new Vector2(0f, 0f);
-            rectTransformOne.pivot = new Vector2(0f, 0f);
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameOne));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwo));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameThree));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameFour));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameFive));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameSix));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameSeven));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameEight));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameNine));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTen));
             
-            var rectTransformTwo = imageTwo.rectTransform;
-            rectTransformTwo.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformTwo.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightTwo);
-            rectTransformTwo.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightTwo);
-            rectTransformTwo.anchoredPosition = new Vector2(0, 0);
-            rectTransformTwo.pivot = new Vector2(0f, 0f);
-
-            var rectTransformThree = imageThree.rectTransform;
-            rectTransformThree.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformThree.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightThree);
-            rectTransformThree.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightThree);
-            rectTransformThree.anchoredPosition = new Vector2(0, 0);
-            rectTransformThree.pivot = new Vector2(0f, 0f);
-
-            var rectTransformFour = imageFour.rectTransform;
-            rectTransformFour.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformFour.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightFour);
-            rectTransformFour.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightFour);
-            rectTransformFour.anchoredPosition = new Vector2(0, 0);
-            rectTransformFour.pivot = new Vector2(0f, 0f);
-
-            var rectTransformFive = imageFive.rectTransform;
-            rectTransformFive.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformFive.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightFive);
-            rectTransformFive.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightFive);
-            rectTransformFive.anchoredPosition = new Vector2(0, 0);
-            rectTransformFive.pivot = new Vector2(0f, 0f);
-
-            var rectTransformSix = imageSix.rectTransform;
-            rectTransformSix.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformSix.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightSix);
-            rectTransformSix.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightSix);
-            rectTransformSix.anchoredPosition = new Vector2(0, 0);
-            rectTransformSix.pivot = new Vector2(0f, 0f);
-
-            var rectTransformSeven = imageSeven.rectTransform;
-            rectTransformSeven.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformSeven.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightSeven);
-            rectTransformSeven.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightSeven);
-            rectTransformSeven.anchoredPosition = new Vector2(0, 0);
-            rectTransformSeven.pivot = new Vector2(0f, 0f);
-
-            var rectTransformEight = imageEight.rectTransform;
-            rectTransformEight.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformEight.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightEight);
-            rectTransformEight.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightEight);
-            rectTransformEight.anchoredPosition = new Vector2(0, 0);
-            rectTransformEight.pivot = new Vector2(0f, 0f);
-
-            var rectTransformNine = imageNine.rectTransform;
-            rectTransformNine.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformNine.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightNine);
-            rectTransformNine.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightNine);
-            rectTransformNine.anchoredPosition = new Vector2(0, 0);
-            rectTransformNine.pivot = new Vector2(0f, 0f);
-
-            var rectTransformTen = imageTen.rectTransform;
-            rectTransformTen.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformTen.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightTen);
-            rectTransformTen.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightTen);
-            rectTransformTen.anchoredPosition = new Vector2(0, 0);
-            rectTransformTen.pivot = new Vector2(0f, 0f);
         }
 
         // Setup the text meshs inside the panel that will display the data we want
         private void BuildTextMeshs()
         {
-            // Create new GameObjects for the debuff display
-            GameObject gameObjectOne = new GameObject(nameOne);
-            GameObject gameObjectTwo = new GameObject(nameTwo);
-            GameObject gameObjectThree = new GameObject(nameThree);
-            GameObject gameObjectFour = new GameObject(nameFour);
-            GameObject gameObjectFive = new GameObject(nameFive);
-            GameObject gameObjectSix = new GameObject(nameSix);
-            GameObject gameObjectSeven = new GameObject(nameSeven);
-            GameObject gameObjectEight = new GameObject(nameEight);
-            GameObject gameObjectNine = new GameObject(nameNine);
-            GameObject gameObjectTen = new GameObject(nameTen);
+            BuildTextMesh(nameOne,   Globals.HeightOneOffset);
+            BuildTextMesh(nameTwo,   Globals.HeightTwoOffset);
+            BuildTextMesh(nameThree, Globals.HeightThreeOffset);
+            BuildTextMesh(nameFour,  Globals.HeightFourOffset);
+            BuildTextMesh(nameFive,  Globals.HeightFiveOffset);
+            BuildTextMesh(nameSix,   Globals.HeightSixOffset);
+            BuildTextMesh(nameSeven, Globals.HeightSevenOffset);
+            BuildTextMesh(nameEight, Globals.HeightEightOffset);
+            BuildTextMesh(nameNine,  Globals.HeightNineOffset);
+            BuildTextMesh(nameTen,   Globals.HeightTenOffset);
 
-            // Set its parent to the new window panel (which is parented to Mid)
-            gameObjectOne.transform.SetParent(gUiWindowPanel.transform, false);
-            gameObjectTwo.transform.SetParent(gUiWindowPanel.transform, false);
-            gameObjectThree.transform.SetParent(gUiWindowPanel.transform, false);
-            gameObjectFour.transform.SetParent(gUiWindowPanel.transform, false);
-            gameObjectFive.transform.SetParent(gUiWindowPanel.transform, false);
-            gameObjectSix.transform.SetParent(gUiWindowPanel.transform, false);
-            gameObjectSeven.transform.SetParent(gUiWindowPanel.transform, false);
-            gameObjectEight.transform.SetParent(gUiWindowPanel.transform, false);
-            gameObjectNine.transform.SetParent(gUiWindowPanel.transform, false);
-            gameObjectTen.transform.SetParent(gUiWindowPanel.transform, false);
-
-            // Build all the required TextMeshs
-            TextMeshProUGUI textMeshOne = BuildTextMesh(gameObjectOne);
-            TextMeshProUGUI textMeshTwo = BuildTextMesh(gameObjectTwo);
-            TextMeshProUGUI textMeshThree = BuildTextMesh(gameObjectThree);
-            TextMeshProUGUI textMeshFour = BuildTextMesh(gameObjectFour);
-            TextMeshProUGUI textMeshFive = BuildTextMesh(gameObjectFive);
-            TextMeshProUGUI textMeshSix = BuildTextMesh(gameObjectSix);
-            TextMeshProUGUI textMeshSeven = BuildTextMesh(gameObjectSeven);
-            TextMeshProUGUI textMeshEight = BuildTextMesh(gameObjectEight);
-            TextMeshProUGUI textMeshNine = BuildTextMesh(gameObjectNine);
-            TextMeshProUGUI textMeshTen = BuildTextMesh(gameObjectTen);
-
-            // Set up the RectTransform to position the texts correctly
-            var rectTransformOne = textMeshOne.rectTransform;
-            rectTransformOne.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformOne.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightOne); 
-            rectTransformOne.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightOne); 
-            rectTransformOne.anchoredPosition = new Vector2(0f, 0f);
-            rectTransformOne.pivot = new Vector2(0f, 0f);
-
-            var rectTransformTwo = textMeshTwo.rectTransform;
-            rectTransformTwo.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformTwo.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightTwo);
-            rectTransformTwo.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightTwo);
-            rectTransformTwo.anchoredPosition = new Vector2(0, 0);
-            rectTransformTwo.pivot = new Vector2(0f, 0f);
-
-            var rectTransformThree = textMeshThree.rectTransform;
-            rectTransformThree.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformThree.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightThree);
-            rectTransformThree.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightThree);
-            rectTransformThree.anchoredPosition = new Vector2(0, 0);
-            rectTransformThree.pivot = new Vector2(0f, 0f);
-
-            var rectTransformFour = textMeshFour.rectTransform;
-            rectTransformFour.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformFour.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightFour);
-            rectTransformFour.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightFour);
-            rectTransformFour.anchoredPosition = new Vector2(0, 0);
-            rectTransformFour.pivot = new Vector2(0f, 0f);
-
-            var rectTransformFive = textMeshFive.rectTransform;
-            rectTransformFive.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformFive.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightFive);
-            rectTransformFive.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightFive);
-            rectTransformFive.anchoredPosition = new Vector2(0, 0);
-            rectTransformFive.pivot = new Vector2(0f, 0f);
-
-            var rectTransformSix = textMeshSix.rectTransform;
-            rectTransformSix.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformSix.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightSix);
-            rectTransformSix.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightSix);
-            rectTransformSix.anchoredPosition = new Vector2(0, 0);
-            rectTransformSix.pivot = new Vector2(0f, 0f);
-
-            var rectTransformSeven = textMeshSeven.rectTransform;
-            rectTransformSeven.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformSeven.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightSeven);
-            rectTransformSeven.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightSeven);
-            rectTransformSeven.anchoredPosition = new Vector2(0, 0);
-            rectTransformSeven.pivot = new Vector2(0f, 0f);
-
-            var rectTransformEight = textMeshEight.rectTransform;
-            rectTransformEight.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformEight.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightEight);
-            rectTransformEight.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightEight);
-            rectTransformEight.anchoredPosition = new Vector2(0, 0);
-            rectTransformEight.pivot = new Vector2(0f, 0f);
-
-            var rectTransformNine = textMeshNine.rectTransform;
-            rectTransformNine.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformNine.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightNine);
-            rectTransformNine.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightNine);
-            rectTransformNine.anchoredPosition = new Vector2(0, 0);
-            rectTransformNine.pivot = new Vector2(0f, 0f);
-
-            var rectTransformTen = textMeshTen.rectTransform;
-            rectTransformTen.sizeDelta = new Vector2(Globals.MeshWidth, Globals.MeshHeight);
-            rectTransformTen.anchorMin = new Vector2(Globals.LeftMargin, Globals.HeightTen);
-            rectTransformTen.anchorMax = new Vector2(Globals.LeftMargin, Globals.HeightTen);
-            rectTransformTen.anchoredPosition = new Vector2(0, 0);
-            rectTransformTen.pivot = new Vector2(0f, 0f);
+            // Create list that holds all the Tranforms for every TextMesh
+            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameOne));
+            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameTwo));
+            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameThree));
+            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameFour));
+            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameFive));
+            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameSix));
+            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameSeven));
+            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameEight));
+            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameNine));
+            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameTen));
         }
 
 
@@ -387,29 +256,11 @@ namespace EnhancedDebuffTracking
             // Try and stop unwanted access to the panel to prevent exceptions
             if (gUiWindowPanel.isActiveAndEnabled && gUiWindowPanel.IsVisible)
             {
-                // Create list that holds all the Tranforms for every TextMesh
-                List<Transform> transformList = new List<Transform>() {
-                    {gUiWindowPanel.transform.Find(nameOne)},   {gUiWindowPanel.transform.Find(nameTwo)},
-                    {gUiWindowPanel.transform.Find(nameThree)}, {gUiWindowPanel.transform.Find(nameFour)},
-                    {gUiWindowPanel.transform.Find(nameFive)},  {gUiWindowPanel.transform.Find(nameSix)},
-                    {gUiWindowPanel.transform.Find(nameSeven)}, {gUiWindowPanel.transform.Find(nameEight)},
-                    {gUiWindowPanel.transform.Find(nameNine)},  {gUiWindowPanel.transform.Find(nameTen)}
-                };
-
-                // List of all the images (progress bars)
-                List<Transform> imageObjects = new List<Transform>() {
-                    {gUiWindowPanel.transform.Find(imageNameOne)},   {gUiWindowPanel.transform.Find(imageNameTwo)},
-                    {gUiWindowPanel.transform.Find(imageNameThree)}, {gUiWindowPanel.transform.Find(imageNameFour)},
-                    {gUiWindowPanel.transform.Find(imageNameFive)},  {gUiWindowPanel.transform.Find(imageNameSix)},
-                    {gUiWindowPanel.transform.Find(imageNameSeven)}, {gUiWindowPanel.transform.Find(imageNameEight)},
-                    {gUiWindowPanel.transform.Find(imageNameNine)},  {gUiWindowPanel.transform.Find(imageNameTen)}
-                };
-
                 // Parse the list of all debuffs on the current target and display the first MaxDisplayableDebuffs
                 for (int i = 0; (i < cleanTextList.Count && i < Globals.MaxDisplayableDebuffs); i++)
                 {
                     // reset to an clean list
-                    transformList[i].GetComponent<TextMeshProUGUI>().text = cleanTextList[i];
+                    textMeshObjects[i].GetComponent<TextMeshProUGUI>().text = cleanTextList[i];
                     // Now update the progress bar colour and time
                     UnityEngine.UI.Image image = imageObjects[i].transform.GetComponent<UnityEngine.UI.Image>();
                     // Set colour to black on reset
@@ -425,31 +276,13 @@ namespace EnhancedDebuffTracking
             // Try and stop unwanted access to the panel to prevent exceptions
             if (gUiWindowPanel.isActiveAndEnabled && gUiWindowPanel.IsVisible)
             {
-                // Create list that holds all the Tranforms for every TextMesh
-                List<Transform> transformList = new List<Transform>() {
-                    {gUiWindowPanel.transform.Find(nameOne)},   {gUiWindowPanel.transform.Find(nameTwo)},
-                    {gUiWindowPanel.transform.Find(nameThree)}, {gUiWindowPanel.transform.Find(nameFour)},
-                    {gUiWindowPanel.transform.Find(nameFive)},  {gUiWindowPanel.transform.Find(nameSix)},
-                    {gUiWindowPanel.transform.Find(nameSeven)}, {gUiWindowPanel.transform.Find(nameEight)},
-                    {gUiWindowPanel.transform.Find(nameNine)},  {gUiWindowPanel.transform.Find(nameTen)}
-                };
-
-                // List of all the images (progress bars)
-                List<Transform> imageObjects = new List<Transform>() {
-                    {gUiWindowPanel.transform.Find(imageNameOne)},   {gUiWindowPanel.transform.Find(imageNameTwo)},
-                    {gUiWindowPanel.transform.Find(imageNameThree)}, {gUiWindowPanel.transform.Find(imageNameFour)},
-                    {gUiWindowPanel.transform.Find(imageNameFive)},  {gUiWindowPanel.transform.Find(imageNameSix)},
-                    {gUiWindowPanel.transform.Find(imageNameSeven)}, {gUiWindowPanel.transform.Find(imageNameEight)},
-                    {gUiWindowPanel.transform.Find(imageNameNine)},  {gUiWindowPanel.transform.Find(imageNameTen)}
-                };
-
                 // Parse the list of all debuffs on the current target and display the first MaxDisplayableDebuffs
                 for (int i = 0; (i < debuffList.Count && i < Globals.MaxDisplayableDebuffs) ; i++)
                 {
                     DebuffData debuff = debuffList[i];
 
-                    // Update the displayed string "DebuffName 22s"
-                    transformList[i].GetComponent<TextMeshProUGUI>().text = $"{debuff.debuffName}, {debuff.debuffDurationRemaining}s, {debuff.numStacks}/{debuff.maxStacks} Stacks ({debuff.casterName})"; ;
+                    // Update the displayed string "DebuffName 22s", leave the leading space in
+                    textMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $" {debuff.debuffName}, {debuff.debuffDurationRemaining}s, {debuff.numStacks}/{debuff.maxStacks} Stacks ({debuff.casterName})"; ;
 
                     // Now update the progress bar colour and time
                     Image image = imageObjects[i].transform.GetComponent<UnityEngine.UI.Image>();

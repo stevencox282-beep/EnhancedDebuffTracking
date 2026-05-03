@@ -26,17 +26,17 @@ public static class Globals
     public static int FontSize = 14;
 
     // Progress Bar Display Co-ordinates
-    public static float TopMargin = 0.15f;
-    public static float InterBarOffset = 0.09f;
-    public static float HeightOne   = 1f - TopMargin;
-    public static float HeightTwo   = HeightOne - InterBarOffset;
-    public static float HeightThree = HeightTwo - InterBarOffset;
-    public static float HeightFour  = HeightThree - InterBarOffset;
-    public static float HeightFive  = HeightFour - InterBarOffset;
-    public static float HeightSix   = HeightFive - InterBarOffset;
-    public static float HeightSeven = HeightSix - InterBarOffset; 
-    public static float HeightEight = HeightSeven - InterBarOffset; 
-    public static float HeightNine  = HeightEight - InterBarOffset;
-    public static float HeightTen   = HeightNine - InterBarOffset;
+    public static float TopMargin         = 0.15f;
+    public static float InterBarOffset    = 0.09f;
+    public static float HeightOneOffset   = 1f - TopMargin;
+    public static float HeightTwoOffset   = HeightOneOffset - InterBarOffset;
+    public static float HeightThreeOffset = HeightTwoOffset - InterBarOffset;
+    public static float HeightFourOffset  = HeightThreeOffset - InterBarOffset;
+    public static float HeightFiveOffset  = HeightFourOffset - InterBarOffset;
+    public static float HeightSixOffset   = HeightFiveOffset - InterBarOffset;
+    public static float HeightSevenOffset = HeightSixOffset - InterBarOffset; 
+    public static float HeightEightOffset = HeightSevenOffset - InterBarOffset; 
+    public static float HeightNineOffset  = HeightEightOffset - InterBarOffset;
+    public static float HeightTenOffset   = HeightNineOffset - InterBarOffset;
 }
 

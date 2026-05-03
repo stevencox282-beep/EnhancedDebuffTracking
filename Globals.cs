@@ -18,11 +18,14 @@ public static class Globals
     public static int MaxDisplayableDebuffs = 10;
 
     // Panel / TextMesh Constants
-    public static float LeftMargin = 0.05f;
+    public static float RowLeftMargin = 0.05f;
     public static int PanelHeight = 300;
     public static int PanelWidth = 400;
-    public static int MeshWidth = (PanelWidth-50);
+    public static int MeshWidth = (PanelWidth - 75); // Give space for the time remaining textmesh
+    public static float TimeLeftMargin = 0.9f; // The Time must start after the mesh ends
+    public static int TimeMeshWidth = 500;
     public static int MeshHeight = 20;
+    public static int TimeMeshHeight = MeshHeight;
     public static int FontSize = 14;
 
     // Progress Bar Display Co-ordinates

@@ -29,6 +29,8 @@ namespace EnhancedDebuffTracking
         public float tickIntervalS; // Interval between Ticks
         public int numStacks; // Number of stacks
         public int maxStacks; // Max stacks
+        public string targetKind; // Humanoid, Undead etc.
+        public string targetClass; // Rogue, Wizard etc.
     }
 
 
@@ -153,6 +155,8 @@ namespace EnhancedDebuffTracking
                 newDebuff.casterNetworkId = buff.Caster.NetworkId.ToString();
                 newDebuff.targetName = buff.Target.Nameplate.nameText.text;
                 newDebuff.targetNetworkId = buff.Target.NetworkId.ToString();
+                newDebuff.targetClass = buff.Target.Info.Class.ToString();
+                newDebuff.targetKind = buff.Target.Info.Kind.ToString();
                 newDebuff.debuffName = buff.BuffData.DisplayName.ToString();
                 newDebuff.debuffType = buff.BuffData.CategoryType.ToString(); // Not especially useful but its something at least
                 newDebuff.debuffDuration = buff.BuffData.Duration;

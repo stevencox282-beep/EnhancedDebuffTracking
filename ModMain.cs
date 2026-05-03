@@ -1,7 +1,4 @@
 ﻿using Il2Cpp;
-using Il2CppLogicalGraphNodes;
-using Il2CppPantheonPersist;
-using Il2CppTMPro;
 using MelonLoader;
 using UnityEngine;
 
@@ -14,23 +11,24 @@ namespace EnhancedDebuffTracking
     // This class will be used to store all the information required to display the debuff data in the debuff panel
     public class DebuffData()
     {
-        public string casterName; // Nameplate name of the caster
-        public string casterNetworkId; // Unique ID of the caster
-        public string targetName; // Nameplate name of the target
-        public string targetNetworkId; // Unique ID of the target
-
         public string debuffName; // Base name of the debuff
         public string debuffIconName; // Debuff Icon
         public string debuffType; // Debuff type, used to select what colour bar to display
-
         public float debuffDuration; // Debuff duration
         public float debuffDurationRemaining; // Used in the panel to keep track of remaining duration
-        public int   numTicks; // Number of ticks
+
+        public string targetName; // Nameplate name of the target
+        public string targetNetworkId; // Unique ID of the target
+        public string targetKind; // Humanoid, Undead etc.
+        public string targetClass; // Rogue, Wizard etc.
+
+        public string casterName; // Nameplate name of the caster
+        public string casterNetworkId; // Unique ID of the caster
+
+        public int numTicks; // Number of ticks
         public float tickIntervalS; // Interval between Ticks
         public int numStacks; // Number of stacks
         public int maxStacks; // Max stacks
-        public string targetKind; // Humanoid, Undead etc.
-        public string targetClass; // Rogue, Wizard etc.
     }
 
 
@@ -87,6 +85,7 @@ namespace EnhancedDebuffTracking
         {
             gDebuffPanel.HideDebuffPanel();
         }
+
 
         // This function is called in the following conditions (at least)
         // 1) When you add a buff to an enemy you already have targetted

@@ -1,5 +1,4 @@
 using HarmonyLib;
-using MelonLoader;
 using Il2Cpp;
 
 namespace EnhancedDebuffTracking.Hooks;

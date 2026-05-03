@@ -15,7 +15,6 @@ public class TargetSetOffensiveHook
     }
 }
 
-// What I need, but it fires every time any kind of buff / debuff fires not just on an enemy
 [HarmonyPatch(typeof(UIBuffBar), nameof(UIBuffBar.OnAddOrRefreshBuff))]
 public class UIBuffBarOnAddOrRefreshBuff
 {
@@ -25,9 +24,6 @@ public class UIBuffBarOnAddOrRefreshBuff
     }
 }
 
-
-// What I need, but it fires every time any kind of buff / debuff fires not just on an enemy
-// Does this get fired when somebody else applies a debuff?
 [HarmonyPatch(typeof(UIBuffBar), nameof(UIBuffBar.OnRemoveBuff))]
 public class UIBuffBarOnRemoveBuff
 {

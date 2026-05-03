@@ -1,8 +1,6 @@
 ﻿using Il2Cpp;
 using Il2CppServiceStack;
-using Il2CppSystem.Runtime.Serialization;
 using Il2CppTMPro;
-using MelonLoader;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -146,7 +144,7 @@ namespace EnhancedDebuffTracking
             })));
         }
 
-        // Builder function to create a default TextMesh
+        // Builder function to create a TextMesh component
         private TextMeshProUGUI BuildTextMeshComponent(GameObject gameObject)
         {
             // Add and configure the TextMeshPros for rendering the time data
@@ -159,7 +157,7 @@ namespace EnhancedDebuffTracking
             return textMesh;
         }
 
-
+        // Builder function to create an TextMesh
         private void BuildTextMesh(string name, float height, float width, float heightOffset, float widthOffset)
         {
             GameObject gameObject = new GameObject(name);
@@ -175,6 +173,7 @@ namespace EnhancedDebuffTracking
             rectTransformOne.pivot = new Vector2(0f, 0f);
         }
 
+        // Builder function to create an Image
         private void BuildImage(string name, float height, float width, float heightOffset, float widthOffset)
         {
             GameObject gameObject = new GameObject(name);
@@ -190,8 +189,8 @@ namespace EnhancedDebuffTracking
             transform.pivot = new Vector2(0f, 0f);
         }
 
-        // Builder function to create a default image
-        private UnityEngine.UI.Image BuildImageComponent(GameObject gameObject)
+        // Builder function to create an image component
+        private Image BuildImageComponent(GameObject gameObject)
         {
             // Make a solid colour sprite for use in the bar
             Texture2D tex = new Texture2D(1, 1);
@@ -209,6 +208,7 @@ namespace EnhancedDebuffTracking
             return image;
         }
 
+        // Builds all images (progress bars) to be display in the panel 
         private void BuildImages() 
         {
             // Make all the progress bars
@@ -236,7 +236,7 @@ namespace EnhancedDebuffTracking
             imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTen));
         }
 
-        // Setup the text meshs inside the panel that will display the data we want
+        // Builds all TextMeshes (debuff/time) to be display in the panel
         private void BuildTextMeshs()
         {
             // Text Mesh for Target Name
@@ -326,7 +326,7 @@ namespace EnhancedDebuffTracking
                     DebuffData debuff = debuffList[i];
 
                     // Set the target name, not the most optimal as it is set multiple times but lets live with it
-                    targetNameTextMeshObject.GetComponent<TextMeshProUGUI>().text = $" <b>Target:</b> {debuff.targetName.ToUpperSafe()},\n {debuff.targetClass}, {debuff.targetKind} ";
+                    targetNameTextMeshObject.GetComponent<TextMeshProUGUI>().text = $" <b>Target:</b> {debuff.targetName.ToUpperSafe()}, {debuff.targetClass}, {debuff.targetKind} ";
                     // Update the displayed string "DebuffName 22s", leave the leading space in
                     textMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $" {debuff.debuffName}, {debuff.numStacks}/{debuff.maxStacks} Stacks";
                     timeTextMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $"{debuff.debuffDurationRemaining}s";
@@ -336,9 +336,7 @@ namespace EnhancedDebuffTracking
 
                     // Set colour based on the debuff type
                     image.color = barColours[i];
-                    // We store a number between 0.0f and 1.0f
-                    // ((1 / debuffDuration) * debuffDurationRemaining)
-                    // (( 1 / 150) * 100) 
+                    // Set the fill amount  1.0f is full, 0.0f is empty
                     image.fillAmount = ((1 / debuff.debuffDuration) * debuff.debuffDurationRemaining);
                 }
             }

@@ -59,7 +59,7 @@ namespace EnhancedDebuffTracking
                     // Call the entitiy manager and get it to update all the timers
                     EntityManager.UpdateAllDurationTimers();
 
-                    // If gCurrentTargetNetworkId is there is no point updating the display
+                    // If gCurrentTargetNetworkId is null there is no point updating the display
                     if (gCurrentTargetNetworkId != null)
                     {
                         // If we have a valid debuff list for the current target, update the screen
@@ -74,7 +74,13 @@ namespace EnhancedDebuffTracking
             }
         }
 
-        // Called on hiding of the offensive target frame
+        // Called to show the debuff panel
+        public static void ShowDebuffPanel()
+        {
+            gDebuffPanel.ShowDebuffPanel();
+        }
+
+        // Called to hideg the debuff panel
         public static void HideDebuffPanel()
         {
             gDebuffPanel.HideDebuffPanel();

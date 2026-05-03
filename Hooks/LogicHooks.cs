@@ -15,15 +15,6 @@ public class TargetSetOffensiveHook
     }
 }
 
-[HarmonyPatch(typeof(Targets.Logic), nameof(Targets.Logic.SetDefensive))]
-public class TargetSetDefensiveHook
-{
-    private static void Postfix(Targets.Logic __instance)
-    {
-        // Do Something
-    }
-}
-
 // What I need, but it fires every time any kind of buff / debuff fires not just on an enemy
 [HarmonyPatch(typeof(UIBuffBar), nameof(UIBuffBar.OnAddOrRefreshBuff))]
 public class UIBuffBarOnAddOrRefreshBuff

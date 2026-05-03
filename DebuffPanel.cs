@@ -10,7 +10,7 @@ namespace EnhancedDebuffTracking
     // Box on the screen with 3 labels inside it
     public class DebuffPanel : MonoBehaviour
     {
-        // Generic names to be used by any object, helps with calls to Find()
+        // Names to be used for textmesh game objects, helps with calls to Find()
         private static string nameOne = "EDT_NameOne_EDT";
         private static string nameTwo = "EDT_NameTwo_EDT";
         private static string nameThree = "EDT_NameThree_EDT";
@@ -22,7 +22,7 @@ namespace EnhancedDebuffTracking
         private static string nameNine = "EDT_NameNine_EDT";
         private static string nameTen = "EDT_NameTen_EDT";
 
-        // Names for images
+        // Names to be used for image game objects, helps with calls to Find()
         private static string imageNameOne = "EDT_ImageNameOne_EDT";
         private static string imageNameTwo = "EDT_ImageNameTwo_EDT";
         private static string imageNameThree = "EDT_ImageNameThree_EDT";
@@ -88,7 +88,7 @@ namespace EnhancedDebuffTracking
             // Add the MANDATORY elements to a panel, the compilor will not error if you don't do this but nothing will work
             BuildCloseButtonAndBackground(parentPanel, gameObject);
 
-            // Add in the uimages that will be the progress bars
+            // Add in the images that will be the progress bars
             BuildImages();
 
             // Add in Text Meshs that display the data
@@ -181,6 +181,7 @@ namespace EnhancedDebuffTracking
         // Builder function to create a default image
         private UnityEngine.UI.Image BuildImageComponent(GameObject gameObject)
         {
+            // Make a solid colour sprite for use in the bar
             Texture2D tex = new Texture2D(1, 1);
             tex.SetPixel(0, 0, Color.pink);
             tex.Apply();
@@ -198,6 +199,7 @@ namespace EnhancedDebuffTracking
 
         private void BuildImages() 
         {
+            // Make all the progress bars
             BuildImage(imageNameOne,   Globals.HeightOneOffset);
             BuildImage(imageNameTwo,   Globals.HeightTwoOffset);
             BuildImage(imageNameThree, Globals.HeightThreeOffset);
@@ -209,6 +211,7 @@ namespace EnhancedDebuffTracking
             BuildImage(imageNameNine,  Globals.HeightNineOffset);
             BuildImage(imageNameTen,   Globals.HeightTenOffset);
 
+            // Save these for use later 
             imageObjects.Add(gUiWindowPanel.transform.Find(imageNameOne));
             imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwo));
             imageObjects.Add(gUiWindowPanel.transform.Find(imageNameThree));
@@ -219,12 +222,12 @@ namespace EnhancedDebuffTracking
             imageObjects.Add(gUiWindowPanel.transform.Find(imageNameEight));
             imageObjects.Add(gUiWindowPanel.transform.Find(imageNameNine));
             imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTen));
-            
         }
 
         // Setup the text meshs inside the panel that will display the data we want
         private void BuildTextMeshs()
         {
+            // Make all the meshes
             BuildTextMesh(nameOne,   Globals.HeightOneOffset);
             BuildTextMesh(nameTwo,   Globals.HeightTwoOffset);
             BuildTextMesh(nameThree, Globals.HeightThreeOffset);
@@ -236,7 +239,7 @@ namespace EnhancedDebuffTracking
             BuildTextMesh(nameNine,  Globals.HeightNineOffset);
             BuildTextMesh(nameTen,   Globals.HeightTenOffset);
 
-            // Create list that holds all the Tranforms for every TextMesh
+            // Save these for use later 
             textMeshObjects.Add(gUiWindowPanel.transform.Find(nameOne));
             textMeshObjects.Add(gUiWindowPanel.transform.Find(nameTwo));
             textMeshObjects.Add(gUiWindowPanel.transform.Find(nameThree));

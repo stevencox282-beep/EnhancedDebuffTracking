@@ -15,19 +15,5 @@ public class UIPanelHooksStart
         {
             ModMain.AddDebuffPanelToUI(__instance);
         }
-
-        if (__instance.name == "Panel_DefensiveTarget")
-        {
-        }
-
-        // Player Debuffs
-        if (__instance.name == "Player")
-        {
-        }
-
-        // Party Debuffs
-        if (__instance.name == "GroupMembers")
-        {
-        }
     }
 }

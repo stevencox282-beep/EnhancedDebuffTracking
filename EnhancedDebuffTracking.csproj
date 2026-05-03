@@ -537,6 +537,7 @@
 		<Compile Include="Hooks\EntityNpcGameObjectHooks.cs" />
 		<Compile Include="Hooks\LogicHooks.cs" />
 		<Compile Include="Hooks\PlayerHooks.cs" />
+		<Compile Include="Hooks\SendChatMessageHook.cs" />
 		<Compile Include="Hooks\UIPanelHooks.cs" />
 		<Compile Include="ModMain.cs" />
 		<Content Include="Directory.Build.props" />

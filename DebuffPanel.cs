@@ -126,9 +126,9 @@ namespace EnhancedDebuffTracking
             Transform tutorialButton = tutorialPopup.transform.GetChild(0);
 
             // Initialise the background for the new panel (MANDATORY)
-            UnityEngine.UI.Image imageToCopy = tutorialPopup.GetComponent<UnityEngine.UI.Image>();
-            var image = gameObject.AddComponent<UnityEngine.UI.Image>();
-            image.type = UnityEngine.UI.Image.Type.Sliced;
+            Image imageToCopy = tutorialPopup.GetComponent<Image>();
+            var image = gameObject.AddComponent<Image>();
+            image.type = Image.Type.Sliced;
             image.sprite = imageToCopy.sprite;
 
             // Initialise the close button of the panel (MANDATORY)
@@ -139,8 +139,8 @@ namespace EnhancedDebuffTracking
             closeButtonRect.pivot = new Vector2(0f, 0f);
 
             // Initialise on click behaviour of the close button
-            var buttonComponent = closeButton.GetComponent<UnityEngine.UI.Button>();
-            buttonComponent.onClick = new UnityEngine.UI.Button.ButtonClickedEvent();
+            var buttonComponent = closeButton.GetComponent<Button>();
+            buttonComponent.onClick = new Button.ButtonClickedEvent();
             buttonComponent.onClick.RemoveAllListeners();
             buttonComponent.onClick.AddCall(new InvokableCall(new Action(() =>
             {

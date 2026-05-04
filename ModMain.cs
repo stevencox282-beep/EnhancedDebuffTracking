@@ -32,6 +32,7 @@ namespace EnhancedDebuffTracking
         public float tickIntervalS; // Interval between Ticks
         public int numStacks; // Number of stacks
         public int maxStacks; // Max stacks
+        public string entityStatus; // Burning / Poisoned etc
     }
 
 
@@ -88,6 +89,15 @@ namespace EnhancedDebuffTracking
             gDebuffPanel.HideDebuffPanel();
         }
 
+        // TODO - Update here when we want better tracking of Player Debuffs! This is how we detect them and send them on to the modified UI elements
+        // Determines if the rtarget for a buff is valid for us to track
+        private static bool IsValidTarget(ActiveBuff buff)
+        {
+            // We do not want buffs that go onto players even if those are from monsters to players
+            // Monster have an access level of None so that is an easy way to detect its a monster not a player
+            // Player Pets also have an access level of none but we dont want to track their debuffs, we need a way to filter them out
+            return (buff.Target.Info.AccessLevel.Equals(AccessLevel.None) && buff.BuffData.CategoryType == BuffCategoryType.Harmful) ? true : false;
+        }
 
         // This function is called in the following conditions (at least)
         // 1) When you add a buff to an enemy you already have targetted
@@ -97,9 +107,9 @@ namespace EnhancedDebuffTracking
         public static void OnAddOrRefreshBuff(double time, ActiveBuff buff, bool inBackground, bool isRefresh, bool isItemBuff)
         {
 //            MelonLogger.Warning($"OnAddOrRefreshBuff 1 isRefresh = {isRefresh}, inBackground = {inBackground}, isItemBuff = {isItemBuff}");
-            // TODO - Update here when we want better tracking of Player Debuffs! This is how we detect them and send them on to the modified UI elements
-            // We do not want buffs that go onto players even if those are from monsters to players
-            if (!buff.Target.Info.AccessLevel.Equals(AccessLevel.Player))
+
+            // Make sure we only track debuffs and only on monsters
+            if (IsValidTarget(buff) )
             {
                 // TODO Make this a blacklist
                 // Do not process Traits
@@ -168,6 +178,14 @@ namespace EnhancedDebuffTracking
                 newDebuff.maxStacks = buff.BuffData.MaxStacks;
                 newDebuff.numTicks = buff.BuffData.Ticks;
                 newDebuff.tickIntervalS = buff.BuffData.TickInterval;
+                
+                for (int j = 0; j < buff.BuffData.EntityStatus.Count; j++)
+                {
+                    newDebuff.entityStatus = buff.BuffData.EntityStatus[j].ToString();
+                    MelonLogger.Warning($"OnAddOrRefreshBuff() buff.BuffData.EntityStatus[j].ToString() = {buff.BuffData.EntityStatus[j].ToString()} ");
+                }
+
+                MelonLogger.Warning($"OnAddOrRefreshBuff() newDebuff.debuffName = buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()} ");
                 MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.AbilityType.AsString() = {buff.CreatedByAbility.AbilityType.AsString()} ");
                 MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.ActionType.ToString() = {buff.CreatedByAbility.ActionType.ToString()} ");
                 MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.SpellType.ToString() = {buff.CreatedByAbility.SpellType.ToString()} ");
@@ -178,8 +196,8 @@ namespace EnhancedDebuffTracking
                 MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.IsTechniqueAbility.toString() = {buff.CreatedByAbility.IsTechniqueAbility().ToString()} ");
                 MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.TargetType.ToString() = {buff.CreatedByAbility.TargetType.ToString()} ");
                 MelonLogger.Warning($"OnAddOrRefreshBuff() buff.Flags.ToString() = {buff.Flags.ToString()} ");
-        
-
+                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.BuffData.Description.ToString() = {buff.BuffData.Description.ToString()}");
+ 
                 // STACKS are process by the game by deleting the original debuff, then creating a new one but with isRefresh set to true, so we actually handle stacks here
                 if (isRefresh == true)
                 {
@@ -199,9 +217,8 @@ namespace EnhancedDebuffTracking
         // 2) When a debuff expires an enemy you do not have targetted
         public static void OnRemoveBuff(double time, ActiveBuff buff, bool moveToBackground, bool isRefresh)
         {
-//            MelonLogger.Warning($"OnRemoveBuff() isRefresh = {isRefresh}, moveToBackground = {moveToBackground}");
-            // Right now we do not want buffs that go onto players
-            if (!buff.Target.Info.AccessLevel.Equals(AccessLevel.Player))
+            // Make sure this is something we want to track
+            if (IsValidTarget(buff))
             {
                 // TODO Make this a blacklist
                 // Do not process Traits
@@ -210,7 +227,6 @@ namespace EnhancedDebuffTracking
                     return;
                 }
 
-                // TODO - Handle the consequtive target chance use case here so we dont add the same debuff multiple times
                 // Find the debuff lst for this specific enemy
                 gCurrentTargetNetworkId = buff.Target.NetworkId.ToString();
                 List<DebuffData> debuffList = EntityManager.GetEnemyDebuffList(gCurrentTargetNetworkId);
@@ -221,6 +237,7 @@ namespace EnhancedDebuffTracking
                  // If we can not find the list log a warning and exit
                 if (debuffList == null)
                 {
+                    // TODO - Get rid of this before releasing it, once released I am finished with this mod so no point filling adding to the log 
                     MelonLogger.Error($"OnRemoveBuff() unable to find debuff list for enemy {buff.Caster.NetworkId.ToString()}");
                     return;
                 }
@@ -270,8 +287,8 @@ namespace EnhancedDebuffTracking
         public static void AddDebuffPanelToUI(UIWindowPanel OffensiveTargetPanel)
         {
             // TODO - Is this good enough, or should we do a Find()?
-            UnityEngine.Transform iTransform = OffensiveTargetPanel.transform.GetChild(0);
-            UnityEngine.Transform jTransform = iTransform.transform.GetChild(4);
+            Transform iTransform = OffensiveTargetPanel.transform.GetChild(0);
+            Transform jTransform = iTransform.transform.GetChild(4);
             // Build the panel, attach it to the offensive target panel
             gDebuffPanel.DisplayPanel(debuffPanelName, UIPanelRoots.Instance.Mid.transform, new Vector2(Globals.PanelWidth, Globals.PanelHeight));
         }

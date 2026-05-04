@@ -1,6 +1,8 @@
 ﻿using Il2Cpp;
+using Il2CppLogicalGraphNodes;
 using MelonLoader;
 using UnityEngine;
+using UnityEngine.Rendering.HighDefinition;
 
 
 [assembly: MelonInfo(typeof(EnhancedDebuffTracking.ModMain), "EnhancedDebuffTracking", "1.0.0", "Anonymous", null)]
@@ -16,6 +18,7 @@ namespace EnhancedDebuffTracking
         public string debuffType; // Debuff type, used to select what colour bar to display
         public float debuffDuration; // Debuff duration
         public float debuffDurationRemaining; // Used in the panel to keep track of remaining duration
+        public string debuffDescription; // Could be used as a Tooltip
 
         public string targetName; // Nameplate name of the target
         public string targetNetworkId; // Unique ID of the target
@@ -39,8 +42,7 @@ namespace EnhancedDebuffTracking
         private static string gCurrentTargetNetworkId = null;
         private const float UpdateInterval = 1.0f; // Update interval in seconds
         private static float _timeSinceLastUpdate;
-        private static int gLastStacks = 0;
-
+        
         private static string debuffPanelName = "EDT_DebuffPanel_EDT";
 
         public override void OnInitializeMelon() { }
@@ -94,7 +96,7 @@ namespace EnhancedDebuffTracking
         // Make sure we dont re-add an existing buff to the buff list and you handle all the different conditions it can be called
         public static void OnAddOrRefreshBuff(double time, ActiveBuff buff, bool inBackground, bool isRefresh, bool isItemBuff)
         {
-            MelonLogger.Warning($"OnAddOrRefreshBuff 1 isRefresh = {isRefresh}, inBackground = {inBackground}, isItemBuff = {isItemBuff}");
+//            MelonLogger.Warning($"OnAddOrRefreshBuff 1 isRefresh = {isRefresh}, inBackground = {inBackground}, isItemBuff = {isItemBuff}");
             // TODO - Update here when we want better tracking of Player Debuffs! This is how we detect them and send them on to the modified UI elements
             // We do not want buffs that go onto players even if those are from monsters to players
             if (!buff.Target.Info.AccessLevel.Equals(AccessLevel.Player))
@@ -125,8 +127,8 @@ namespace EnhancedDebuffTracking
                     // If this is the correct buff from teh correct caster to the correct target
                     if ((debuff.casterNetworkId == buff.Caster.NetworkId.ToString()) && (debuff.targetNetworkId == buff.Target.NetworkId.ToString()) && (debuff.debuffName == buff.BuffData.DisplayName.ToString()))
                     {
-                        MelonLogger.Warning($"OnAddOrRefreshBuff() buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}");
-                        MelonLogger.Warning($"OnAddOrRefreshBuff() debuff.numStacks = {debuff.numStacks}, debuff.maxStacks = {debuff.maxStacks}");
+//                        MelonLogger.Warning($"OnAddOrRefreshBuff() buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}");
+//                        MelonLogger.Warning($"OnAddOrRefreshBuff() debuff.numStacks = {debuff.numStacks}, debuff.maxStacks = {debuff.maxStacks}");
 
                         // This function is also called on change of offensive target, so we can't assume this is actually a new buff or a refresh of a buff
                         // If we are not a refresh and have a the same buff already, do nothing
@@ -161,16 +163,26 @@ namespace EnhancedDebuffTracking
                 newDebuff.debuffDuration = buff.BuffData.Duration;
                 newDebuff.debuffDurationRemaining = buff.BuffData.Duration;
                 newDebuff.debuffIconName = buff.BuffData.Icon.IconName.ToString();
-                newDebuff.numStacks = 1;
+                newDebuff.debuffDescription = buff.BuffData.Description.ToString();
+                newDebuff.numStacks = buff.StackCount;
                 newDebuff.maxStacks = buff.BuffData.MaxStacks;
                 newDebuff.numTicks = buff.BuffData.Ticks;
                 newDebuff.tickIntervalS = buff.BuffData.TickInterval;
+                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.AbilityType.AsString() = {buff.CreatedByAbility.AbilityType.AsString()} ");
+                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.ActionType.ToString() = {buff.CreatedByAbility.ActionType.ToString()} ");
+                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.SpellType.ToString() = {buff.CreatedByAbility.SpellType.ToString()} ");
+                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.AbilitySchool.ToString() = {buff.CreatedByAbility.AbilitySchool.ToString()} ");
+                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.CastType.ToString() = {buff.CreatedByAbility.CastType.ToString()} ");
+                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.cachedRangeData.value.ToString() = {buff.CreatedByAbility.cachedRangeData.value.ToString()} ");
+                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.HasteAffectType.ToString() = {buff.CreatedByAbility.HasteAffectType.ToString()} ");
+                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.IsTechniqueAbility.toString() = {buff.CreatedByAbility.IsTechniqueAbility().ToString()} ");
+                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.TargetType.ToString() = {buff.CreatedByAbility.TargetType.ToString()} ");
+                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.Flags.ToString() = {buff.Flags.ToString()} ");
+        
 
-
-                // STACKS are process by the game by deleting the original debuff, then creating a new one but with isRefresh set to true
-                if (isRefresh == true && newDebuff.numStacks < newDebuff.maxStacks)
+                // STACKS are process by the game by deleting the original debuff, then creating a new one but with isRefresh set to true, so we actually handle stacks here
+                if (isRefresh == true)
                 {
-                    newDebuff.numStacks = gLastStacks+1; // HOW DO YOU KNOW THE LAST NUMBER OF STACKS?
                     newDebuff.debuffDurationRemaining = newDebuff.debuffDuration;
                 }
 
@@ -187,7 +199,7 @@ namespace EnhancedDebuffTracking
         // 2) When a debuff expires an enemy you do not have targetted
         public static void OnRemoveBuff(double time, ActiveBuff buff, bool moveToBackground, bool isRefresh)
         {
-            MelonLogger.Warning($"OnRemoveBuff() isRefresh = {isRefresh}, moveToBackground = {moveToBackground}");
+//            MelonLogger.Warning($"OnRemoveBuff() isRefresh = {isRefresh}, moveToBackground = {moveToBackground}");
             // Right now we do not want buffs that go onto players
             if (!buff.Target.Info.AccessLevel.Equals(AccessLevel.Player))
             {
@@ -220,9 +232,8 @@ namespace EnhancedDebuffTracking
                     // We must remove a specific debuff for a specific target cast by a specific person
                     if ((debuff.casterNetworkId == buff.Caster.NetworkId.ToString()) && (debuff.targetNetworkId == buff.Target.NetworkId.ToString()) && (debuff.debuffName == buff.BuffData.DisplayName.ToString()))
                     {
-                        MelonLogger.Warning($"OnRemoveBuff() buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}");
-                        MelonLogger.Warning($"OnRemoveBuff() debuff.numStacks = {debuff.numStacks}, debuff.maxStacks = {debuff.maxStacks}");
-                        gLastStacks = debuff.numStacks;
+//                        MelonLogger.Warning($"OnRemoveBuff() buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}");
+//                        MelonLogger.Warning($"OnRemoveBuff() debuff.numStacks = {debuff.numStacks}, debuff.maxStacks = {debuff.maxStacks}");
 
                         // There should be no duplicates
                         // Remove the entry, if something has gone wrong with the list then it might exception
@@ -265,6 +276,12 @@ namespace EnhancedDebuffTracking
             gDebuffPanel.DisplayPanel(debuffPanelName, UIPanelRoots.Instance.Mid.transform, new Vector2(Globals.PanelWidth, Globals.PanelHeight));
         }
 
+
+        public static void RemoveDebuffPanelFromUI()
+        {
+            gDebuffPanel.RemovePanel();
+        }
+
         // Returns is a current target is dead or not
         private static bool CheckIfMonsterIsDead(Pools.Logic Pools)
         {
@@ -278,7 +295,7 @@ namespace EnhancedDebuffTracking
         // 2) Current selected moster despawns 
         public static void OffensiveTargetSelected(Targets.Logic targetLogic)
         {
-            MelonLogger.Warning($"OffensiveTargetSelected");
+//            MelonLogger.Warning($"OffensiveTargetSelected");
             // TODO - Show the debuff panel right now, maybe remove later
             gDebuffPanel.ShowDebuffPanel();
             gDebuffPanel.ResetDebuffPanel();

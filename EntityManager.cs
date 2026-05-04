@@ -36,7 +36,7 @@ public static class EntityManager
 
     public static void UpdateAllDurationTimers()
     {
-        for (int i = 0; i < gDebuffDictionary.Count(); i++)
+        for (int i = 0; i < gDebuffDictionary.Count; i++)
         {
             List<DebuffData> list = gDebuffDictionary.ElementAt(i).Value;
             foreach(DebuffData debuff in list)

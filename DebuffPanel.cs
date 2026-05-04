@@ -1,6 +1,7 @@
 ﻿using Il2Cpp;
 using Il2CppServiceStack;
 using Il2CppTMPro;
+using MelonLoader;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -108,6 +109,15 @@ namespace EnhancedDebuffTracking
             gUiWindowPanel.Hide();
         }
 
+        // Tidy up the alloated resources when we logout
+        public void RemovePanel()
+        {
+            // On a /camp out and logging back in the static variables persist and are not garbage collected, explicitly clear them out, we will rebuild them on loading into a zone
+            textMeshObjects.Clear();
+            timeTextMeshObjects.Clear();
+            imageObjects.Clear();
+        }
+
         // Constructs the close button and set the background
         private void BuildCloseButtonAndBackground(Transform parentPanel, GameObject gameObject)
         {
@@ -194,6 +204,7 @@ namespace EnhancedDebuffTracking
         {
             // Make a solid colour sprite for use in the bar
             Texture2D tex = new Texture2D(1, 1);
+            // NEVER set this to black, it stops the progress bar from displaying prperly for reasoons that are not obvious to me.
             tex.SetPixel(0, 0, Color.pink);
             tex.Apply();
             Sprite sprite = Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f));
@@ -203,7 +214,7 @@ namespace EnhancedDebuffTracking
             image.sprite = sprite;
             image.type = Image.Type.Filled;
             image.fillMethod = Image.FillMethod.Horizontal;
-            image.color = Color.pink;
+            image.color = Color.black;
             image.fillAmount = 0.5f; // 1.0f is full 0.0f is empty
             return image;
         }
@@ -296,17 +307,17 @@ namespace EnhancedDebuffTracking
         public void ResetDebuffPanel()
         {
             // Try and stop unwanted access to the panel to prevent exceptions
-            if (gUiWindowPanel.isActiveAndEnabled && gUiWindowPanel.IsVisible)
+            if (gUiWindowPanel != null && gUiWindowPanel.isActiveAndEnabled && gUiWindowPanel.IsVisible)
             {
                 // Parse the list of all debuffs on the current target and display the first MaxDisplayableDebuffs
-                for (int i = 0; (i < Globals.MaxDisplayableDebuffs); i++)
+                for (int i = 0; i < Globals.MaxDisplayableDebuffs; i++)
                 {
-                    // reset to an clean list
+                    // Reset to an clean list
                     targetNameTextMeshObject.GetComponent<TextMeshProUGUI>().text = "";
                     textMeshObjects[i].GetComponent<TextMeshProUGUI>().text = "";
                     timeTextMeshObjects[i].GetComponent<TextMeshProUGUI>().text = "";
                     // Now update the progress bar colour and time
-                    UnityEngine.UI.Image image = imageObjects[i].transform.GetComponent<UnityEngine.UI.Image>();
+                    Image image = imageObjects[i].transform.GetComponent<Image>();
                     // Set colour to black on reset
                     image.color = Color.black;
                     image.fillAmount = 0.5f;
@@ -318,7 +329,7 @@ namespace EnhancedDebuffTracking
         public void UpdateDebuffPanel(List<DebuffData> debuffList)
         {
             // Try and stop unwanted access to the panel to prevent exceptions
-            if (gUiWindowPanel.isActiveAndEnabled && gUiWindowPanel.IsVisible)
+            if (gUiWindowPanel != null && gUiWindowPanel.isActiveAndEnabled && gUiWindowPanel.IsVisible)
             {
                 // Parse the list of all debuffs on the current target and display the first MaxDisplayableDebuffs
                 for (int i = 0; (i < debuffList.Count && i < Globals.MaxDisplayableDebuffs); i++)
@@ -326,13 +337,13 @@ namespace EnhancedDebuffTracking
                     DebuffData debuff = debuffList[i];
 
                     // Set the target name, not the most optimal as it is set multiple times but lets live with it
-                    targetNameTextMeshObject.GetComponent<TextMeshProUGUI>().text = $" <b>Target:</b> {debuff.targetName.ToUpperSafe()}, {debuff.targetClass}, {debuff.targetKind} ";
+                    targetNameTextMeshObject.GetComponent<TextMeshProUGUI>().text = $" <b>Target:</b> {debuff.targetName.ToUpperSafe()}, {debuff.targetClass}, {debuff.targetKind}";
                     // Update the displayed string "DebuffName 22s", leave the leading space in
-                    textMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $" {debuff.debuffName}, {debuff.numStacks}/{debuff.maxStacks} Stacks";
+                    textMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $" {debuff.debuffName} ({debuff.numStacks}/{debuff.maxStacks} Stacks), ({debuff.casterName})";
                     timeTextMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $"{debuff.debuffDurationRemaining}s";
 
                     // Now update the progress bar colour and time
-                    Image image = imageObjects[i].transform.GetComponent<UnityEngine.UI.Image>();
+                    Image image = imageObjects[i].transform.GetComponent<Image>();
 
                     // Set colour based on the debuff type
                     image.color = barColours[i];

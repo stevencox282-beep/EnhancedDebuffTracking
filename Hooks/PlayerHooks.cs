@@ -35,6 +35,7 @@ public class PlayerNetworkStop
         if (__instance.NetworkId.Value == EntityPlayerGameObject.LocalPlayerId.Value)
         {
             Globals.PlayerIsLoaded = false;
+            ModMain.RemoveDebuffPanelFromUI();
             return;
         }
     }

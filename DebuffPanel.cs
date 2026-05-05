@@ -303,7 +303,7 @@ namespace EnhancedDebuffTracking
         }
 
 
-        //Update the text displayed in the Debuff Box
+        // Update the text displayed in the Debuff Box
         public void ResetDebuffPanel()
         {
             // Try and stop unwanted access to the panel to prevent exceptions
@@ -362,7 +362,11 @@ namespace EnhancedDebuffTracking
         // Called by the /debuff command and on offensive target select
         public void ShowDebuffPanel()
         {
-            gUiWindowPanel.Show();
+            // Display the panel if the gloabl is set to allow it
+            if (Globals.ShowDebuffPanel == true)
+            {
+                gUiWindowPanel.Show();
+            }
         }
     }
 }

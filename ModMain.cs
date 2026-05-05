@@ -1,5 +1,6 @@
 ﻿using Il2Cpp;
 using Il2CppLogicalGraphNodes;
+using Il2CppServiceStack.Text;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.Rendering.HighDefinition;
@@ -81,22 +82,25 @@ namespace EnhancedDebuffTracking
         // Called to show the debuff panel
         public static void ShowDebuffPanel()
         {
-            gDebuffPanel.ShowDebuffPanel();
+            // Display the panel if the gloabl is set to allow it
+            if (Globals.ShowDebuffPanel == true)
+            {
+                gDebuffPanel.ShowDebuffPanel();
+            }
         }
 
-        // Called to hideg the debuff panel
+        // Called to hide the debuff panel
         public static void HideDebuffPanel()
         {
             gDebuffPanel.HideDebuffPanel();
         }
 
-        // TODO - Update here when we want better tracking of Player Debuffs! This is how we detect them and send them on to the modified UI elements
-        // Determines if the rtarget for a buff is valid for us to track
+        // Determines if the target for a buff is valid for us to track
         private static bool IsValidTarget(ActiveBuff buff)
         {
             // We do not want buffs that go onto players even if those are from monsters to players
             // Monster have an access level of None so that is an easy way to detect its a monster not a player
-            // Player Pets also have an access level of none but we dont want to track their debuffs, we need a way to filter them out
+            // TODO - Player Pets also have an access level of none but we dont want to track their debuffs, we need a way to filter them out, its not a problem if we do not but it would be better
             return (buff.Target.Info.AccessLevel.Equals(AccessLevel.None) && buff.BuffData.CategoryType == BuffCategoryType.Harmful) ? true : false;
         }
 
@@ -150,21 +154,21 @@ namespace EnhancedDebuffTracking
                 for (int j = 0; j < buff.BuffData.EntityStatus.Count; j++)
                 {
                     newDebuff.entityStatus = buff.BuffData.EntityStatus[j].ToString();
-                    //MelonLogger.Warning($"OnAddOrRefreshBuff() buff.BuffData.EntityStatus[j].ToString() = {buff.BuffData.EntityStatus[j].ToString()} ");
+//                    MelonLogger.Warning($"OnAddOrRefreshBuff() buff.BuffData.EntityStatus[j].ToString() = {buff.BuffData.EntityStatus[j].ToString()} ");
                 }
 
-                //MelonLogger.Warning($"OnAddOrRefreshBuff() newDebuff.debuffName = buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()} ");
-                //MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.AbilityType.AsString() = {buff.CreatedByAbility.AbilityType.AsString()} ");
-                //M/elonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.ActionType.ToString() = {buff.CreatedByAbility.ActionType.ToString()} ");
-                //MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.SpellType.ToString() = {buff.CreatedByAbility.SpellType.ToString()} ");
-                //MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.AbilitySchool.ToString() = {buff.CreatedByAbility.AbilitySchool.ToString()} ");
-                //MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.CastType.ToString() = {buff.CreatedByAbility.CastType.ToString()} ");
-                //MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.cachedRangeData.value.ToString() = {buff.CreatedByAbility.cachedRangeData.value.ToString()} ");
-                //MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.HasteAffectType.ToString() = {buff.CreatedByAbility.HasteAffectType.ToString()} ");
-                //MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.IsTechniqueAbility.toString() = {buff.CreatedByAbility.IsTechniqueAbility().ToString()} ");
-                //MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.TargetType.ToString() = {buff.CreatedByAbility.TargetType.ToString()} ");
-                //MelonLogger.Warning($"OnAddOrRefreshBuff() buff.Flags.ToString() = {buff.Flags.ToString()} ");
-                //MelonLogger.Warning($"OnAddOrRefreshBuff() buff.BuffData.Description.ToString() = {buff.BuffData.Description.ToString()}");
+//                MelonLogger.Warning($"OnAddOrRefreshBuff() newDebuff.debuffName = buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()} ");
+//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.AbilityType.AsString() = {buff.CreatedByAbility.AbilityType.AsString()} ");
+//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.ActionType.ToString() = {buff.CreatedByAbility.ActionType.ToString()} ");
+//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.SpellType.ToString() = {buff.CreatedByAbility.SpellType.ToString()} ");
+//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.AbilitySchool.ToString() = {buff.CreatedByAbility.AbilitySchool.ToString()} ");
+//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.CastType.ToString() = {buff.CreatedByAbility.CastType.ToString()} ");
+//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.cachedRangeData.value.ToString() = {buff.CreatedByAbility.cachedRangeData.value.ToString()} ");
+//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.HasteAffectType.ToString() = {buff.CreatedByAbility.HasteAffectType.ToString()} ");
+//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.IsTechniqueAbility.toString() = {buff.CreatedByAbility.IsTechniqueAbility().ToString()} ");
+//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.TargetType.ToString() = {buff.CreatedByAbility.TargetType.ToString()} ");
+//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.Flags.ToString() = {buff.Flags.ToString()} ");
+//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.BuffData.Description.ToString() = {buff.BuffData.Description.ToString()}");
 
                 // Add this specific debuff
                 debuffList.Add(newDebuff);
@@ -201,7 +205,7 @@ namespace EnhancedDebuffTracking
                 if (debuffList == null)
                 {
                     // TODO - Get rid of this before releasing it, once released I am finished with this mod so no point filling adding to the log 
-                    MelonLogger.Error($"OnRemoveBuff() unable to find debuff list for enemy {buff.Caster.NetworkId.ToString()}");
+                    //MelonLogger.Error($"OnRemoveBuff() unable to find debuff list for enemy {buff.Caster.NetworkId.ToString()}");
                     return;
                 }
 
@@ -212,8 +216,8 @@ namespace EnhancedDebuffTracking
                     // We must remove a specific debuff for a specific target cast by a specific person
                     if ((debuff.casterNetworkId == buff.Caster.NetworkId.ToString()) && (debuff.targetNetworkId == buff.Target.NetworkId.ToString()) && (debuff.debuffName == buff.BuffData.DisplayName.ToString()))
                     {
-                        MelonLogger.Warning($"OnRemoveBuff() buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}");
-                        MelonLogger.Warning($"OnRemoveBuff() debuff.numStacks = {debuff.numStacks}, debuff.maxStacks = {debuff.maxStacks}");
+//                        MelonLogger.Warning($"OnRemoveBuff() buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}");
+//                        MelonLogger.Warning($"OnRemoveBuff() debuff.numStacks = {debuff.numStacks}, debuff.maxStacks = {debuff.maxStacks}");
 
                         // There should be no duplicates
                         // Remove the entry, if something has gone wrong with the list then it might exception
@@ -256,12 +260,6 @@ namespace EnhancedDebuffTracking
             gDebuffPanel.DisplayPanel(debuffPanelName, UIPanelRoots.Instance.Mid.transform, new Vector2(Globals.PanelWidth, Globals.PanelHeight));
         }
 
-
-        public static void RemoveDebuffPanelFromUI()
-        {
-            gDebuffPanel.RemovePanel();
-        }
-
         // Returns is a current target is dead or not
         private static bool CheckIfMonsterIsDead(Pools.Logic Pools)
         {
@@ -269,6 +267,11 @@ namespace EnhancedDebuffTracking
             return (Pools.Entity.Nameplate.isDead == true) ? true : false;            
         }
 
+        // Used to tear down all the resources allocated by the panel on logout / character change
+        public static void RemoveDebuffPanelFromUI()
+        {
+            gDebuffPanel.RemovePanel();
+        }
 
         // This fires on at least the following conditions
         // 1) User selects a new target
@@ -276,7 +279,7 @@ namespace EnhancedDebuffTracking
         public static void OffensiveTargetSelected(Targets.Logic targetLogic)
         {
             MelonLogger.Warning($"OffensiveTargetSelected() ");
-            gDebuffPanel.ShowDebuffPanel();
+            ShowDebuffPanel();
             gDebuffPanel.ResetDebuffPanel();
 
             // Offensive goes to null when a monster despawns

@@ -137,7 +137,6 @@ public static class EntityManager
         //  Remove an entry from the dictionary based on the network id
         try
         {
-            MelonLogger.Warning($"OnNpcRemoved() TRY Removing entry {entityNpcGameObject.NetworkId.ToString()}");
             gDebuffDictionary.Remove(entityNpcGameObject.NetworkId.ToString());
         }
         catch (Exception e)

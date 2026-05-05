@@ -6,6 +6,7 @@ namespace EnhancedDebuffTracking;
 public static class Globals
 {
     public static bool PlayerIsLoaded = false;
+    public static bool ShowDebuffPanel = true;
     public static EntityPlayerGameObject? LocalPlayer = null;
     public static bool HasSetUpUI = false;
     public static EntityNpcGameObject? TrackedOffensiveEntity = null;

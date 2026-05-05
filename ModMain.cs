@@ -3,6 +3,7 @@ using Il2CppLogicalGraphNodes;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.Rendering.HighDefinition;
+using UnityEngine.UIElements;
 
 
 [assembly: MelonInfo(typeof(EnhancedDebuffTracking.ModMain), "EnhancedDebuffTracking", "1.0.0", "Anonymous", null)]
@@ -100,16 +101,13 @@ namespace EnhancedDebuffTracking
         }
 
         // This function is called in the following conditions (at least)
-        // 1) When you add a buff to an enemy you already have targetted
-        // 2) A buff expires on an enemy you already have targetted
-        // 3) When you change target to a new target that already has debuffs on it
         // Make sure we dont re-add an existing buff to the buff list and you handle all the different conditions it can be called
         public static void OnAddOrRefreshBuff(double time, ActiveBuff buff, bool inBackground, bool isRefresh, bool isItemBuff)
         {
-//            MelonLogger.Warning($"OnAddOrRefreshBuff 1 isRefresh = {isRefresh}, inBackground = {inBackground}, isItemBuff = {isItemBuff}");
+            MelonLogger.Warning($"OnAddOrRefreshBuff 1 buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}, isRefresh = {isRefresh}, inBackground = {inBackground}, isItemBuff = {isItemBuff}");
 
             // Make sure we only track debuffs and only on monsters
-            if (IsValidTarget(buff) )
+            if (IsValidTarget(buff))
             {
                 // TODO Make this a blacklist
                 // Do not process Traits
@@ -125,42 +123,12 @@ namespace EnhancedDebuffTracking
                 // If we can not find the list log a warning and exit
                 if (debuffList == null)
                 {
-                    MelonLogger.Error($"OnAddOrRefreshBuff unable to find debuff list for enemy {buff.Caster.NetworkId.ToString()}");
                     // update the debuff list to be empty
                     gDebuffPanel.ResetDebuffPanel();
                     return;
                 }
 
-                // Check every debuff and update as required
-                foreach (var debuff in debuffList)
-                {
-                    // If this is the correct buff from teh correct caster to the correct target
-                    if ((debuff.casterNetworkId == buff.Caster.NetworkId.ToString()) && (debuff.targetNetworkId == buff.Target.NetworkId.ToString()) && (debuff.debuffName == buff.BuffData.DisplayName.ToString()))
-                    {
-//                        MelonLogger.Warning($"OnAddOrRefreshBuff() buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}");
-//                        MelonLogger.Warning($"OnAddOrRefreshBuff() debuff.numStacks = {debuff.numStacks}, debuff.maxStacks = {debuff.maxStacks}");
-
-                        // This function is also called on change of offensive target, so we can't assume this is actually a new buff or a refresh of a buff
-                        // If we are not a refresh and have a the same buff already, do nothing
-                        if (isRefresh == true)
-                        {
-                            MelonLogger.Warning($"OnAddOrRefreshBuff() REFRESH DETECTED");
-                            debuff.debuffDurationRemaining = debuff.debuffDuration;
-
-                            // update the debuff list
-                            gDebuffPanel.UpdateDebuffPanel(debuffList);
-                            return;
-                        }
-                        else
-                        {
-                            MelonLogger.Warning($"OnAddOrRefreshBuff() TARGET SWITCH DETECTED");
-                            return;
-                        }
-                    }
-                }
-
                 // We do not have a debuff of this type in the list, make a new one
-                MelonLogger.Warning($"OnAddOrRefreshBuff() NEW BUFF DETECTED.");
                 DebuffData newDebuff = new DebuffData();
                 newDebuff.casterName = buff.Caster.Nameplate.nameText.text;
                 newDebuff.casterNetworkId = buff.Caster.NetworkId.ToString();
@@ -178,36 +146,30 @@ namespace EnhancedDebuffTracking
                 newDebuff.maxStacks = buff.BuffData.MaxStacks;
                 newDebuff.numTicks = buff.BuffData.Ticks;
                 newDebuff.tickIntervalS = buff.BuffData.TickInterval;
-                
+
                 for (int j = 0; j < buff.BuffData.EntityStatus.Count; j++)
                 {
                     newDebuff.entityStatus = buff.BuffData.EntityStatus[j].ToString();
-                    MelonLogger.Warning($"OnAddOrRefreshBuff() buff.BuffData.EntityStatus[j].ToString() = {buff.BuffData.EntityStatus[j].ToString()} ");
+                    //MelonLogger.Warning($"OnAddOrRefreshBuff() buff.BuffData.EntityStatus[j].ToString() = {buff.BuffData.EntityStatus[j].ToString()} ");
                 }
 
-                MelonLogger.Warning($"OnAddOrRefreshBuff() newDebuff.debuffName = buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()} ");
-                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.AbilityType.AsString() = {buff.CreatedByAbility.AbilityType.AsString()} ");
-                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.ActionType.ToString() = {buff.CreatedByAbility.ActionType.ToString()} ");
-                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.SpellType.ToString() = {buff.CreatedByAbility.SpellType.ToString()} ");
-                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.AbilitySchool.ToString() = {buff.CreatedByAbility.AbilitySchool.ToString()} ");
-                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.CastType.ToString() = {buff.CreatedByAbility.CastType.ToString()} ");
-                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.cachedRangeData.value.ToString() = {buff.CreatedByAbility.cachedRangeData.value.ToString()} ");
-                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.HasteAffectType.ToString() = {buff.CreatedByAbility.HasteAffectType.ToString()} ");
-                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.IsTechniqueAbility.toString() = {buff.CreatedByAbility.IsTechniqueAbility().ToString()} ");
-                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.TargetType.ToString() = {buff.CreatedByAbility.TargetType.ToString()} ");
-                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.Flags.ToString() = {buff.Flags.ToString()} ");
-                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.BuffData.Description.ToString() = {buff.BuffData.Description.ToString()}");
- 
-                // STACKS are process by the game by deleting the original debuff, then creating a new one but with isRefresh set to true, so we actually handle stacks here
-                if (isRefresh == true)
-                {
-                    newDebuff.debuffDurationRemaining = newDebuff.debuffDuration;
-                }
+                //MelonLogger.Warning($"OnAddOrRefreshBuff() newDebuff.debuffName = buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()} ");
+                //MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.AbilityType.AsString() = {buff.CreatedByAbility.AbilityType.AsString()} ");
+                //M/elonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.ActionType.ToString() = {buff.CreatedByAbility.ActionType.ToString()} ");
+                //MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.SpellType.ToString() = {buff.CreatedByAbility.SpellType.ToString()} ");
+                //MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.AbilitySchool.ToString() = {buff.CreatedByAbility.AbilitySchool.ToString()} ");
+                //MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.CastType.ToString() = {buff.CreatedByAbility.CastType.ToString()} ");
+                //MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.cachedRangeData.value.ToString() = {buff.CreatedByAbility.cachedRangeData.value.ToString()} ");
+                //MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.HasteAffectType.ToString() = {buff.CreatedByAbility.HasteAffectType.ToString()} ");
+                //MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.IsTechniqueAbility.toString() = {buff.CreatedByAbility.IsTechniqueAbility().ToString()} ");
+                //MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.TargetType.ToString() = {buff.CreatedByAbility.TargetType.ToString()} ");
+                //MelonLogger.Warning($"OnAddOrRefreshBuff() buff.Flags.ToString() = {buff.Flags.ToString()} ");
+                //MelonLogger.Warning($"OnAddOrRefreshBuff() buff.BuffData.Description.ToString() = {buff.BuffData.Description.ToString()}");
 
                 // Add this specific debuff
                 debuffList.Add(newDebuff);
 
-                // update the debuff list
+                // Update the debuff list
                 gDebuffPanel.UpdateDebuffPanel(debuffList);
             }
         }
@@ -217,6 +179,7 @@ namespace EnhancedDebuffTracking
         // 2) When a debuff expires an enemy you do not have targetted
         public static void OnRemoveBuff(double time, ActiveBuff buff, bool moveToBackground, bool isRefresh)
         {
+            MelonLogger.Warning($"OnRemoveBuff() 1 buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}, isRefresh = {isRefresh}, inBackground = {moveToBackground}");
             // Make sure this is something we want to track
             if (IsValidTarget(buff))
             {
@@ -234,7 +197,7 @@ namespace EnhancedDebuffTracking
                 // Reset the debuff list
                 gDebuffPanel.ResetDebuffPanel();
 
-                 // If we can not find the list log a warning and exit
+                // If we can not find the list log a warning and exit
                 if (debuffList == null)
                 {
                     // TODO - Get rid of this before releasing it, once released I am finished with this mod so no point filling adding to the log 
@@ -249,8 +212,8 @@ namespace EnhancedDebuffTracking
                     // We must remove a specific debuff for a specific target cast by a specific person
                     if ((debuff.casterNetworkId == buff.Caster.NetworkId.ToString()) && (debuff.targetNetworkId == buff.Target.NetworkId.ToString()) && (debuff.debuffName == buff.BuffData.DisplayName.ToString()))
                     {
-//                        MelonLogger.Warning($"OnRemoveBuff() buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}");
-//                        MelonLogger.Warning($"OnRemoveBuff() debuff.numStacks = {debuff.numStacks}, debuff.maxStacks = {debuff.maxStacks}");
+                        MelonLogger.Warning($"OnRemoveBuff() buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}");
+                        MelonLogger.Warning($"OnRemoveBuff() debuff.numStacks = {debuff.numStacks}, debuff.maxStacks = {debuff.maxStacks}");
 
                         // There should be no duplicates
                         // Remove the entry, if something has gone wrong with the list then it might exception
@@ -312,13 +275,20 @@ namespace EnhancedDebuffTracking
         // 2) Current selected moster despawns 
         public static void OffensiveTargetSelected(Targets.Logic targetLogic)
         {
-//            MelonLogger.Warning($"OffensiveTargetSelected");
-            // TODO - Show the debuff panel right now, maybe remove later
+            MelonLogger.Warning($"OffensiveTargetSelected() ");
             gDebuffPanel.ShowDebuffPanel();
             gDebuffPanel.ResetDebuffPanel();
 
             // Offensive goes to null when a monster despawns
             if (targetLogic.Offensive == null)
+            {
+                gDebuffPanel.ResetDebuffPanel();
+                return;
+            }
+
+            // Check if we are dead, if we are clear the panel
+            bool isDead = CheckIfMonsterIsDead(targetLogic.Offensive.Pools);
+            if (isDead)
             {
                 gDebuffPanel.ResetDebuffPanel();
                 return;
@@ -332,18 +302,6 @@ namespace EnhancedDebuffTracking
             {
                 return;
             }
-
-            // This should be zero on a new element, or on a known element should be the correct number of buffs
-            gDebuffPanel.UpdateDebuffPanel(debuffList);
-
-            // Check if we are dead, if we are clear the panel
-            bool isDead = CheckIfMonsterIsDead(targetLogic.Offensive.Pools);
-            if (isDead)
-            {
-                gDebuffPanel.ResetDebuffPanel();
-            }
-            
-            // Set the debuff count to the actual count
             gDebuffPanel.UpdateDebuffPanel(debuffList);
         }
     }

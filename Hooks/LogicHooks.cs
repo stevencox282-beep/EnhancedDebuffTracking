@@ -15,20 +15,33 @@ public class TargetSetOffensiveHook
     }
 }
 
-[HarmonyPatch(typeof(UIBuffBar), nameof(UIBuffBar.OnAddOrRefreshBuff))]
-public class UIBuffBarOnAddOrRefreshBuff
+[HarmonyPatch(typeof(Buffs.Logic), nameof(Buffs.Logic.Add), typeof(double), typeof(ActiveBuff), typeof(bool), typeof(bool), typeof(bool))]
+public class BuffLogicAdd
 {
-    private static void Postfix(double time, ActiveBuff buff, bool inBackground, bool isRefresh, bool isItemBuff)
+    private static void Prefix(double time, ActiveBuff buff, bool putInBackground = false, bool isRefresh = false, bool isItemBuff = false)
     {
-        ModMain.OnAddOrRefreshBuff(time, buff, inBackground, isRefresh, isItemBuff);
+        ModMain.OnAddOrRefreshBuff(time, buff, putInBackground, isRefresh, isItemBuff);
     }
 }
 
-[HarmonyPatch(typeof(UIBuffBar), nameof(UIBuffBar.OnRemoveBuff))]
-public class UIBuffBarOnRemoveBuff
+//[HarmonyPatch(typeof(Buffs.Logic), nameof(Buffs.Logic.Add), typeof(double), typeof(ActiveBuff.SerializableBuff), typeof(bool), typeof(bool), typeof(bool))]
+//public class BuffLogicAdd
+//{
+    //private static void Prefix(double time, ref ActiveBuff.SerializableBuff buff, bool putInBackground = false, bool isRefresh = false, bool isItemBuff = false)
+    //{
+        //MelonLogger.Warning($"BuffLogicAdd 1 buff.BuffId.ToString() = {buff.BuffId.ToString()}, buff.InternalId.ToString() = {buff.InternalId.ToString()}");
+        //MelonLogger.Warning($"BuffLogicAdd 1 buff.CasterId.ToString() = {buff.CasterId.ToString()}, buff.TargetId.ToString() = {buff.TargetId.ToString()}");
+    //}
+//}
+
+
+
+[HarmonyPatch(typeof(Buffs.Logic), nameof(Buffs.Logic.Remove), typeof(double), typeof(ulong), typeof(bool), typeof(bool), typeof(bool), typeof(int))]
+public class BuffLogicRemove
 {
-    private static void Postfix(double time, ActiveBuff buff, bool moveToBackground, bool isRefresh)
+    private static void Prefix(double time, ulong internalBuffId, bool moveToBackground = false, bool removeAllStacks = true, bool isItemBuff = false, int stacksToRemove = 1)
     {
-        ModMain.OnRemoveBuff(time, buff, moveToBackground, isRefresh);
+        MelonLogger.Warning($"BuffLogicRemove() internalBuffId = {internalBuffId}");
+        //ModMain.OnRemoveBuff(time, buffData, moveToBackground, isRefresh);
     }
 }

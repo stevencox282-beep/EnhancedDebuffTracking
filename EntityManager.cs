@@ -38,12 +38,22 @@ public static class EntityManager
     {
         for (int i = 0; i < gDebuffDictionary.Count; i++)
         {
-            List<DebuffData> list = gDebuffDictionary.ElementAt(i).Value;
-            foreach(DebuffData debuff in list)
+            List<DebuffData> debuffList = gDebuffDictionary.ElementAt(i).Value;
+            // Process this list backwards, this allows us to delete from the end from inside the loop and not corrupt our own index
+            for (int j = debuffList.Count()-1; j > -1; j--)
             {
+                DebuffData debuff = debuffList[j];
+                        
                 // Update the time remaining and the size of the progress bar
                 debuff.debuffDurationRemaining = debuff.debuffDurationRemaining - 1;
+                // Sopmehow we have missed an event and this debuff has expired, remove it
+                if (debuff.debuffDurationRemaining < 0)
+                {
+                    // This is not very nice, this is deleting an object inside the loop we created it, this MUST be the last thing we do in this function
+                    debuffList.RemoveAt(j);
+                }
             }
+
         }
     }
 

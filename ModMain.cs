@@ -45,7 +45,8 @@ namespace EnhancedDebuffTracking
         private static string gCurrentTargetNetworkId = null;
         private const float UpdateInterval = 1.0f; // Update interval in seconds
         private static float _timeSinceLastUpdate;
-        
+        private static readonly string[] Blacklist = { "Trait:" };
+
         private static string debuffPanelName = "EDT_DebuffPanel_EDT";
 
         public override void OnInitializeMelon() { }
@@ -108,18 +109,17 @@ namespace EnhancedDebuffTracking
         // Make sure we dont re-add an existing buff to the buff list and you handle all the different conditions it can be called
         public static void OnAddOrRefreshBuff(double time, ActiveBuff buff, bool inBackground, bool isRefresh, bool isItemBuff)
         {
-            MelonLogger.Warning($"OnAddOrRefreshBuff 1 buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}, isRefresh = {isRefresh}, inBackground = {inBackground}, isItemBuff = {isItemBuff}");
+//            MelonLogger.Warning($"OnAddOrRefreshBuff 1 buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}, isRefresh = {isRefresh}, inBackground = {inBackground}, isItemBuff = {isItemBuff}");
 
             // Make sure we only track debuffs and only on monsters
             if (IsValidTarget(buff))
             {
-                // TODO Make this a blacklist
-                // Do not process Traits
-                if (buff.BuffData.DisplayName.ToString().Contains("Trait:"))
+                // Do not process anything in the blacklist
+                if (Blacklist.Contains(buff.BuffData.DisplayName.ToString()))
                 {
                     return;
                 }
-
+                
                 // Get the list for the current enemy
                 gCurrentTargetNetworkId = buff.Target.NetworkId.ToString();
                 List<DebuffData> debuffList = EntityManager.GetEnemyDebuffList(gCurrentTargetNetworkId);
@@ -183,13 +183,12 @@ namespace EnhancedDebuffTracking
         // 2) When a debuff expires an enemy you do not have targetted
         public static void OnRemoveBuff(double time, ActiveBuff buff, bool moveToBackground, bool isRefresh)
         {
-            MelonLogger.Warning($"OnRemoveBuff() 1 buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}, isRefresh = {isRefresh}, inBackground = {moveToBackground}");
+//            MelonLogger.Warning($"OnRemoveBuff() 1 buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}, isRefresh = {isRefresh}, inBackground = {moveToBackground}");
             // Make sure this is something we want to track
             if (IsValidTarget(buff))
             {
-                // TODO Make this a blacklist
-                // Do not process Traits
-                if (buff.BuffData.DisplayName.ToString().Contains("Trait:"))
+                // Do not process anything in the blacklist
+                if (Blacklist.Contains(buff.BuffData.DisplayName.ToString()))
                 {
                     return;
                 }
@@ -234,7 +233,6 @@ namespace EnhancedDebuffTracking
                         // Update the debuff list
                         gDebuffPanel.UpdateDebuffPanel(debuffList);
 
-                        MelonLogger.Error($"OnRemoveBuff() - debuffList.Count {debuffList.Count}");
                         // Check the number of debuffs left, if none, reset the panel.  This will also catch dead enemies as Target.Nameplate.isDead is False when this trigger fires and as such is unusable here
                         if (debuffList.Count == 0)
                         {
@@ -278,33 +276,41 @@ namespace EnhancedDebuffTracking
         // 2) Current selected moster despawns 
         public static void OffensiveTargetSelected(Targets.Logic targetLogic)
         {
-            MelonLogger.Warning($"OffensiveTargetSelected() ");
+//            MelonLogger.Warning($"OffensiveTargetSelected() 1");
             ShowDebuffPanel();
             gDebuffPanel.ResetDebuffPanel();
 
+//            MelonLogger.Warning($"OffensiveTargetSelected() 2");
             // Offensive goes to null when a monster despawns
             if (targetLogic.Offensive == null)
             {
-                gDebuffPanel.ResetDebuffPanel();
+//                MelonLogger.Warning($"OffensiveTargetSelected() 3");
+                // Either the user has pressed ESC so they are targetting nothing or something has gone wrong somewhere
+                gCurrentTargetNetworkId = null;
                 return;
             }
+
+//            MelonLogger.Warning($"OffensiveTargetSelected() 4 targetLogic.Offensive.Nameplate.nameText.text.ToString() = {targetLogic.Offensive.Nameplate.nameText.text.ToString()}");
 
             // Check if we are dead, if we are clear the panel
             bool isDead = CheckIfMonsterIsDead(targetLogic.Offensive.Pools);
             if (isDead)
             {
-                gDebuffPanel.ResetDebuffPanel();
+//                MelonLogger.Warning($"OffensiveTargetSelected() 5");
                 return;
             }
 
+//            MelonLogger.Warning($"OffensiveTargetSelected() 6");
             // Identify the new target, make sure we have a row in the dictionary for it, this is an explicit handling of a weakness in the detect of new NPC entities
             gCurrentTargetNetworkId = targetLogic.Offensive.NetworkId.ToString();
             EntityManager.AddMonsterIfMissing(gCurrentTargetNetworkId);
             List<DebuffData> debuffList = EntityManager.GetEnemyDebuffList(gCurrentTargetNetworkId);
             if (debuffList == null)
             {
+//                MelonLogger.Warning($"OffensiveTargetSelected() 7");
                 return;
             }
+//            MelonLogger.Warning($"OffensiveTargetSelected() 8");
             gDebuffPanel.UpdateDebuffPanel(debuffList);
         }
     }

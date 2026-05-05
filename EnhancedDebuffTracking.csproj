@@ -535,9 +535,10 @@
 		<Compile Include="EntityManager.cs" />
 		<Compile Include="Globals.cs" />
 		<Compile Include="Hooks\EntityNpcGameObjectHooks.cs" />
-		<Compile Include="Hooks\LogicHooks.cs" />
-		<Compile Include="Hooks\PlayerHooks.cs" />
+		<Compile Include="Hooks\BuffLogicHooks.cs" />
+		<Compile Include="Hooks\PlayerGameObjectHooks.cs" />
 		<Compile Include="Hooks\SendChatMessageHook.cs" />
+		<Compile Include="Hooks\TargetLogicHooks.cs" />
 		<Compile Include="Hooks\UIPanelHooks.cs" />
 		<Compile Include="ModMain.cs" />
 		<Content Include="Directory.Build.props" />

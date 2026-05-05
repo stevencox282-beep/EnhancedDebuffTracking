@@ -141,7 +141,7 @@ public static class EntityManager
         }
         catch (Exception e)
         {
-            MelonLogger.Warning($"OnNpcRemoved() CATCH Remove entry {entityNpcGameObject.NetworkId.ToString()} but it does not exist");
+            MelonLogger.Error($"OnNpcRemoved() Entry {entityNpcGameObject.NetworkId.ToString()} does not exist");
         }
         
     }

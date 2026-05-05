@@ -1,5 +1,6 @@
 using HarmonyLib;
 using Il2Cpp;
+using MelonLoader;
 
 namespace EnhancedDebuffTracking.Hooks;
 
@@ -16,16 +17,6 @@ public class UIPanelHooksStart
         }
     }
 }
-
-//[HarmonyPatch(typeof(UIBuffBar), nameof(UIBuffBar.OnAddOrRefreshBuff))]
-//public class UIBuffBarOnAddOrRefreshBuff
-//{
-//    private static void Postfix(double time, ActiveBuff buff, bool inBackground, bool isRefresh, bool isItemBuff)
-//    {
-//        // This has been replaced by Buff.Logic.Add in LogicHooks
-//        //ModMain.OnAddOrRefreshBuff(time, buff, inBackground, isRefresh, isItemBuff);
-//    }
-//}
 
 [HarmonyPatch(typeof(UIBuffBar), nameof(UIBuffBar.OnRemoveBuff))]
 public class UIBuffBarOnRemoveBuff

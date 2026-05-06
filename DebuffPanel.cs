@@ -181,7 +181,7 @@ namespace EnhancedDebuffTracking
             rectTransformOne.anchorMax = new Vector2(widthOffset, heightOffset);
             rectTransformOne.anchoredPosition = new Vector2(0f, 0f);
             rectTransformOne.pivot = new Vector2(0f, 0f);
-        }
+                    }
 
         // Builder function to create an Image
         private void BuildImage(string name, float height, float width, float heightOffset, float widthOffset)
@@ -223,16 +223,16 @@ namespace EnhancedDebuffTracking
         private void BuildImages() 
         {
             // Make all the progress bars
-            BuildImage(imageNameOne,   Globals.MeshHeight, Globals.MeshWidth, Globals.HeightOneOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameTwo,   Globals.MeshHeight, Globals.MeshWidth, Globals.HeightTwoOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameThree, Globals.MeshHeight, Globals.MeshWidth, Globals.HeightThreeOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameFour,  Globals.MeshHeight, Globals.MeshWidth, Globals.HeightFourOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameFive,  Globals.MeshHeight, Globals.MeshWidth, Globals.HeightFiveOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameSix,   Globals.MeshHeight, Globals.MeshWidth, Globals.HeightSixOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameSeven, Globals.MeshHeight, Globals.MeshWidth, Globals.HeightSevenOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameEight, Globals.MeshHeight, Globals.MeshWidth, Globals.HeightEightOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameNine,  Globals.MeshHeight, Globals.MeshWidth, Globals.HeightNineOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameTen,   Globals.MeshHeight, Globals.MeshWidth, Globals.HeightTenOffset, Globals.RowLeftMargin);
+            BuildImage(imageNameOne,   Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightOneOffset, Globals.RowLeftMargin);
+            BuildImage(imageNameTwo,   Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwoOffset, Globals.RowLeftMargin);
+            BuildImage(imageNameThree, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightThreeOffset, Globals.RowLeftMargin);
+            BuildImage(imageNameFour,  Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFourOffset, Globals.RowLeftMargin);
+            BuildImage(imageNameFive,  Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFiveOffset, Globals.RowLeftMargin);
+            BuildImage(imageNameSix,   Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSixOffset, Globals.RowLeftMargin);
+            BuildImage(imageNameSeven, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSevenOffset, Globals.RowLeftMargin);
+            BuildImage(imageNameEight, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightEightOffset, Globals.RowLeftMargin);
+            BuildImage(imageNameNine,  Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightNineOffset, Globals.RowLeftMargin);
+            BuildImage(imageNameTen,   Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTenOffset, Globals.RowLeftMargin);
 
             // Save these for use later 
             imageObjects.Add(gUiWindowPanel.transform.Find(imageNameOne));
@@ -251,19 +251,19 @@ namespace EnhancedDebuffTracking
         private void BuildTextMeshs()
         {
             // Text Mesh for Target Name
-            BuildTextMesh(targetName, Globals.MeshHeight, Globals.MeshWidth, 1f, 0f);
+            BuildTextMesh(targetName, Globals.NameMeshHeight, Globals.NameMeshWidth, 1f, 0f);
 
             // Make all the meshes that will sit on top of the bars
-            BuildTextMesh(nameOne, Globals.MeshHeight, Globals.MeshWidth, Globals.HeightOneOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameTwo, Globals.MeshHeight, Globals.MeshWidth, Globals.HeightTwoOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameThree, Globals.MeshHeight, Globals.MeshWidth, Globals.HeightThreeOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameFour, Globals.MeshHeight, Globals.MeshWidth, Globals.HeightFourOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameFive, Globals.MeshHeight, Globals.MeshWidth, Globals.HeightFiveOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameSix, Globals.MeshHeight, Globals.MeshWidth, Globals.HeightSixOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameSeven, Globals.MeshHeight, Globals.MeshWidth, Globals.HeightSevenOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameEight, Globals.MeshHeight, Globals.MeshWidth, Globals.HeightEightOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameNine, Globals.MeshHeight, Globals.MeshWidth, Globals.HeightNineOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameTen, Globals.MeshHeight, Globals.MeshWidth, Globals.HeightTenOffset, Globals.RowLeftMargin);
+            BuildTextMesh(nameOne, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightOneOffset, Globals.RowLeftMargin);
+            BuildTextMesh(nameTwo, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwoOffset, Globals.RowLeftMargin);
+            BuildTextMesh(nameThree, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightThreeOffset, Globals.RowLeftMargin);
+            BuildTextMesh(nameFour, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFourOffset, Globals.RowLeftMargin);
+            BuildTextMesh(nameFive, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFiveOffset, Globals.RowLeftMargin);
+            BuildTextMesh(nameSix, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSixOffset, Globals.RowLeftMargin);
+            BuildTextMesh(nameSeven, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSevenOffset, Globals.RowLeftMargin);
+            BuildTextMesh(nameEight, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightEightOffset, Globals.RowLeftMargin);
+            BuildTextMesh(nameNine, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightNineOffset, Globals.RowLeftMargin);
+            BuildTextMesh(nameTen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTenOffset, Globals.RowLeftMargin);
 
             BuildTextMesh(timeNameOne, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightOneOffset, Globals.TimeLeftMargin);
             BuildTextMesh(timeNameTwo, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwoOffset, Globals.TimeLeftMargin);
@@ -343,24 +343,16 @@ namespace EnhancedDebuffTracking
                     if (debuff.debuffDurationRemaining < 60)
                     {
                         timeTextMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $"{debuff.debuffDurationRemaining}s";
+                        // Display the remaining time in seconds
+                        timeTextMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $"{debuff.debuffDurationRemaining}s ({debuff.uptimePercent.ToString("0")}%)";
                     }
                     else
                     {
                         timeTextMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $"{Math.Floor((decimal)debuff.debuffDurationRemaining/60)}m{debuff.debuffDurationRemaining%60}s";
+                        // Display the remaining time in minutes and seconds
+                        timeTextMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $"{Math.Floor((decimal)debuff.debuffDurationRemaining/60)}m{Math.Floor((decimal)debuff.debuffDurationRemaining) % 60}s, ({debuff.uptimePercent.ToString("0")}%)";
                     }
                     
-//                    if (debuff.debuffDurationRemaining < 60f)
-//                    {
-//                        // Display the remaining time in seconds
-//                        timeTextMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $"debuff.debuffDurationRemaining}s ({Math.Floor((decimal)debuff.uptime/60)})m{Math.Floor((decimal)debuff.uptime)%60}s";
-//                    }
-//                    else
-//                    {
-//                        // display the remaining time in minutes and seconds
-//                        timeTextMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $"{Math.Floor((decimal)debuff.debuffDurationRemaining)}m{Math.Floor((decimal)debuff.debuffDurationRemaining)%60}s, {Math.Floor((decimal)debuff.uptime/60)}m{debuff.uptime%60}s";
-//                    }
-                    
-
                     // Now update the progress bar colour and time
                     Image image = imageObjects[i].transform.GetComponent<Image>();
 

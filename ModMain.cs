@@ -2,6 +2,7 @@
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.Rendering.HighDefinition;
+using static Il2CppSystem.DateTimeParse;
 
 
 [assembly: MelonInfo(typeof(EnhancedDebuffTracking.ModMain), "EnhancedDebuffTracking", "1.0.0", "Anonymous", null)]
@@ -13,9 +14,7 @@ namespace EnhancedDebuffTracking
     // TODO - When we are ready for uptime, we will need to recfactor to use EntityData and a way to track when we engage a new target to get the total time
     public class EntityData()
     {
-        public int uptime; // Time the debuff has been up
-        public int totalTime; // Time since the monster received its first debuff
-        public int numBuffs; // Number of buffs on the target
+        public long startCombatTime; // Time since the monster was engaged
         public List<DebuffData> debuffData = new List<DebuffData>();
 
     }
@@ -43,16 +42,17 @@ namespace EnhancedDebuffTracking
         public int numStacks; // Number of stacks
         public int maxStacks; // Max stacks
         public string entityStatus; // Burning / Poisoned etc
-        
+        public long uptime; // Time the debuff has been up
+        public float uptimePercent; // Time the debuff has been up as a % of total encounter time
     }
 
 
     // IMPORTANT INFORMATION ABOUT HOW THIS MOD WORKS AND WHY
     // This Mod collects all debuff information about all mobs that are currently in range, this is handle neatly in a single trigger.
     // The Pantheon Client does proves multiple remove triggers but none of them provide enough information to allow this mod to reliably remove debuffs (essential information is NULL or filled with default values under various conditions)
-    // So to handle the removal of debuffs (expiry / monster dies) I have 2 systems in place:
+    // So to handle the removal of debuffs (expiry / monster dies) I have 2 solution in place:
     // 1) If the duration remaining reaches zero this mod delete the debuff itself, even if it have not receives a triogegr to do so (this is done in the OnUpdate() function and is the primary way debuffs are removed)
-    // 2) For the triggers I do receive that are usuable they are ONLY received for the current offensive target.
+    // 2) The Remove Buff trigger for ONLY the current offensive target.
 
     // The key use-case scenarios for this mode are:
     // 1) A monster moves into range (EntityNpcGameObject.NetworkStart)
@@ -62,9 +62,9 @@ namespace EnhancedDebuffTracking
 
     // UNHANDLED SCENARIOS:
     // 1) Somebody puts a deuff on a monster that is not the current offensive target and the debuff is removed before the debuff expires naturally expires.
-    //    The implementation of a reliable remove trigger is needed to solve this problem or somebody smarter than me to work out how to hack it together with the mess we have to work with.
+    //    The implementation of a reliable remove trigger is needed to solve this problem or somebody smarter than me to work out how to hack it together
     // 2) A monster attacks a player and the game auto targets that monster if there is no offensive target already selected.
-    //    Right now we do nothing as the triggers are full of default values so the mod cant do much at this time, its not perfect but for now we have to live with it
+    //    Right now we do nothing as the triggers are full of default values so the mod cant work out which mob is attacking you, for now we have to live with it
     public class ModMain : MelonMod
     {
         // UI Elements
@@ -73,7 +73,6 @@ namespace EnhancedDebuffTracking
         private const float UpdateInterval = 1.0f; // Update interval in seconds
         private static float _timeSinceLastUpdate;
         private static readonly string[] Blacklist = { "Trait:" };
-
         private static string debuffPanelName = "EDT_DebuffPanel_EDT";
 
         public override void OnInitializeMelon() { }
@@ -96,7 +95,7 @@ namespace EnhancedDebuffTracking
                     if (gCurrentTargetNetworkId != null)
                     {
                         // If we have a valid debuff list for the current target, update the screen
-                        List<DebuffData> debuffList = EntityManager.GetEnemyDebuffList(gCurrentTargetNetworkId);
+                        List<DebuffData> debuffList = EntityManager.GetEntityDebuffList(gCurrentTargetNetworkId);
                         if (debuffList != null)
                         {
                             gDebuffPanel.UpdateDebuffPanel(debuffList);
@@ -149,7 +148,13 @@ namespace EnhancedDebuffTracking
                 
                 // Get the list for the current enemy
                 gCurrentTargetNetworkId = buff.Target.NetworkId.ToString();
-                List<DebuffData> debuffList = EntityManager.GetEnemyDebuffList(gCurrentTargetNetworkId);
+                EntityData entityData = EntityManager.GetEntityData(gCurrentTargetNetworkId);
+                // Get the number of seconds since EPOCH from when the very first debuff lands
+                if (entityData.startCombatTime == 0L)
+                {
+                    entityData.startCombatTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                }
+                List<DebuffData> debuffList = EntityManager.GetEntityDebuffList(gCurrentTargetNetworkId);
 
                 // If we can not find the list log a warning and exit
                 if (debuffList == null)
@@ -177,6 +182,7 @@ namespace EnhancedDebuffTracking
                 newDebuff.maxStacks = buff.BuffData.MaxStacks;
                 newDebuff.numTicks = buff.BuffData.Ticks;
                 newDebuff.tickIntervalS = buff.BuffData.TickInterval;
+                
 
                 for (int j = 0; j < buff.BuffData.EntityStatus.Count; j++)
                 {
@@ -222,10 +228,10 @@ namespace EnhancedDebuffTracking
 
                 // Find the debuff lst for this specific enemy
                 gCurrentTargetNetworkId = buff.Target.NetworkId.ToString();
-                List<DebuffData> debuffList = EntityManager.GetEnemyDebuffList(gCurrentTargetNetworkId);
+                List<DebuffData> debuffList = EntityManager.GetEntityDebuffList(gCurrentTargetNetworkId);
 
                 // Reset the debuff list
-                gDebuffPanel.ResetDebuffPanel();
+                //gDebuffPanel.ResetDebuffPanel();
 
                 // If we can not find the list log a warning and exit
                 if (debuffList == null)
@@ -259,10 +265,13 @@ namespace EnhancedDebuffTracking
                         // Update the debuff list
                         gDebuffPanel.UpdateDebuffPanel(debuffList);
 
-                        // Check the number of debuffs left, if none, reset the panel.  This will also catch dead enemies as Target.Nameplate.isDead is False when this trigger fires and as such is unusable here
+                        // Check the number of debuffs left, if none update the panel.
+                        // This will also catch dead enemies as Target.Nameplate.isDead is False when this trigger fires and as such is unusable here
                         if (debuffList.Count == 0)
                         {
-                            gDebuffPanel.ResetDebuffPanel();
+                            // Do not call reset, we dont actually want to reset the panel when something dies, only when it despawns
+                            gDebuffPanel.UpdateDebuffPanel(debuffList);
+                                
                         }
                         // Only process the first one
                         break;
@@ -302,43 +311,34 @@ namespace EnhancedDebuffTracking
         // 2) Current selected moster despawns 
         public static void OffensiveTargetSelected(Targets.Logic targetLogic)
         {
-//            MelonLogger.Warning($"OffensiveTargetSelected() 1");
             ShowDebuffPanel();
+            // Reset the panel, we must do this to clear the window when somebody switches to a new target
             gDebuffPanel.ResetDebuffPanel();
 
-//            MelonLogger.Warning($"OffensiveTargetSelected() 2");
             // Offensive goes to null when a monster despawns
             if (targetLogic.Offensive == null)
             {
-//                MelonLogger.Warning($"OffensiveTargetSelected() 3");
                 // Either the user has pressed ESC so they are targetting nothing or something has gone wrong somewhere
                 gCurrentTargetNetworkId = null;
                 return;
             }
 
-//            MelonLogger.Warning($"OffensiveTargetSelected() 4 targetLogic.Offensive.Nameplate.nameText.text.ToString() = {targetLogic.Offensive.Nameplate.nameText.text.ToString()}");
-//            MelonLogger.Warning($"OffensiveTargetSelected() 4 targetLogic.Offensive.NetworkId.ToString() = {targetLogic.Offensive.NetworkId.ToString()} ");
-//            MelonLogger.Warning($"OffensiveTargetSelected() 4 targetLogic.Entity.Info.CharacterId.ToString() = {targetLogic.Entity.Info.CharacterId.ToString()} ");
-
-            // Check if we are dead, if we are clear the panel
+            // Check if we are dead, if we are dead just return, we have nothing to do
             bool isDead = CheckIfMonsterIsDead(targetLogic.Offensive.Pools);
             if (isDead)
             {
-//                MelonLogger.Warning($"OffensiveTargetSelected() 5");
                 return;
             }
 
-//            MelonLogger.Warning($"OffensiveTargetSelected() 6");
             // Identify the new target, make sure we have a row in the dictionary for it, this is an explicit handling of a weakness in the detect of new NPC entities
             gCurrentTargetNetworkId = targetLogic.Offensive.NetworkId.ToString();
             EntityManager.AddMonsterIfMissing(gCurrentTargetNetworkId);
-            List<DebuffData> debuffList = EntityManager.GetEnemyDebuffList(gCurrentTargetNetworkId);
+
+            List<DebuffData> debuffList = EntityManager.GetEntityDebuffList(gCurrentTargetNetworkId);
             if (debuffList == null)
             {
-//                MelonLogger.Warning($"OffensiveTargetSelected() 7");
                 return;
             }
-//            MelonLogger.Warning($"OffensiveTargetSelected() 8");
             gDebuffPanel.UpdateDebuffPanel(debuffList);
         }
     }

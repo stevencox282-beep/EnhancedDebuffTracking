@@ -1,6 +1,5 @@
 using Il2Cpp;
 using Il2CppPantheonPersist;
-using Il2CppRootMotion;
 using MelonLoader;
 
 namespace EnhancedDebuffTracking;
@@ -9,12 +8,12 @@ public static class EntityManager
 {
     private static readonly string[] Blacklist = { "Banner of Arms", "Banner of Onslaught", "Challenger's Banner", "Rallying Banner", "Shieldman's Banner", "ghostly riddler" };
     // Global to hold the list of all debuffs for a monster, it accesses a List of debuffs via a unique monster id
-    public static Dictionary<string, List<DebuffData>> gDebuffDictionary = new Dictionary<string, List<DebuffData>>();
+    public static Dictionary<string, EntityData> gDebuffDictionary = new Dictionary<string, EntityData>();
 
     private static readonly List<EntityNpcGameObject> Monsters = new();
     private static readonly List<EntityNpcGameObject> FriendlyNPCs = new();
 
-    public static List<DebuffData> GetEnemyDebuffList(string targetNetworkId)
+    public static EntityData GetEntityData(string targetNetworkId)
     {
         // We have no target selected
         if (targetNetworkId == null)
@@ -34,37 +33,84 @@ public static class EntityManager
         }
     }
 
+    public static List<DebuffData> GetEntityDebuffList(string targetNetworkId)
+    {
+        // We have no target selected
+        if (targetNetworkId == null)
+        {
+            return null;
+        }
+
+        // EntityManager will remove entries from the Dictionary on death, not on despawn, so for now we just have to ignore all failures to find an enemy in the database
+        // Not ideal as this will mask genuine problems but there is nothing we can do about it, it is how the hook for managing NPCs works
+        if (gDebuffDictionary.ContainsKey(targetNetworkId))
+        {
+            return gDebuffDictionary[targetNetworkId].debuffData;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
     public static void UpdateAllDurationTimers()
     {
         for (int i = 0; i < gDebuffDictionary.Count; i++)
         {
-            List<DebuffData> debuffList = gDebuffDictionary.ElementAt(i).Value;
+            EntityData entityData = gDebuffDictionary.ElementAt(i).Value;
+            List<DebuffData> debuffList = entityData.debuffData;
             // Process this list backwards, this allows us to delete from the end from inside the loop and not corrupt our own index
             for (int j = debuffList.Count()-1; j > -1; j--)
             {
                 DebuffData debuff = debuffList[j];
                         
-                // Update the time remaining and the size of the progress bar
-                debuff.debuffDurationRemaining = debuff.debuffDurationRemaining - 1;
                 // Sopmehow we have missed an event and this debuff has expired, remove it
                 if (debuff.debuffDurationRemaining < 0)
                 {
                     // This is not very nice, this is deleting an object inside the loop we created it, this MUST be the last thing we do in this function
                     debuffList.RemoveAt(j);
                 }
-            }
 
+                // Update the time remaining and the size of the progress bar
+                debuff.debuffDurationRemaining = debuff.debuffDurationRemaining - 1;
+                // Update uptime in seconds
+                debuff.uptime++;
+
+                // OnUpdate will certainly run before we can target a monster in range, handle the possible DIV0 error 
+                if (entityData.startCombatTime == 0L)
+                {
+                    debuff.uptimePercent = 0L;
+                }
+                else
+                {
+                    long currentTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                    // This should be impossible, how can the current time be less than the time we started combat? But just in case, handle it to prevent a negative uptime percent
+                    if (currentTime == entityData.startCombatTime)
+                    {
+                        MelonLogger.Error("UpdateAllDurationTimers() INVALID currentTime {currentTime} vs entityData.startCombatTime {entityData.startCombatTime}");
+                        // Reduce the start time by 1, one second doesnt matter in the grand scheme of things
+                        entityData.startCombatTime--;
+                    }
+
+                    // Get the time in seconds the encounter has been running
+                    float currentEncounterDurationS = (float)(currentTime - entityData.startCombatTime);
+                    debuff.uptimePercent = (float)(debuff.uptime/ (float)(currentTime - entityData.startCombatTime)) * 100;                    
+                }
+            }
         }
     }
 
     // This function checks is there is an entry in the dictionary for casterNetworkId and if not makes one, prevent exceptions if something unexpected happens
     public static void AddMonsterIfMissing(string targetNetworkId)
     {
-        List<DebuffData> temp = GetEnemyDebuffList(targetNetworkId);
+        List<DebuffData> debuffData = GetEntityDebuffList(targetNetworkId);
         // We do not care about the return data
-        if (temp == null)
+        if (debuffData == null)
         {
-            List<DebuffData> newMonster = new List<DebuffData>();
+            MelonLogger.Error("AddMonsterIfMissing() Missing Monster Found");
+            EntityData newMonster = new EntityData();
+            newMonster.startCombatTime = 0L;
+            newMonster.debuffData = new List<DebuffData>(debuffData);
             gDebuffDictionary.Add(targetNetworkId, newMonster);
         }
     }
@@ -120,7 +166,9 @@ public static class EntityManager
 
             Globals.MonstersInRange.Add(entityNpcGameObject.NetworkId.Value, entityNpcGameObject);
             Globals.MonstersInRangeLastPosition.Add(entityNpcGameObject.NetworkId.Value, entityNpcGameObject.transform.position);
-            List<DebuffData> newMonster = new List<DebuffData>();
+            EntityData newMonster = new EntityData();
+            newMonster.startCombatTime = 0L;
+            newMonster.debuffData = new List<DebuffData>();
             gDebuffDictionary.Add(entityNpcGameObject.NetworkId.ToString(), newMonster);
         }
         else

@@ -23,7 +23,7 @@ public static class Globals
     public static int PanelHeight = 300;
     public static int PanelWidth = 400;
     public static int MeshWidth = (PanelWidth - 75); // Give space for the time remaining textmesh
-    public static float TimeLeftMargin = 0.9f; // The Time must start after the mesh ends
+    public static float TimeLeftMargin = 0.875f; // The Time mesh must start after the name text mesh ends
     public static int TimeMeshWidth = 500;
     public static int MeshHeight = 20;
     public static int TimeMeshHeight = MeshHeight;

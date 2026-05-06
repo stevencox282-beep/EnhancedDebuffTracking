@@ -1,10 +1,7 @@
 ﻿using Il2Cpp;
-using Il2CppLogicalGraphNodes;
-using Il2CppServiceStack.Text;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.Rendering.HighDefinition;
-using UnityEngine.UIElements;
 
 
 [assembly: MelonInfo(typeof(EnhancedDebuffTracking.ModMain), "EnhancedDebuffTracking", "1.0.0", "Anonymous", null)]
@@ -12,6 +9,17 @@ using UnityEngine.UIElements;
 
 namespace EnhancedDebuffTracking
 {
+
+    // TODO - When we are ready for uptime, we will need to recfactor to use EntityData and a way to track when we engage a new target to get the total time
+    public class EntityData()
+    {
+        public int uptime; // Time the debuff has been up
+        public int totalTime; // Time since the monster received its first debuff
+        public int numBuffs; // Number of buffs on the target
+        public List<DebuffData> debuffData = new List<DebuffData>();
+
+    }
+
     // This class will be used to store all the information required to display the debuff data in the debuff panel
     public class DebuffData()
     {
@@ -35,9 +43,28 @@ namespace EnhancedDebuffTracking
         public int numStacks; // Number of stacks
         public int maxStacks; // Max stacks
         public string entityStatus; // Burning / Poisoned etc
+        
     }
 
 
+    // IMPORTANT INFORMATION ABOUT HOW THIS MOD WORKS AND WHY
+    // This Mod collects all debuff information about all mobs that are currently in range, this is handle neatly in a single trigger.
+    // The Pantheon Client does proves multiple remove triggers but none of them provide enough information to allow this mod to reliably remove debuffs (essential information is NULL or filled with default values under various conditions)
+    // So to handle the removal of debuffs (expiry / monster dies) I have 2 systems in place:
+    // 1) If the duration remaining reaches zero this mod delete the debuff itself, even if it have not receives a triogegr to do so (this is done in the OnUpdate() function and is the primary way debuffs are removed)
+    // 2) For the triggers I do receive that are usuable they are ONLY received for the current offensive target.
+
+    // The key use-case scenarios for this mode are:
+    // 1) A monster moves into range (EntityNpcGameObject.NetworkStart)
+    // 2) A monster leaves range (EntityNpcGameObject.NetworkStop)
+    // 3) A monster receices a debuff (Buffs.Logic.Add)
+    // 4) A debuff on a monster expires (OnUpdate() if not the active target, or if the active target UIBuffBar.OnRemoveBuff)
+
+    // UNHANDLED SCENARIOS:
+    // 1) Somebody puts a deuff on a monster that is not the current offensive target and the debuff is removed before the debuff expires naturally expires.
+    //    The implementation of a reliable remove trigger is needed to solve this problem or somebody smarter than me to work out how to hack it together with the mess we have to work with.
+    // 2) A monster attacks a player and the game auto targets that monster if there is no offensive target already selected.
+    //    Right now we do nothing as the triggers are full of default values so the mod cant do much at this time, its not perfect but for now we have to live with it
     public class ModMain : MelonMod
     {
         // UI Elements
@@ -203,7 +230,6 @@ namespace EnhancedDebuffTracking
                 // If we can not find the list log a warning and exit
                 if (debuffList == null)
                 {
-                    // TODO - Get rid of this before releasing it, once released I am finished with this mod so no point filling adding to the log 
                     //MelonLogger.Error($"OnRemoveBuff() unable to find debuff list for enemy {buff.Caster.NetworkId.ToString()}");
                     return;
                 }
@@ -291,6 +317,8 @@ namespace EnhancedDebuffTracking
             }
 
 //            MelonLogger.Warning($"OffensiveTargetSelected() 4 targetLogic.Offensive.Nameplate.nameText.text.ToString() = {targetLogic.Offensive.Nameplate.nameText.text.ToString()}");
+//            MelonLogger.Warning($"OffensiveTargetSelected() 4 targetLogic.Offensive.NetworkId.ToString() = {targetLogic.Offensive.NetworkId.ToString()} ");
+//            MelonLogger.Warning($"OffensiveTargetSelected() 4 targetLogic.Entity.Info.CharacterId.ToString() = {targetLogic.Entity.Info.CharacterId.ToString()} ");
 
             // Check if we are dead, if we are clear the panel
             bool isDead = CheckIfMonsterIsDead(targetLogic.Offensive.Pools);

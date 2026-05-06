@@ -338,9 +338,28 @@ namespace EnhancedDebuffTracking
 
                     // Set the target name, not the most optimal as it is set multiple times but lets live with it
                     targetNameTextMeshObject.GetComponent<TextMeshProUGUI>().text = $" <b>Target:</b> {debuff.targetName.ToUpperSafe()}, {debuff.targetClass}, {debuff.targetKind}";
-                    // Update the displayed string "DebuffName 22s", leave the leading space in
+                    // Update the target information, leave the leading space in
                     textMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $" {debuff.debuffName} ({debuff.numStacks}/{debuff.maxStacks} Stacks), ({debuff.casterName})";
-                    timeTextMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $"{debuff.debuffDurationRemaining}s";
+                    if (debuff.debuffDurationRemaining < 60)
+                    {
+                        timeTextMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $"{debuff.debuffDurationRemaining}s";
+                    }
+                    else
+                    {
+                        timeTextMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $"{Math.Floor((decimal)debuff.debuffDurationRemaining/60)}m{debuff.debuffDurationRemaining%60}s";
+                    }
+                    
+//                    if (debuff.debuffDurationRemaining < 60f)
+//                    {
+//                        // Display the remaining time in seconds
+//                        timeTextMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $"debuff.debuffDurationRemaining}s ({Math.Floor((decimal)debuff.uptime/60)})m{Math.Floor((decimal)debuff.uptime)%60}s";
+//                    }
+//                    else
+//                    {
+//                        // display the remaining time in minutes and seconds
+//                        timeTextMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $"{Math.Floor((decimal)debuff.debuffDurationRemaining)}m{Math.Floor((decimal)debuff.debuffDurationRemaining)%60}s, {Math.Floor((decimal)debuff.uptime/60)}m{debuff.uptime%60}s";
+//                    }
+                    
 
                     // Now update the progress bar colour and time
                     Image image = imageObjects[i].transform.GetComponent<Image>();

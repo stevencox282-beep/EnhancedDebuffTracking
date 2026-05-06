@@ -14,12 +14,3 @@ public class BuffLogicAdd
         ModMain.OnAddOrRefreshBuff(time, buff, putInBackground, isRefresh, isItemBuff);
     }
 }
-
-[HarmonyPatch(typeof(Buffs.Logic), nameof(Buffs.Logic.Remove), typeof(double), typeof(ulong), typeof(bool), typeof(bool), typeof(bool), typeof(int))]
-public class BuffLogicRemove
-{
-    private static void Prefix(double time, ulong internalBuffId, bool moveToBackground = false, bool removeAllStacks = true, bool isItemBuff = false, int stacksToRemove = 1)
-    {
-        //ModMain.OnRemoveBuff(time, buffData, moveToBackground, isRefresh);
-    }
-}

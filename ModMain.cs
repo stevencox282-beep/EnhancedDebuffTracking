@@ -200,15 +200,15 @@ namespace EnhancedDebuffTracking
                 for (int j = 0; j < buff.BuffData.EntityStatus.Count; j++)
                 {
                     newDebuff.entityStatus = buff.BuffData.EntityStatus[j].ToString();
-                    MelonLogger.Warning($"OnAddOrRefreshBuff() buff.BuffData.EntityStatus[j].ToString() = {buff.BuffData.EntityStatus[j].ToString()} ");
+//                    MelonLogger.Warning($"OnAddOrRefreshBuff() buff.BuffData.EntityStatus[j].ToString() = {buff.BuffData.EntityStatus[j].ToString()} ");
                 }
 
-                MelonLogger.Warning($"OnAddOrRefreshBuff() newDebuff.debuffName = buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()} ");
-                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.AbilityType.AsString() = {buff.CreatedByAbility.AbilityType.AsString()} ");
-                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.ActionType.ToString() = {buff.CreatedByAbility.ActionType.ToString()} ");
-                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.SpellType.ToString() = {buff.CreatedByAbility.SpellType.ToString()} ");
-                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.AbilitySchool.ToString() = {buff.CreatedByAbility.AbilitySchool.ToString()} ");
-                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.CastType.ToString() = {buff.CreatedByAbility.CastType.ToString()} ");
+//                MelonLogger.Warning($"OnAddOrRefreshBuff() newDebuff.debuffName = buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()} ");
+//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.AbilityType.AsString() = {buff.CreatedByAbility.AbilityType.AsString()} ");
+//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.ActionType.ToString() = {buff.CreatedByAbility.ActionType.ToString()} ");
+//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.SpellType.ToString() = {buff.CreatedByAbility.SpellType.ToString()} ");
+//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.AbilitySchool.ToString() = {buff.CreatedByAbility.AbilitySchool.ToString()} ");
+//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.CastType.ToString() = {buff.CreatedByAbility.CastType.ToString()} ");
                 
                 // Add this specific debuff`
                 debuffList.Add(newDebuff);
@@ -233,6 +233,12 @@ namespace EnhancedDebuffTracking
                 {
                     MelonLogger.Warning($"OnRemoveBuff() 3");
                     return;
+                }
+
+                // Target is dead
+                if (buff.Target == null)
+                {
+                    MelonLogger.Warning($"OnRemoveBuff() 3b");
                 }
 
                 // Find the debuff lst for this specific enemy
@@ -276,9 +282,12 @@ namespace EnhancedDebuffTracking
                     }
                 }
 
-                // update the debuff list
-                gDebuffPanel.ResetDebuffPanel();
-                gDebuffPanel.UpdateDebuffPanel(debuffList);
+                // If the monster is dead dont remove the debuffs from the panel
+                if (buff.Target.Nameplate.entity.Nameplate.isDead)
+                {
+                    gDebuffPanel.ResetDebuffPanel();
+                    gDebuffPanel.UpdateDebuffPanel(debuffList);
+                }
             }
         }
 

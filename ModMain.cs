@@ -1,4 +1,5 @@
 ﻿using Il2Cpp;
+using Il2CppPantheonPersist;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.Rendering.HighDefinition;
@@ -16,8 +17,8 @@ namespace EnhancedDebuffTracking
     public class EntityData()
     {
         public long startCombatTime; // Time since the monster was engaged
+        public bool isDead; // If the monster is dea or not
         public List<DebuffData> debuffData = new List<DebuffData>();
-
     }
 
     // This class will be used to store all the information required to display the debuff data in the debuff panel
@@ -73,7 +74,7 @@ namespace EnhancedDebuffTracking
         private static string gCurrentTargetNetworkId = null;
         private const float UpdateInterval = 1.0f; // Update interval in seconds
         private static float _timeSinceLastUpdate;
-        private static readonly string[] Blacklist = { "Trait:", "Bleeding Essence", "Mana Guzzle", "Taunt Immunity" };
+        private static readonly string[] Blacklist = { "Trait:", "Mana Guzzle", "Taunt Immunity", "Feared" };
         private static string debuffPanelName = "EDT_DebuffPanel_EDT";
 
         public override void OnInitializeMelon() { }
@@ -136,11 +137,8 @@ namespace EnhancedDebuffTracking
         // Make sure we dont re-add an existing buff to the buff list and you handle all the different conditions it can be called
         public static void OnAddOrRefreshBuff(double time, ActiveBuff buff, bool inBackground, bool isRefresh, bool isItemBuff)
         {
-//            MelonLogger.Warning($"OnAddOrRefreshBuff() 1 buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}, isRefresh = {isRefresh}, inBackground = {inBackground}, isItemBuff = {isItemBuff}");
+            MelonLogger.Warning($"OnAddOrRefreshBuff() 1 buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}, isRefresh = {isRefresh}, inBackground = {inBackground}, isItemBuff = {isItemBuff}");
 
-
-
-            
             // Make sure we only track debuffs and only on monsters
             if (IsValidTarget(buff))
             {
@@ -229,7 +227,7 @@ namespace EnhancedDebuffTracking
         // 2) When a debuff expires an enemy you do not have targetted
         public static void OnRemoveBuff(double time, ActiveBuff buff, bool moveToBackground, bool isRefresh)
         {
-            MelonLogger.Warning($"OnRemoveBuff() 1 buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}, isRefresh = {isRefresh}, inBackground = {moveToBackground}");
+//            MelonLogger.Warning($"OnRemoveBuff() 1 buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}, isRefresh = {isRefresh}, inBackground = {moveToBackground}");
             // Make sure this is something we want to track
             if (IsValidTarget(buff))
             {
@@ -254,7 +252,7 @@ namespace EnhancedDebuffTracking
                 // If we can not find the list log a warning and exit
                 if (debuffList == null)
                 {
-                    MelonLogger.Error($"OnRemoveBuff() unable to find debuff list for enemy {buff.Caster.NetworkId.ToString()}");
+//                    MelonLogger.Error($"OnRemoveBuff() unable to find debuff list for enemy {buff.Caster.NetworkId.ToString()}");
                     return;
                 }
 
@@ -282,14 +280,13 @@ namespace EnhancedDebuffTracking
                         {
                             MelonLogger.Error($"OnRemoveBuff() - Failed to remove debuff {buff.BuffData?.DisplayName.ToString()} from list");
                         }
-
-//                        MelonLogger.Warning($"OnRemoveBuff() 8");
                         break;
                     }
                 }
 
-                // If the monster is dead dont remove the debuffs from the panel
-                if (buff.Target.Nameplate.entity.Nameplate.isDead)
+                // If the monster is dead dont remove the debuffs from the panel, checking isDead doesnt work, its always false
+                var pool = buff.Target.Pools.GetPool(PoolType.Health);
+                if (pool != null && pool.Current > 0)
                 {
                     gDebuffPanel.ResetDebuffPanel();
                     gDebuffPanel.UpdateDebuffPanel(debuffList);
@@ -332,6 +329,7 @@ namespace EnhancedDebuffTracking
             {
                 // Either the user has pressed ESC so they are targetting nothing or something has gone wrong somewhere
                 gCurrentTargetNetworkId = null;
+                gDebuffPanel.ResetDebuffPanel();
                 return;
             }
 
@@ -342,7 +340,6 @@ namespace EnhancedDebuffTracking
                 return;
             }
 
-            // Reset the panel, we must do this to clear the window when somebody switches to a new target
             // Reset the panel, we must do this to clear the window when somebody switches to a new target
             gDebuffPanel.ResetDebuffPanel();
 

@@ -113,11 +113,15 @@ public static class EntityManager
         // We do not care about the return data
         if (debuffData == null)
         {
-            MelonLogger.Error("AddMonsterIfMissing() Missing Monster Found");
+            MelonLogger.Error("AddMonsterIfMissing() 1");
             EntityData newMonster = new EntityData();
+            MelonLogger.Error("AddMonsterIfMissing() 2");
             newMonster.startCombatTime = 0L;
-            newMonster.debuffData = new List<DebuffData>(debuffData);
+            MelonLogger.Error("AddMonsterIfMissing() 3");
+            newMonster.debuffData = new List<DebuffData>();
+            MelonLogger.Error("AddMonsterIfMissing() 4");
             gDebuffDictionary.Add(targetNetworkId, newMonster);
+            MelonLogger.Error("AddMonsterIfMissing() 5");
         }
     }
 

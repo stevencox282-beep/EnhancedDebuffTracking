@@ -84,17 +84,23 @@ public static class EntityManager
                 else
                 {
                     long currentTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                    // This should be impossible, how can the current time be less than the time we started combat? But just in case, handle it to prevent a negative uptime percent
-                    if (currentTime == entityData.startCombatTime)
-                    {
-                        MelonLogger.Error("UpdateAllDurationTimers() INVALID currentTime {currentTime} vs entityData.startCombatTime {entityData.startCombatTime}");
-                        // Reduce the start time by 1, one second doesnt matter in the grand scheme of things
-                        entityData.startCombatTime--;
-                    }
+                    // If we add the first dbeuff to a monster just before OnUpdate runs we can get into this function before one whole second has passed
+                    // There is no point in dealing with this edge case properly, set the combat start time back one second and continue processing,
+                    // this will cause a minor inaccuracy in the uptime percent but its good enough for this mod and prevents a DIV0 error
+//                    if (currentTime == entityData.startCombatTime)
+                    //{
+//                        // Reduce the start time by 1, one second doesnt matter in the grand scheme of things
+//                        entityData.startCombatTime--;
+//                    }
 
                     // Get the time in seconds the encounter has been running
                     float currentEncounterDurationS = (float)(currentTime - entityData.startCombatTime);
-                    debuff.uptimePercent = (float)(debuff.uptime/ (float)(currentTime - entityData.startCombatTime)) * 100;                    
+                    debuff.uptimePercent = (float)(debuff.uptime/ (float)(currentTime - entityData.startCombatTime)) * 100;
+                    // Cap % at 100, this handles the case when the combat start time and current time are the same
+                    if (debuff.uptimePercent > 100)
+                    {
+                        debuff.uptimePercent = 100;
+                    }
                 }
             }
         }

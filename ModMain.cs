@@ -3,6 +3,7 @@ using MelonLoader;
 using UnityEngine;
 using UnityEngine.Rendering.HighDefinition;
 using static Il2CppSystem.DateTimeParse;
+using static UnityEngine.UIElements.StylePropertyAnimationSystem;
 
 
 [assembly: MelonInfo(typeof(EnhancedDebuffTracking.ModMain), "EnhancedDebuffTracking", "1.0.0", "Anonymous", null)]
@@ -135,8 +136,6 @@ namespace EnhancedDebuffTracking
         // Make sure we dont re-add an existing buff to the buff list and you handle all the different conditions it can be called
         public static void OnAddOrRefreshBuff(double time, ActiveBuff buff, bool inBackground, bool isRefresh, bool isItemBuff)
         {
-//            MelonLogger.Warning($"OnAddOrRefreshBuff 1 buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}, isRefresh = {isRefresh}, inBackground = {inBackground}, isItemBuff = {isItemBuff}");
-
             // Make sure we only track debuffs and only on monsters
             if (IsValidTarget(buff))
             {
@@ -187,21 +186,21 @@ namespace EnhancedDebuffTracking
                 for (int j = 0; j < buff.BuffData.EntityStatus.Count; j++)
                 {
                     newDebuff.entityStatus = buff.BuffData.EntityStatus[j].ToString();
-//                    MelonLogger.Warning($"OnAddOrRefreshBuff() buff.BuffData.EntityStatus[j].ToString() = {buff.BuffData.EntityStatus[j].ToString()} ");
+                    MelonLogger.Warning($"OnAddOrRefreshBuff() buff.BuffData.EntityStatus[j].ToString() = {buff.BuffData.EntityStatus[j].ToString()} ");
                 }
 
-//                MelonLogger.Warning($"OnAddOrRefreshBuff() newDebuff.debuffName = buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()} ");
-//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.AbilityType.AsString() = {buff.CreatedByAbility.AbilityType.AsString()} ");
-//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.ActionType.ToString() = {buff.CreatedByAbility.ActionType.ToString()} ");
-//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.SpellType.ToString() = {buff.CreatedByAbility.SpellType.ToString()} ");
-//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.AbilitySchool.ToString() = {buff.CreatedByAbility.AbilitySchool.ToString()} ");
-//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.CastType.ToString() = {buff.CreatedByAbility.CastType.ToString()} ");
-//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.cachedRangeData.value.ToString() = {buff.CreatedByAbility.cachedRangeData.value.ToString()} ");
-//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.HasteAffectType.ToString() = {buff.CreatedByAbility.HasteAffectType.ToString()} ");
-//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.IsTechniqueAbility.toString() = {buff.CreatedByAbility.IsTechniqueAbility().ToString()} ");
-//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.TargetType.ToString() = {buff.CreatedByAbility.TargetType.ToString()} ");
-//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.Flags.ToString() = {buff.Flags.ToString()} ");
-//                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.BuffData.Description.ToString() = {buff.BuffData.Description.ToString()}");
+                MelonLogger.Warning($"OnAddOrRefreshBuff() newDebuff.debuffName = buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()} ");
+                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.AbilityType.AsString() = {buff.CreatedByAbility.AbilityType.AsString()} ");
+                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.ActionType.ToString() = {buff.CreatedByAbility.ActionType.ToString()} ");
+                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.SpellType.ToString() = {buff.CreatedByAbility.SpellType.ToString()} ");
+                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.AbilitySchool.ToString() = {buff.CreatedByAbility.AbilitySchool.ToString()} ");
+                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.CastType.ToString() = {buff.CreatedByAbility.CastType.ToString()} ");
+                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.cachedRangeData.value.ToString() = {buff.CreatedByAbility.cachedRangeData.value.ToString()} ");
+                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.HasteAffectType.ToString() = {buff.CreatedByAbility.HasteAffectType.ToString()} ");
+                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.IsTechniqueAbility.toString() = {buff.CreatedByAbility.IsTechniqueAbility().ToString()} ");
+                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.CreatedByAbility.TargetType.ToString() = {buff.CreatedByAbility.TargetType.ToString()} ");
+                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.Flags.ToString() = {buff.Flags.ToString()} ");
+                MelonLogger.Warning($"OnAddOrRefreshBuff() buff.BuffData.Description.ToString() = {buff.BuffData.Description.ToString()}");
 
                 // Add this specific debuff
                 debuffList.Add(newDebuff);
@@ -312,9 +311,7 @@ namespace EnhancedDebuffTracking
         public static void OffensiveTargetSelected(Targets.Logic targetLogic)
         {
             ShowDebuffPanel();
-            // Reset the panel, we must do this to clear the window when somebody switches to a new target
-            gDebuffPanel.ResetDebuffPanel();
-
+            
             // Offensive goes to null when a monster despawns
             if (targetLogic.Offensive == null)
             {
@@ -329,6 +326,10 @@ namespace EnhancedDebuffTracking
             {
                 return;
             }
+
+            // Reset the panel, we must do this to clear the window when somebody switches to a new target
+            // Reset the panel, we must do this to clear the window when somebody switches to a new target
+            gDebuffPanel.ResetDebuffPanel();
 
             // Identify the new target, make sure we have a row in the dictionary for it, this is an explicit handling of a weakness in the detect of new NPC entities
             gCurrentTargetNetworkId = targetLogic.Offensive.NetworkId.ToString();

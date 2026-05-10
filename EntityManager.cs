@@ -175,6 +175,10 @@ public static class EntityManager
             EntityData newMonster = new EntityData();
             newMonster.startCombatTime = 0L;
             newMonster.debuffData = new List<DebuffData>();
+            if (gDebuffDictionary.ContainsKey(entityNpcGameObject.NetworkId.ToString()))
+            {
+                MelonLogger.Error($"OnNpcAdded() Entry {entityNpcGameObject.NetworkId.ToString()} already exists in the dictionary, this should never happen");
+            }
             gDebuffDictionary.Add(entityNpcGameObject.NetworkId.ToString(), newMonster);
         }
         else
@@ -192,10 +196,11 @@ public static class EntityManager
         try
         {
             gDebuffDictionary.Remove(entityNpcGameObject.NetworkId.ToString());
+            MelonLogger.Warning($"OnNpcRemoved() Entry {entityNpcGameObject.NetworkId.ToString()} Removed");
         }
         catch (Exception e)
         {
-            MelonLogger.Error($"OnNpcRemoved() Entry {entityNpcGameObject.NetworkId.ToString()} does not exist");
+            MelonLogger.Warning($"OnNpcRemoved() Entry {entityNpcGameObject.NetworkId.ToString()} does not exist");
         }
         
     }

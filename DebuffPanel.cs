@@ -25,6 +25,16 @@ namespace EnhancedDebuffTracking
         private static string nameEight = "EDT_NameEight_EDT";
         private static string nameNine = "EDT_NameNine_EDT";
         private static string nameTen = "EDT_NameTen_EDT";
+        private static string nameEleven = "EDT_NameEleven_EDT";
+        private static string nameTwelve = "EDT_NameTwelve_EDT";
+        private static string nameThirteen = "EDT_NameThirteen_EDT";
+        private static string nameFourteen = "EDT_NameFourteen_EDT";
+        private static string nameFithteen = "EDT_NameFithteen_EDT";
+        private static string nameSixteen = "EDT_NameSixteen_EDT";
+        private static string nameSeventeen = "EDT_NameSeventeen_EDT";          
+        private static string nameEighteen = "EDT_NameEighteen_EDT";
+        private static string nameNineteen = "EDT_NameNineteen_EDT";
+        private static string nameTwenty = "EDT_NameTwenty_EDT";
         // Names to be used for time textmesh game objects, helps with calls to Find()
         private static string timeNameOne = "EDT_TimeNameOne_EDT";
         private static string timeNameTwo = "EDT_TimeNameTwo_EDT";
@@ -36,6 +46,16 @@ namespace EnhancedDebuffTracking
         private static string timeNameEight = "EDT_TimeNameEight_EDT";
         private static string timeNameNine = "EDT_TimeNameNine_EDT";
         private static string timeNameTen = "EDT_TimeNameTen_EDT";
+        private static string timeNameEleven = "EDT_TimeNameEleven_EDT";
+        private static string timeNameTwelve = "EDT_TimeNameTwelve_EDT";
+        private static string timeNameThirteen = "EDT_TimeNameThirteen_EDT";
+        private static string timeNameFourteen = "EDT_TimeNameFourteen_EDT";
+        private static string timeNameFithteen = "EDT_TimeNameFitheen_EDT";
+        private static string timeNameSixteen = "EDT_TimeNameSixteen_EDT";
+        private static string timeNameSeventeen = "EDT_TimeNameSeventeen_EDT";
+        private static string timeNameEighteen = "EDT_TimeNameEighteen_EDT";
+        private static string timeNameNineteen = "EDT_TimeNameNineteen_EDT";
+        private static string timeNameTwenty = "EDT_TimeNameTwenty_EDT";
 
         // Names to be used for image game objects, helps with calls to Find()
         private static string imageNameOne = "EDT_ImageNameOne_EDT";
@@ -48,20 +68,33 @@ namespace EnhancedDebuffTracking
         private static string imageNameEight = "EDT_ImageNameEight_EDT";
         private static string imageNameNine = "EDT_ImageNameNine_EDT";
         private static string imageNameTen = "EDT_ImageNameTen_EDT";
+        private static string imageNameEleven = "EDT_ImageNameEleven_EDT";
+        private static string imageNameTwelve = "EDT_ImageNameTwelve_EDT";
+        private static string imageNameThirteen = "EDT_ImageNameThirteen_EDT";
+        private static string imageNameFourteen = "EDT_ImageNameFourteen_EDT";
+        private static string imageNameFithteen = "EDT_ImageNameFithteen_EDT";
+        private static string imageNameSixteen = "EDT_ImageNameSixteen_EDT";
+        private static string imageNameSeventeen = "EDT_ImageNameSeventeen_EDT";
+        private static string imageNameEighteen = "EDT_ImageNameEighteen_EDT";
+        private static string imageNameNineteen = "EDT_ImageNameNineteen_EDT";
+        private static string imageNameTwenty = "EDT_ImageNameTwenty_EDT";
 
         // List the string values for all MaxDisplayableDebuffs debuffs
-        private static List<Color> barColours = new List<Color>()
+        private static Dictionary<SpellType, Color> barColours = new Dictionary<SpellType, Color>()
         {
-            { Color.darkBlue}, { Color.darkGreen}, { Color.purple }, { Color.brown }, { Color.red },
-            { Color.darkBlue}, { Color.darkGreen}, { Color.purple }, { Color.brown }, { Color.red },
+            { SpellType.Augmentation, Color.darkBlue}, { SpellType.Fortification, Color.darkGreen}, { SpellType.Manifestation, Color.purple }, { SpellType.Conjuration, Color.brown },
+            { SpellType.Evocation, Color.red }, { SpellType.Expulsion, Color.cadetBlue}, { SpellType.Restoration, Color.green }, { SpellType.Invocation, Color.indigo },
+            { SpellType.Illumination, Color.lavender }, { SpellType.Enervation, Color.limeGreen }, { SpellType.Corruption, Color.navyBlue }, { SpellType.TricksOfTheTrade, Color.oldLace },
+            { SpellType.Trapping, Color.azure }, { SpellType.Naturalism, Color.red }, { SpellType.ChiManipulation, Color.red }, { SpellType.FeignDeath, Color.orange },
+            { SpellType.Warfare, Color.olive }, { SpellType.Consecration, Color.mintCream }, { SpellType.None, Color.yellowGreen },
         };
+   
 
         // Setup lists to aid in the accessing of transform data later on
         Transform targetNameTextMeshObject = new Transform();
         List<Transform> textMeshObjects = new List<Transform>();
         List<Transform> timeTextMeshObjects = new List<Transform>();
         List<Transform> imageObjects = new List<Transform>();
-        
 
         // Holds the panel
         private static UIWindowPanel gUiWindowPanel  = null;
@@ -233,6 +266,17 @@ namespace EnhancedDebuffTracking
             BuildImage(imageNameEight, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightEightOffset, Globals.RowLeftMargin);
             BuildImage(imageNameNine,  Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightNineOffset, Globals.RowLeftMargin);
             BuildImage(imageNameTen,   Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTenOffset, Globals.RowLeftMargin);
+            BuildImage(imageNameEleven, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightElevenOffset, Globals.RowLeftMargin);
+            BuildImage(imageNameTwelve, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwelveOffset, Globals.RowLeftMargin);
+            BuildImage(imageNameThirteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightThirteenOffset, Globals.RowLeftMargin);
+            BuildImage(imageNameFourteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFourteenOffset, Globals.RowLeftMargin);
+            BuildImage(imageNameFithteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFithteenOffset, Globals.RowLeftMargin);
+            BuildImage(imageNameSixteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSixteenOffset, Globals.RowLeftMargin);
+            BuildImage(imageNameSeventeen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSeventeenOffset, Globals.RowLeftMargin);
+            BuildImage(imageNameEighteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightEighteenOffset, Globals.RowLeftMargin);
+            BuildImage(imageNameNineteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightNineteenOffset, Globals.RowLeftMargin);
+            BuildImage(imageNameTwenty, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyOffset, Globals.RowLeftMargin);
+
 
             // Save these for use later 
             imageObjects.Add(gUiWindowPanel.transform.Find(imageNameOne));
@@ -245,6 +289,16 @@ namespace EnhancedDebuffTracking
             imageObjects.Add(gUiWindowPanel.transform.Find(imageNameEight));
             imageObjects.Add(gUiWindowPanel.transform.Find(imageNameNine));
             imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTen));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameEleven));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwelve));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameThirteen));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameFourteen));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameFithteen));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameSixteen));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameSeventeen));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameEighteen));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameNineteen));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwenty));
         }
 
         // Builds all TextMeshes (debuff/time) to be display in the panel
@@ -264,6 +318,16 @@ namespace EnhancedDebuffTracking
             BuildTextMesh(nameEight, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightEightOffset, Globals.RowLeftMargin);
             BuildTextMesh(nameNine, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightNineOffset, Globals.RowLeftMargin);
             BuildTextMesh(nameTen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTenOffset, Globals.RowLeftMargin);
+            BuildTextMesh(nameEleven, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightElevenOffset, Globals.RowLeftMargin);
+            BuildTextMesh(nameTwelve, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwelveOffset, Globals.RowLeftMargin);
+            BuildTextMesh(nameThirteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightThirteenOffset, Globals.RowLeftMargin);
+            BuildTextMesh(nameFourteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFourteenOffset, Globals.RowLeftMargin);
+            BuildTextMesh(nameFithteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFithteenOffset, Globals.RowLeftMargin);
+            BuildTextMesh(nameSixteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSixteenOffset, Globals.RowLeftMargin);
+            BuildTextMesh(nameSeventeen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSeventeenOffset, Globals.RowLeftMargin);
+            BuildTextMesh(nameEighteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightEighteenOffset, Globals.RowLeftMargin);
+            BuildTextMesh(nameNineteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightNineteenOffset, Globals.RowLeftMargin);
+            BuildTextMesh(nameTwenty, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyOffset, Globals.RowLeftMargin);
 
             BuildTextMesh(timeNameOne, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightOneOffset, Globals.TimeLeftMargin);
             BuildTextMesh(timeNameTwo, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwoOffset, Globals.TimeLeftMargin);
@@ -275,6 +339,16 @@ namespace EnhancedDebuffTracking
             BuildTextMesh(timeNameEight, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightEightOffset, Globals.TimeLeftMargin);
             BuildTextMesh(timeNameNine, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightNineOffset, Globals.TimeLeftMargin);
             BuildTextMesh(timeNameTen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTenOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(timeNameEleven, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightElevenOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(timeNameTwelve, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwelveOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(timeNameThirteen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightThirteenOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(timeNameFourteen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightFourteenOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(timeNameFithteen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightFithteenOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(timeNameSixteen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightSixteenOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(timeNameSeventeen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightSeventeenOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(timeNameEighteen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightEighteenOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(timeNameNineteen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightNineteenOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(timeNameTwenty, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyOffset, Globals.TimeLeftMargin);
 
             // Save these for use later 
             targetNameTextMeshObject = gUiWindowPanel.transform.Find(targetName);
@@ -289,6 +363,16 @@ namespace EnhancedDebuffTracking
             textMeshObjects.Add(gUiWindowPanel.transform.Find(nameEight));
             textMeshObjects.Add(gUiWindowPanel.transform.Find(nameNine));
             textMeshObjects.Add(gUiWindowPanel.transform.Find(nameTen));
+            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameEleven));
+            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameTwelve));
+            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameThirteen));
+            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameFourteen));
+            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameFithteen));
+            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameSixteen));
+            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameSeventeen));
+            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameEighteen));
+            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameNineteen));
+            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameTwenty));
 
             timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameOne));
             timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameTwo));
@@ -300,6 +384,16 @@ namespace EnhancedDebuffTracking
             timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameEight));
             timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameNine));
             timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameTen));
+            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameEleven));
+            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameTwelve));
+            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameThirteen));
+            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameFourteen));
+            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameFithteen));
+            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameSixteen));
+            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameSeventeen));
+            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameEighteen));
+            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameNineteen));
+            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameTwenty));
         }
 
 
@@ -326,15 +420,15 @@ namespace EnhancedDebuffTracking
         }
 
         //Update the text displayed in the Debuff Box
-        public void UpdateDebuffPanel(List<DebuffData> debuffList)
+        public void UpdateDebuffPanel(EntityData entityData)
         {
             // Try and stop unwanted access to the panel to prevent exceptions
             if (gUiWindowPanel != null && gUiWindowPanel.isActiveAndEnabled && gUiWindowPanel.IsVisible)
             {
                 // Parse the list of all debuffs on the current target and display the first MaxDisplayableDebuffs
-                for (int i = 0; (i < debuffList.Count && i < Globals.MaxDisplayableDebuffs); i++)
+                for (int i = 0; (i < entityData.debuffData.Count && i < Globals.MaxDisplayableDebuffs); i++)
                 {
-                    DebuffData debuff = debuffList[i];
+                    DebuffData debuff = entityData.debuffData[i];
 
                     // Set the target name, not the most optimal as it is set multiple times but lets live with it
                     targetNameTextMeshObject.GetComponent<TextMeshProUGUI>().text = $" <b>Target:</b> {debuff.targetName.ToUpperSafe()}, {debuff.targetClass}, {debuff.targetKind}";
@@ -344,20 +438,20 @@ namespace EnhancedDebuffTracking
                     {
                         timeTextMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $"{debuff.debuffDurationRemaining}s";
                         // Display the remaining time in seconds
-                        timeTextMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $"{debuff.debuffDurationRemaining}s ({debuff.uptimePercent.ToString("0")}%)";
+                        timeTextMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $"{debuff.debuffDurationRemaining}s ({debuff.totalEncounterUptimePercent.ToString("0")}%)";
                     }
                     else
                     {
                         timeTextMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $"{Math.Floor((decimal)debuff.debuffDurationRemaining/60)}m{debuff.debuffDurationRemaining%60}s";
                         // Display the remaining time in minutes and seconds
-                        timeTextMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $"{Math.Floor((decimal)debuff.debuffDurationRemaining/60)}m{Math.Floor((decimal)debuff.debuffDurationRemaining) % 60}s, ({debuff.uptimePercent.ToString("0")}%)";
+                        timeTextMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $"{Math.Floor((decimal)debuff.debuffDurationRemaining/60)}m{Math.Floor((decimal)debuff.debuffDurationRemaining) % 60}s, ({debuff.totalEncounterUptimePercent.ToString("0")}%)";
                     }
                     
                     // Now update the progress bar colour and time
                     Image image = imageObjects[i].transform.GetComponent<Image>();
 
-                    // Set colour based on the debuff type
-                    image.color = barColours[i];
+                    // Set colour based on the spell type
+                    image.color =  barColours[debuff.spellType];
                     // Set the fill amount  1.0f is full, 0.0f is empty
                     image.fillAmount = ((1 / debuff.debuffDuration) * debuff.debuffDurationRemaining);
                 }

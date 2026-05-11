@@ -16,12 +16,12 @@ public static class Globals
     public static Dictionary<uint, EntityNpcGameObject> MonstersInRange = new Dictionary<uint, EntityNpcGameObject>();
     public static Dictionary<uint, Vector3> MonstersInRangeLastPosition = new Dictionary<uint, Vector3>();
 
-    public static int MaxDisplayableDebuffs = 10;
+    public static int MaxDisplayableDebuffs = 20;
     public static int MsToSeconds = 1000;
 
     // Panel / TextMesh Constants
     public static float RowLeftMargin = 0.05f;
-    public static int PanelHeight = 300;
+    public static int PanelHeight = 600;
     public static int PanelWidth = 400;
     public static int NameMeshWidth = (PanelWidth - 120); // Give space for the time textmesh
     public static int NameMeshHeight = 20;
@@ -31,8 +31,8 @@ public static class Globals
     public static int FontSize = 12;
 
     // Progress Bar Display Co-ordinates
-    public static float TopMargin         = 0.15f;
-    public static float InterBarOffset    = 0.09f;
+    public static float TopMargin         = 0.05f;
+    public static float InterBarOffset    = 0.04f;
     public static float HeightOneOffset   = 1f - TopMargin;
     public static float HeightTwoOffset   = HeightOneOffset - InterBarOffset;
     public static float HeightThreeOffset = HeightTwoOffset - InterBarOffset;
@@ -43,5 +43,16 @@ public static class Globals
     public static float HeightEightOffset = HeightSevenOffset - InterBarOffset; 
     public static float HeightNineOffset  = HeightEightOffset - InterBarOffset;
     public static float HeightTenOffset   = HeightNineOffset - InterBarOffset;
+    public static float HeightElevenOffset = HeightTenOffset - InterBarOffset;
+    public static float HeightTwelveOffset = HeightElevenOffset - InterBarOffset;
+    public static float HeightThirteenOffset = HeightTwelveOffset - InterBarOffset;
+    public static float HeightFourteenOffset = HeightThirteenOffset - InterBarOffset;
+    public static float HeightFithteenOffset = HeightFourteenOffset - InterBarOffset;
+    public static float HeightSixteenOffset = HeightFithteenOffset - InterBarOffset;
+    public static float HeightSeventeenOffset = HeightSixteenOffset - InterBarOffset;
+    public static float HeightEighteenOffset = HeightSeventeenOffset - InterBarOffset;
+    public static float HeightNineteenOffset = HeightEighteenOffset - InterBarOffset;
+    public static float HeightTwentyOffset = HeightNineteenOffset - InterBarOffset;
+
 }
 

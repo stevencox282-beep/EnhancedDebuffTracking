@@ -18,6 +18,8 @@ namespace EnhancedDebuffTracking
         public bool isDead = false;
         public List<DebuffData> debuffData = new List<DebuffData>();
         public long  encounterStartTime; // Total encounter time for this monster
+        public string monsterNetworkId; // network id of this monster
+        public long totalEncounterTime; // Time the monster has been engaged
     }
 
     // This class will be used to store all the information required to display the debuff data in the debuff panel
@@ -47,8 +49,8 @@ namespace EnhancedDebuffTracking
 
         public long localUptime; // Time this instance of this debuff has been up regardless of wether or not it has been cast before
         public float localUptimePercent; // Time the debuff has been up as a % of total encounter time
-        public long totalEncounterUptime; // Time the debuff has been up as a % of total encounter time
-        public float totalEncounterUptimePercent; // Time the debuff has been up as a % of total encounter time
+        public long consolidatedEncounterUptime; // Time the debuff has been up as a % of total encounter time
+        public float consolidatedEncounterUptimePercent; // Time the debuff has been up as a % of total encounter time
     }
 
 
@@ -243,12 +245,14 @@ namespace EnhancedDebuffTracking
                 EntityData entityData = EntityManager.GetEntityData(buff.Target.NetworkId.ToString());
                 if (entityData == null)
                 {
-//                    MelonLogger.Warning($"OnAddOrRefreshBuff() 4 entityData = NULL");
+//                    MelonLogger.Warning($"OnAddOrRefreshBuff() 4 entityData = NULL, buff.Target.NetworkId.ToString() = {buff.Target.NetworkId.ToString()}");
                     EntityManager.AddMonsterIfMissing(buff.Target.NetworkId.ToString());
                     entityData = EntityManager.GetEntityData(buff.Target.NetworkId.ToString());
+                    entityData.monsterNetworkId = buff.Target.NetworkId.ToString();
                 }
-                
-//                MelonLogger.Warning($"OnAddOrRefreshBuff() 5 ");
+
+
+//                MelonLogger.Warning($"OnAddOrRefreshBuff() 5 entityData.monsterNetworkId = {entityData.monsterNetworkId}");
                 // Get the number of seconds since EPOCH from when the very first debuff lands
                 if (entityData.encounterStartTime == 0L)
                 {
@@ -311,7 +315,7 @@ namespace EnhancedDebuffTracking
                 // Add this specific debuff`
                 //                MelonLogger.Warning($"OnAddOrRefreshBuff() 10 addDebuff");
                 entityData.debuffData.Add(newDebuff);
-                EntityManager.AddDebuffToUptime(buff.Target.NetworkId.ToString(), newDebuff);
+                EntityManager.AddConsolidatedUptime(buff.Target.NetworkId.ToString(), newDebuff);
 
 //                MelonLogger.Warning($"OnAddOrRefreshBuff() 11");
 
@@ -461,7 +465,7 @@ namespace EnhancedDebuffTracking
                 return;
             }
 
-//            MelonLogger.Warning($"OffensiveTargetSelected() 4");
+            MelonLogger.Warning($"OffensiveTargetSelected() 4 targetLogic.Offensive.NetworkId.ToString() = {targetLogic.Offensive.NetworkId.ToString()}");
             // Reset the panel, we must do this to clear the window when somebody switches to a new target
             gDebuffPanel.ResetDebuffPanel();
 

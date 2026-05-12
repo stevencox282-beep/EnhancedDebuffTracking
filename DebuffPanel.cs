@@ -312,8 +312,6 @@ namespace EnhancedDebuffTracking
         // Builds all images (progress bars) to be display in the panel 
         private void BuildImages() 
         {
-//            MelonLogger.Warning($"BuildImages() 1");
-
             // Make all the progress bars
             BuildImage(imageNameOne,   Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightOneOffset, Globals.RowLeftMargin);
             BuildImage(imageNameTwo,   Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwoOffset, Globals.RowLeftMargin);
@@ -335,7 +333,6 @@ namespace EnhancedDebuffTracking
             BuildImage(imageNameEighteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightEighteenOffset, Globals.RowLeftMargin);
             BuildImage(imageNameNineteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightNineteenOffset, Globals.RowLeftMargin);
             BuildImage(imageNameTwenty, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyOffset, Globals.RowLeftMargin);
-
 
             // Save these for use later 
             imageObjects.Add(gUiWindowPanel.transform.Find(imageNameOne));
@@ -363,8 +360,6 @@ namespace EnhancedDebuffTracking
         // Builds all TextMeshes (debuff/time) to be display in the panel
         private void BuildTextMeshs()
         {
-//            MelonLogger.Warning($"BuildTextMeshs() 1");
-
             // Text Mesh for Target Name
             BuildTextMesh(targetName, Globals.NameMeshHeight, Globals.NameMeshWidth, 1f, 0f);
 
@@ -435,8 +430,6 @@ namespace EnhancedDebuffTracking
             textMeshObjects.Add(gUiWindowPanel.transform.Find(nameNineteen));
             textMeshObjects.Add(gUiWindowPanel.transform.Find(nameTwenty));
 
-//            MelonLogger.Warning($"BuildTextMeshs() 2 textMeshObjects.Count = {textMeshObjects.Count}");
-
             timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameOne));
             timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameTwo));
             timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameThree));
@@ -463,30 +456,21 @@ namespace EnhancedDebuffTracking
         // Update the text displayed in the Debuff Box
         public void ResetDebuffPanel()
         { 
-//            MelonLogger.Warning($"ResetDebuffPanel() 1");
             // Try and stop unwanted access to the panel to prevent exceptions
             if (gUiWindowPanel != null && gUiWindowPanel.isActiveAndEnabled && gUiWindowPanel.IsVisible)
             {
-//                MelonLogger.Warning($"ResetDebuffPanel() 2");
                 // Parse the list of all debuffs on the current target and display the first MaxDisplayableDebuffs
                 for (int i = 0; i < Globals.MaxDisplayableDebuffs; i++)
                 {
-//                    MelonLogger.Warning($"ResetDebuffPanel() 3");
                     // Reset to an clean list
                     targetNameTextMeshObject.GetComponent<TextMeshProUGUI>().text = "";
-//                    MelonLogger.Warning($"ResetDebuffPanel() 4 textMeshObjects.Count = {textMeshObjects.Count}");
                     textMeshObjects[i].GetComponent<TextMeshProUGUI>().text = "";
-//                    MelonLogger.Warning($"ResetDebuffPanel() 5 timeTextMeshObjects.Count = {timeTextMeshObjects.Count}");
                     timeTextMeshObjects[i].GetComponent<TextMeshProUGUI>().text = "";
-//                    MelonLogger.Warning($"ResetDebuffPanel() 6 imageObjects.Count {imageObjects.Count}");
                     // Now update the progress bar colour and time
                     Image image = imageObjects[i].transform.GetComponent<Image>();
-//                    MelonLogger.Warning($"ResetDebuffPanel() 7");
                     // Set colour to black on reset
                     image.color = Color.black;
-//                    MelonLogger.Warning($"ResetDebuffPanel() 8");
                     image.fillAmount = 0.5f;
-//                    MelonLogger.Warning($"ResetDebuffPanel() 9");
                 }
             }
         }
@@ -502,8 +486,7 @@ namespace EnhancedDebuffTracking
                 {
                     DebuffData debuff = entityData.debuffData[i];
 
-                    // Set the target name, not the most optimal as it is set multiple times but lets live with it
-                    targetNameTextMeshObject.GetComponent<TextMeshProUGUI>().text = $" <b>Target:</b> {debuff.targetName.ToUpperSafe()}, {debuff.targetClass}, {debuff.targetKind}";
+                    targetNameTextMeshObject.GetComponent<TextMeshProUGUI>().text = $" <b>Target:</b> {debuff.targetName.ToUpperSafe()},\n {debuff.targetClass}, {debuff.targetKind}, ({entityData.traits})";
                     // Update the target information, leave the leading space in
                     textMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $" {debuff.debuffName} ({debuff.numStacks}/{debuff.maxStacks} Stacks), ({debuff.casterName})";
                     if (debuff.debuffDurationRemaining < 60)

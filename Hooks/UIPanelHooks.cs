@@ -2,7 +2,7 @@ using EnhancedDebuffTracking;
 using HarmonyLib;
 using Il2Cpp;
 
-namespace Clock.Hooks;
+namespace EnhancedDebuffTracking.Hooks;
 
 /// <summary>
 /// Hooks for UI panel events, specifically for creating the server time display

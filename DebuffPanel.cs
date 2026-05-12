@@ -79,17 +79,6 @@ namespace EnhancedDebuffTracking
         private static string imageNameNineteen = "EDT_ImageNameNineteen_EDT";
         private static string imageNameTwenty = "EDT_ImageNameTwenty_EDT";
 
-        // List the string values for all MaxDisplayableDebuffs debuffs
-        private static Dictionary<SpellType, Color> barColours = new Dictionary<SpellType, Color>()
-        {
-            { SpellType.Augmentation, Color.darkBlue}, { SpellType.Fortification, Color.darkGreen}, { SpellType.Manifestation, Color.purple }, { SpellType.Conjuration, Color.brown },
-            { SpellType.Evocation, Color.red }, { SpellType.Expulsion, Color.cadetBlue}, { SpellType.Restoration, Color.green }, { SpellType.Invocation, Color.indigo },
-            { SpellType.Illumination, Color.lavender }, { SpellType.Enervation, Color.limeGreen }, { SpellType.Corruption, Color.navyBlue }, { SpellType.TricksOfTheTrade, Color.oldLace },
-            { SpellType.Trapping, Color.azure }, { SpellType.Naturalism, Color.red }, { SpellType.ChiManipulation, Color.red }, { SpellType.FeignDeath, Color.orange },
-            { SpellType.Warfare, Color.olive }, { SpellType.Consecration, Color.mintCream }, { SpellType.None, Color.yellowGreen },
-        };
-   
-
         // Setup lists to aid in the accessing of transform data later on
         Transform targetNameTextMeshObject = new Transform();
         List<Transform> textMeshObjects = new List<Transform>();
@@ -98,6 +87,72 @@ namespace EnhancedDebuffTracking
 
         // Holds the panel
         private static UIWindowPanel gUiWindowPanel  = null;
+
+        private static Color getBarColours(string spellType)
+        {
+            Color returnColor = Color.black;
+            // List the string values for all MaxDisplayableDebuffs debuffs
+            switch (spellType)
+            {
+                case "Augmentation":
+                    returnColor = Color.darkBlue;
+                    break;
+                case "Fortification":
+                    returnColor = Color.darkGreen;
+                    break;
+                case "Manifestation":
+                    returnColor = Color.purple;
+                    break;
+                case "Conjuration":
+                    returnColor = Color.brown;
+                    break;
+                case "Evocation":
+                    returnColor = Color.red;
+                    break;
+                case "Expulsion":
+                    returnColor = Color.cadetBlue;
+                    break;
+                case "Restoration":
+                    returnColor = Color.green;
+                    break;
+                case "Invocation":
+                    returnColor = Color.indigo;
+                    break;
+                case "Illumination":
+                    returnColor = Color.lavender;
+                    break;
+                case "Enervation":
+                    returnColor = Color.limeGreen;
+                    break;
+                case "Corruption":
+                    returnColor = Color.navyBlue;
+                    break;
+                case "TricksOfTheTrade":
+                    returnColor = Color.oldLace;
+                    break;
+                case "Trapping":
+                    returnColor = Color.azure;
+                    break;
+                case "Naturalism":
+                    returnColor = Color.red;
+                    break;
+                case "FeignDeath":
+                    returnColor = Color.orange;
+                    break;
+                case "Warfare":
+                    returnColor = Color.olive;
+                    break;
+                case "None":
+                    returnColor = Color.yellowGreen;
+                    break;
+                default:
+                    returnColor = Color.black;
+                    break;
+            }
+
+            return returnColor;
+        }
+
 
         // Displays a panel with to contain the data we want
         public void DisplayPanel(string panelName, Transform parentPanel, Vector2 panelSize)
@@ -138,17 +193,19 @@ namespace EnhancedDebuffTracking
             // Add in Text Meshs that display the data
             BuildTextMeshs();
 
-            // Ensure the panel is not displayed immediatly, this will trigger on target selection
-            gUiWindowPanel.Hide();
+            // Ensure the panel is displayed immediatly
+            gUiWindowPanel.Show();
         }
 
         // Tidy up the alloated resources when we logout
         public void RemovePanel()
         {
+//            MelonLogger.Warning($"RemovePanel() 1");
             // On a /camp out and logging back in the static variables persist and are not garbage collected, explicitly clear them out, we will rebuild them on loading into a zone
             textMeshObjects.Clear();
             timeTextMeshObjects.Clear();
             imageObjects.Clear();
+//            MelonLogger.Warning($"RemovePanel() 2");
         }
 
         // Constructs the close button and set the background
@@ -255,6 +312,8 @@ namespace EnhancedDebuffTracking
         // Builds all images (progress bars) to be display in the panel 
         private void BuildImages() 
         {
+//            MelonLogger.Warning($"BuildImages() 1");
+
             // Make all the progress bars
             BuildImage(imageNameOne,   Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightOneOffset, Globals.RowLeftMargin);
             BuildImage(imageNameTwo,   Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwoOffset, Globals.RowLeftMargin);
@@ -304,6 +363,8 @@ namespace EnhancedDebuffTracking
         // Builds all TextMeshes (debuff/time) to be display in the panel
         private void BuildTextMeshs()
         {
+//            MelonLogger.Warning($"BuildTextMeshs() 1");
+
             // Text Mesh for Target Name
             BuildTextMesh(targetName, Globals.NameMeshHeight, Globals.NameMeshWidth, 1f, 0f);
 
@@ -374,6 +435,8 @@ namespace EnhancedDebuffTracking
             textMeshObjects.Add(gUiWindowPanel.transform.Find(nameNineteen));
             textMeshObjects.Add(gUiWindowPanel.transform.Find(nameTwenty));
 
+//            MelonLogger.Warning($"BuildTextMeshs() 2 textMeshObjects.Count = {textMeshObjects.Count}");
+
             timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameOne));
             timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameTwo));
             timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameThree));
@@ -399,22 +462,31 @@ namespace EnhancedDebuffTracking
 
         // Update the text displayed in the Debuff Box
         public void ResetDebuffPanel()
-        {
+        { 
+//            MelonLogger.Warning($"ResetDebuffPanel() 1");
             // Try and stop unwanted access to the panel to prevent exceptions
             if (gUiWindowPanel != null && gUiWindowPanel.isActiveAndEnabled && gUiWindowPanel.IsVisible)
             {
+//                MelonLogger.Warning($"ResetDebuffPanel() 2");
                 // Parse the list of all debuffs on the current target and display the first MaxDisplayableDebuffs
                 for (int i = 0; i < Globals.MaxDisplayableDebuffs; i++)
                 {
+//                    MelonLogger.Warning($"ResetDebuffPanel() 3");
                     // Reset to an clean list
                     targetNameTextMeshObject.GetComponent<TextMeshProUGUI>().text = "";
+//                    MelonLogger.Warning($"ResetDebuffPanel() 4 textMeshObjects.Count = {textMeshObjects.Count}");
                     textMeshObjects[i].GetComponent<TextMeshProUGUI>().text = "";
+//                    MelonLogger.Warning($"ResetDebuffPanel() 5 timeTextMeshObjects.Count = {timeTextMeshObjects.Count}");
                     timeTextMeshObjects[i].GetComponent<TextMeshProUGUI>().text = "";
+//                    MelonLogger.Warning($"ResetDebuffPanel() 6 imageObjects.Count {imageObjects.Count}");
                     // Now update the progress bar colour and time
                     Image image = imageObjects[i].transform.GetComponent<Image>();
+//                    MelonLogger.Warning($"ResetDebuffPanel() 7");
                     // Set colour to black on reset
                     image.color = Color.black;
+//                    MelonLogger.Warning($"ResetDebuffPanel() 8");
                     image.fillAmount = 0.5f;
+//                    MelonLogger.Warning($"ResetDebuffPanel() 9");
                 }
             }
         }
@@ -451,7 +523,7 @@ namespace EnhancedDebuffTracking
                     Image image = imageObjects[i].transform.GetComponent<Image>();
 
                     // Set colour based on the spell type
-                    image.color =  barColours[debuff.spellType];
+                    image.color = getBarColours(debuff.spellType.ToString());
                     // Set the fill amount  1.0f is full, 0.0f is empty
                     image.fillAmount = ((1 / debuff.debuffDuration) * debuff.debuffDurationRemaining);
                 }

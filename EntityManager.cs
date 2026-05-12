@@ -54,7 +54,7 @@ public static class EntityManager
     // Adds entry to calculate consolidated uptime for
     public static void AddConsolidatedUptime(string monsterNetworkId, DebuffData debuffData)
     {
-        MelonLogger.Warning($"AddConsolidatedUptime() monsterNetworkId = {monsterNetworkId}, debuffName = {debuffData.debuffName}");
+        //MelonLogger.Warning($"AddConsolidatedUptime() monsterNetworkId = {monsterNetworkId}, debuffName = {debuffData.debuffName}");
         // if we do not have this debuff in our uptime dictionary, add it
         if (!consolidatedUptimeDictionary.ContainsKey(monsterNetworkId))
         {
@@ -91,30 +91,30 @@ public static class EntityManager
     // Gets the total consolidated uptime for a monster and debuff
     public static void IncrementConsolidatedUptime(string monsterNetworkId, string debuffName)
     {
-        MelonLogger.Warning($"IncrementConsolidatedUptime() 1 monsterNetworkId = {monsterNetworkId}, debuffName = {debuffName}");
+//        MelonLogger.Warning($"IncrementConsolidatedUptime() 1 monsterNetworkId = {monsterNetworkId}, debuffName = {debuffName}");
         List<ConsolidatedUptime> consolidatedUptimeList = consolidatedUptimeDictionary[monsterNetworkId];
-        MelonLogger.Warning($"IncrementConsolidatedUptime() 2 consolidatedUptimeList.Count = {consolidatedUptimeList.Count}");
+//        MelonLogger.Warning($"IncrementConsolidatedUptime() 2 consolidatedUptimeList.Count = {consolidatedUptimeList.Count}");
         if (!monsterNetworkId.IsEmpty() && consolidatedUptimeList != null && consolidatedUptimeList.Count > 0)
         {
-            MelonLogger.Warning($"IncrementConsolidatedUptime() 3");
+//            MelonLogger.Warning($"IncrementConsolidatedUptime() 3");
             foreach (var uptimeItem in consolidatedUptimeList)
             {
-                MelonLogger.Warning($"IncrementConsolidatedUptime() 4 uptimeItem.debuffName = {uptimeItem.debuffName} debuffName = {debuffName}");
+//                MelonLogger.Warning($"IncrementConsolidatedUptime() 4 uptimeItem.debuffName = {uptimeItem.debuffName} debuffName = {debuffName}");
                 if (uptimeItem.debuffName == debuffName)
                 {
-                    MelonLogger.Warning($"IncrementConsolidatedUptime() 5");
+//                    MelonLogger.Warning($"IncrementConsolidatedUptime() 5");
                     uptimeItem.totalEncounterUptime++;
                 }
             }
-            MelonLogger.Warning($"IncrementConsolidatedUptime() 6");
+//            MelonLogger.Warning($"IncrementConsolidatedUptime() 6");
         }
-        MelonLogger.Warning($"IncrementConsolidatedUptime() 7");
+//        MelonLogger.Warning($"IncrementConsolidatedUptime() 7");
     }
 
     // Gets the total consolidated uptime for a monster and debuff
     public static long GetConsolidatedUptime(string monsterNetworkId, string debuffName)
     {
-        MelonLogger.Warning($"GetConsolidatedUptime() monsterNetworkId = {monsterNetworkId}, debuffName = {debuffName}");
+//        MelonLogger.Warning($"GetConsolidatedUptime() monsterNetworkId = {monsterNetworkId}, debuffName = {debuffName}");
         List<ConsolidatedUptime> ConsolidatedUptimeList = consolidatedUptimeDictionary[monsterNetworkId];
         foreach(var uptimeItem in ConsolidatedUptimeList)
         {
@@ -131,7 +131,7 @@ public static class EntityManager
     // Adds a debuff to the list of unique monsters debuffs, creates a new mosnter row if needed
     public static void addMonsterToUniqueDebuffs(string monsterNetworkId, string debuffName)
     {
-        MelonLogger.Warning($"addMonsterToUniqueDebuffs() monsterNetworkId = {monsterNetworkId}, debuffName = {debuffName}");
+//        MelonLogger.Warning($"addMonsterToUniqueDebuffs() monsterNetworkId = {monsterNetworkId}, debuffName = {debuffName}");
         // Add a new monster to the list if this is the first time we are putting debuffs on it
         if (!uniqueDebuffsDictionary.ContainsKey(monsterNetworkId))
         {
@@ -149,7 +149,7 @@ public static class EntityManager
     // This removes a monster from the list of monsters with unique debuffs
     public static void removeMonsterFromUniqueBuffs(string monsterNetworkId)
     {
-        MelonLogger.Warning($"removeMonsterFromUniqueBuffs() monsterNetworkId = {monsterNetworkId}");
+//        MelonLogger.Warning($"removeMonsterFromUniqueBuffs() monsterNetworkId = {monsterNetworkId}");
         if (uniqueDebuffsDictionary.ContainsKey(monsterNetworkId)) {
             uniqueDebuffsDictionary.Remove(monsterNetworkId);
         }
@@ -195,7 +195,7 @@ public static class EntityManager
 
                 // Update encounter uptime for this specific debuff in the list of all monster debuffs
                 EntityData monster = gMonsterDebuffDictionary[monsterNetworkId];
-                MelonLogger.Warning($"UpdateEncounterUpTime() monster.monsterNetworkId = {monster.monsterNetworkId}, monsterNetworkId = {monsterNetworkId}, monster.debuffData.Count = {monster.debuffData.Count}");
+//                MelonLogger.Warning($"UpdateEncounterUpTime() monster.monsterNetworkId = {monster.monsterNetworkId}, monsterNetworkId = {monsterNetworkId}, monster.debuffData.Count = {monster.debuffData.Count}");
                 monster.monsterNetworkId = monsterNetworkId; // TODO - Workout why this is not populated
 
                 // For every debuff
@@ -210,23 +210,23 @@ public static class EntityManager
                             debuff.consolidatedEncounterUptime = EntityManager.GetConsolidatedUptime(monster.monsterNetworkId, debuff.debuffName);
                         }
                         
-                        MelonLogger.Warning($"UpdateEncounterUpTime() debuff.debuffName = {debuff.debuffName}, debuff.totalEncounterUptime = {debuff.consolidatedEncounterUptime}");
+//                        MelonLogger.Warning($"UpdateEncounterUpTime() debuff.debuffName = {debuff.debuffName}, debuff.totalEncounterUptime = {debuff.consolidatedEncounterUptime}");
                         // OnUpdate will certainly run before we can target and engage a monster in range, prevent a possible DIV0
                         if (monster.encounterStartTime == 0L)
                         {
                             debuff.consolidatedEncounterUptimePercent = 0L;
-                            MelonLogger.Warning($"UpdateEncounterUpTime() debuff.debuffName = {debuff.debuffName}, encounterStartTime = 0");
+//                            MelonLogger.Warning($"UpdateEncounterUpTime() debuff.debuffName = {debuff.debuffName}, encounterStartTime = 0");
                         }
                         else
                         {
                             // Get the time in seconds the encounter has been running
                             long currentTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                            MelonLogger.Warning($"UpdateEncounterUpTime() debuff.debuffName = {debuff.debuffName}, currentTime = {currentTime}");
-                            MelonLogger.Warning($"UpdateEncounterUpTime() debuff.debuffName = {debuff.debuffName}, monster.encounterStartTime = {monster.encounterStartTime}");
+//                            MelonLogger.Warning($"UpdateEncounterUpTime() debuff.debuffName = {debuff.debuffName}, currentTime = {currentTime}");
+//                            MelonLogger.Warning($"UpdateEncounterUpTime() debuff.debuffName = {debuff.debuffName}, monster.encounterStartTime = {monster.encounterStartTime}");
                             float currentEncounterDurationS = (float)(currentTime - monster.encounterStartTime);
-                            MelonLogger.Warning($"UpdateEncounterUpTime() debuff.debuffName = {debuff.debuffName}, currentEncounterDurationS = {currentEncounterDurationS}");
+//                            MelonLogger.Warning($"UpdateEncounterUpTime() debuff.debuffName = {debuff.debuffName}, currentEncounterDurationS = {currentEncounterDurationS}");
                             debuff.consolidatedEncounterUptimePercent = (float)(debuff.consolidatedEncounterUptime / (float)(currentTime - monster.encounterStartTime)) * 100;
-                            MelonLogger.Warning($"UpdateEncounterUpTime() debuff.debuffName = {debuff.debuffName}, debuff.totalEncounterUptimePercent = {debuff.consolidatedEncounterUptimePercent}");
+//                            MelonLogger.Warning($"UpdateEncounterUpTime() debuff.debuffName = {debuff.debuffName}, debuff.totalEncounterUptimePercent = {debuff.consolidatedEncounterUptimePercent}");
                             // Cap % at 100, this handles the case when the combat start time and current time are the same
                             if (debuff.consolidatedEncounterUptimePercent > 100)
                             {

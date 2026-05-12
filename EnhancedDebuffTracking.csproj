@@ -539,7 +539,7 @@
 		<Compile Include="Hooks\PlayerGameObjectHooks.cs" />
 		<Compile Include="Hooks\SendChatMessageHook.cs" />
 		<Compile Include="Hooks\TargetLogicHooks.cs" />
-		<Compile Include="Hooks\UIPanelHooks.cs" />
+		<Compile Include="Hooks\UICompassHooks.cs" />
 		<Compile Include="ModMain.cs" />
 		<Content Include="Directory.Build.props" />
 	</ItemGroup>

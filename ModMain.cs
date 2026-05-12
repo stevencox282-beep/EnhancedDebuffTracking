@@ -15,7 +15,7 @@ namespace EnhancedDebuffTracking
     // TODO - When we are ready for uptime, we will need to recfactor to use EntityData and a way to track when we engage a new target to get the total time
     public class EntityData()
     {
-        public bool isDead = false;
+        public bool isDead;
         public List<DebuffData> debuffData = new List<DebuffData>();
         public long  encounterStartTime; // Total encounter time for this monster
         public string monsterNetworkId; // network id of this monster
@@ -96,27 +96,31 @@ namespace EnhancedDebuffTracking
 
                     EntityManager.UpdateDurationRemaining();
                     // Removed Zombied Debuffs (possibly not needed)
-                    EntityManager.RemoveZombiedDebuffs();
+                    //EntityManager.RemoveZombiedDebuffs();
 
                     // Call the entitiy manager and get it to update the uptime timers
-                    EntityManager.UpdateLocalUpTime();
+                    //EntityManager.UpdateLocalUpTime();
 
                     // Call the entitiy manager and get it to update the uptime timers
                     EntityManager.UpdateEncounterUpTime();
 
+//                    MelonLogger.Warning($"OnUpdate() 1b gCurrentTargetNetworkId = {gCurrentTargetNetworkId}");
                     // If gCurrentTargetNetworkId is not populated there is no point updating the display
                     if (!gCurrentTargetNetworkId.Equals(""))
                     {
-                        MelonLogger.Warning($"OnUpdate gCurrentTargetNetworkId = {gCurrentTargetNetworkId.ToString()}");
+//                        MelonLogger.Warning($"OnUpdate 2 gCurrentTargetNetworkId = {gCurrentTargetNetworkId.ToString()}");
 
                         // Do not update the screen for dead enemies
                         EntityData entityData = EntityManager.GetEntityData(gCurrentTargetNetworkId);
                         // If the current network id despawns whilst targetted, dont try and update anything
                         if (entityData == null)
                         {
+                            MelonLogger.Error($"OnUpdate() NO ENTITY DATA IN ONUPDATE gCurrentTargetNetworkId = {gCurrentTargetNetworkId}");
                             gCurrentTargetNetworkId = "";
                             return;
                         }
+
+//                        MelonLogger.Warning($"OnUpdate() 2 entityData.isDead = {entityData.isDead}");
                         // We do not update the screen if the entity is dead
                         if (entityData.isDead == false)
                         {
@@ -175,17 +179,17 @@ namespace EnhancedDebuffTracking
             return (buff.BuffData.CategoryType == BuffCategoryType.Harmful) ? true : false;
         }
 
-        public static void MarkEnemyAsDead(string networkId)
+        public static void UpdateEnemyDeadStatus(string networkId, bool isDead)
         {
-            EntityManager.MarkEnemyAsDead(networkId);
+            EntityManager.UpdateEnemyDeadStatus(networkId, isDead);
         }
 
         // This function is called in the following conditions (at least)
         // Make sure we dont re-add an existing buff to the buff list and you handle all the different conditions it can be called
         public static void OnAddOrRefreshBuff(double time, ActiveBuff buff, bool inBackground, bool isRefresh, bool isItemBuff)
         {
-            //MelonLogger.Warning($"OnAddOrRefreshBuff() 0 buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}, isRefresh = {isRefresh}, inBackground = {inBackground}, isItemBuff = {isItemBuff}");
-            //MelonLogger.Warning($"OnAddOrRefreshBuff() 0 buff.Target?.NetworkId.ToString() = {buff.Target?.NetworkId.ToString()}, gCurrentTargetNetworkId = {gCurrentTargetNetworkId}");
+            //MelonLogger.Warning($"OnAddOrRefreshBuff() 0a buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}, isRefresh = {isRefresh}, inBackground = {inBackground}, isItemBuff = {isItemBuff}");
+            //MelonLogger.Warning($"OnAddOrRefreshBuff() 0b buff.Target?.NetworkId.ToString() = {buff.Target?.NetworkId.ToString()}, gCurrentTargetNetworkId = {gCurrentTargetNetworkId}");
 
             // Make sure we only track debuffs and only on monsters
             if (IsValidTarget(buff) && IsValidDebuff(buff))
@@ -225,20 +229,23 @@ namespace EnhancedDebuffTracking
                     return;
                 }
 
-                // If we are a refresh, update the duration on the existing buff
-                if (isRefresh)
+                // If we are a refresh or a buff that was applied in the past but has since expired
+                bool found = false;
+                foreach (DebuffData debuff in entityData.debuffData)
                 {
-                    foreach (DebuffData debuff in entityData.debuffData)
+                    if (debuff.debuffName == buff.BuffData.DisplayName.ToString())
                     {
-                        if (debuff.debuffName == buff.BuffData.DisplayName.ToString())
-                        {
-                            debuff.debuffDurationRemaining = buff.BuffData.Duration;
-                            gDebuffPanel.ResetDebuffPanel();
-                            gDebuffPanel.UpdateDebuffPanel(entityData);
-                        }
+                        //MelonLogger.Warning($"OnAddOrRefreshBuff 1 (isRefresh = {isRefresh}, debuff.debuffName = {debuff.debuffName}, buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}");
+                        found = true;
+                        debuff.debuffDurationRemaining = buff.BuffData.Duration;
+                        gDebuffPanel.ResetDebuffPanel();
+                        gDebuffPanel.UpdateDebuffPanel(entityData);
+
                     }
                 }
-                else
+
+                // This is not a refresh and it is not a previously applied buff that has expired
+                if (found != true)
                 {
                     // We do not have a debuff of this type in the list, make a new one
                     DebuffData newDebuff = new DebuffData();
@@ -330,31 +337,12 @@ namespace EnhancedDebuffTracking
                         {
                             MelonLogger.Error($"OnRemoveBuff() - Failed to remove debuff {buff.BuffData?.DisplayName.ToString()} from list");
                         }
-
-                        // If the monster is dead, mark it as dead
-                        var pool = buff.Target.Pools.GetPool(PoolType.Health);
-                        if (pool != null && pool.Current == 0)
-                        {
-                            entityData.isDead = true;
-                        }
                     }
                 }
 
-                // If the monster is not dead, update the panel, if it is dead, leave the panel untouched
-                if (entityData.isDead == true)
-                {
-                    return;                    
-                }
                 gDebuffPanel.ResetDebuffPanel();
                 gDebuffPanel.UpdateDebuffPanel(entityData);
             }
-        }
-
-        // Returns is a current target is dead or not
-        private static bool CheckIfMonsterIsDead(Pools.Logic Pools)
-        {
-            // Get the isDead status
-            return (Pools.Entity.Nameplate.isDead == true) ? true : false;
         }
 
         // This fires on at least the following conditions
@@ -362,35 +350,43 @@ namespace EnhancedDebuffTracking
         // 2) Current selected moster despawns 
         public static void OffensiveTargetSelected(Targets.Logic targetLogic)
         {
-            MelonLogger.Warning($"OffensiveTargetSelected 1 gCurrentTargetNetworkId = {gCurrentTargetNetworkId.ToString()}");
+            //MelonLogger.Warning($"OffensiveTargetSelected 1 gCurrentTargetNetworkId = {gCurrentTargetNetworkId.ToString()}");
             if (targetLogic.Offensive == null)
             {
+                //MelonLogger.Warning($"OffensiveTargetSelected 2");
                 // Either the user has pressed ESC so they are targetting nothing or something has gone wrong somewhere
                 gCurrentTargetNetworkId = "";
                 gDebuffPanel.ResetDebuffPanel();
                 return;
             }
 
-            // Check if we are dead, if we are dead just return, we have nothing to do
-            bool isDead = CheckIfMonsterIsDead(targetLogic.Offensive.Pools);
-            if (isDead)
+            //MelonLogger.Warning($"OffensiveTargetSelected 3 targetLogic.Offensive.NetworkId.ToString() = {targetLogic.Offensive.NetworkId.ToString()}");
+            // Identify the new target, make sure we have a row in the dictionary for it, this is an explicit handling of a weakness in the detect of new NPC entities
+            EntityManager.AddMonsterIfMissing(targetLogic.Offensive.NetworkId.ToString());
+            // Get the entity data
+            EntityData entityData = EntityManager.GetEntityData(targetLogic.Offensive.NetworkId.ToString());
+            if (entityData == null)
             {
+                //MelonLogger.Warning($"OffensiveTargetSelected 3b");
+            }
+
+            //MelonLogger.Warning($"OffensiveTargetSelected 3");
+            // Check if we are dead, if we are dead just return, we have nothing to do
+            if (entityData.isDead == true)
+            {
+                //MelonLogger.Warning($"OffensiveTargetSelected 4");
                 return;
             }
 
+            /MelonLogger.Warning($"OffensiveTargetSelected 5");
             // Reset the panel, we must do this to clear the window when somebody switches to a new target
             gDebuffPanel.ResetDebuffPanel();
-
-            // Identify the new target, make sure we have a row in the dictionary for it, this is an explicit handling of a weakness in the detect of new NPC entities
-            EntityManager.AddMonsterIfMissing(targetLogic.Offensive.NetworkId.ToString());
-
-            // Get the entity data
-            EntityData entityData = EntityManager.GetEntityData(targetLogic.Offensive.NetworkId.ToString());
             gDebuffPanel.UpdateDebuffPanel(entityData);
 
             // Store this for use in OnUpdate()
+            //MelonLogger.Warning($"OffensiveTargetSelected 6 targetLogic.Offensive.NetworkId.ToString() = {targetLogic.Offensive.NetworkId.ToString()}");
             gCurrentTargetNetworkId = targetLogic.Offensive.NetworkId.ToString();
-            MelonLogger.Warning($"OffensiveTargetSelected 2 gCurrentTargetNetworkId = {gCurrentTargetNetworkId.ToString()}");
+            //MelonLogger.Warning($"OffensiveTargetSelected 7 gCurrentTargetNetworkId = {gCurrentTargetNetworkId.ToString()}");
         }
     }
 }

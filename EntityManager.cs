@@ -157,8 +157,8 @@ public static class EntityManager
             for (int j = 0; j < debuffData.Count; j++)
             {
                 DebuffData debuff = debuffData.ElementAt(j);
-                // Update the time remaining and the size of the progress bar
-                debuff.debuffDurationRemaining = debuff.debuffDurationRemaining - 1;                
+                // Update the time remaining and the size of the progress bar, stop at zero seconds
+                debuff.debuffDurationRemaining = (debuff.debuffDurationRemaining == 0) ? 0 : debuff.debuffDurationRemaining - 1;
             } // End of FOR all debuffs for a monster
         } // End of FOR all monsters
     }
@@ -194,7 +194,7 @@ public static class EntityManager
                     if (debuff.debuffName == currentHistoricDebuffName)
                     {
                         // Match found, increase the encounter uptime only if the current duration remaining on the buff is > 0
-                        if (debuff.debuffDuration > 0)
+                        if (debuff.debuffDurationRemaining > 0)
                         {
                             EntityManager.IncrementConsolidatedUptime(monster.monsterNetworkId, debuff.debuffName);
                             debuff.consolidatedEncounterUptime = EntityManager.GetConsolidatedUptime(monster.monsterNetworkId, debuff.debuffName);
@@ -303,19 +303,22 @@ public static class EntityManager
         // Make a new entity if one does not exist
         if (entityData == null)
         {
+            MelonLogger.Error("AddMonsterIfMissing() ADDING MISSING MONSTER");
             EntityData newMonster = new EntityData();
             newMonster.monsterNetworkId = targetNetworkId;
+            //MelonLogger.Warning("AddMonsterIfMissing() is Dead = False");
             newMonster.isDead = false;
             newMonster.debuffData = new List<DebuffData>();
             gMonsterDebuffDictionary.Add(targetNetworkId, newMonster);
         }
     }
 
-    public static void MarkEnemyAsDead(string networkId)
+    public static void UpdateEnemyDeadStatus(string networkId, bool isDead)
     {
         if (gMonsterDebuffDictionary.ContainsKey(networkId.ToString()))
         {
-            gMonsterDebuffDictionary[networkId].isDead = true;
+            //MelonLogger.Warning($"MarkEnemyAsDead  networkId = {networkId}, isDead = {isDead}");
+            gMonsterDebuffDictionary[networkId].isDead = isDead;
         }
     }
 
@@ -375,7 +378,7 @@ public static class EntityManager
             newMonster.debuffData = new List<DebuffData>();
 
             // TODO - Get rid of the black list and the error showing buffs found on monsters loaded
-            string[] debuffBlacklist = { "Mana Guzzle", "Taunt Immunity", "Feared", "Temporary Invulnerability" };
+            string[] debuffBlacklist = { "Mana Guzzle", "Taunt Immunity", "Feared" };
             // Pick up any traits if they exist
             // TOD - Do we want to pick up existing deuffs on monsters
             foreach (ActiveBuff activeBuff in entityNpcGameObject.Buffs.myActiveBuffs)
@@ -398,7 +401,7 @@ public static class EntityManager
                     }
                 }
             }
-            newMonster.isDead = entityNpcGameObject.Buffs.Entity.Nameplate.isDead;
+            newMonster.isDead = entityNpcGameObject.Status.IsDead();
             
             if (gMonsterDebuffDictionary.ContainsKey(entityNpcGameObject.NetworkId.ToString()))
             {
@@ -422,7 +425,7 @@ public static class EntityManager
         {
             removeMonsterFromUniqueBuffs(entityNpcGameObject.NetworkId.ToString());
             gMonsterDebuffDictionary.Remove(entityNpcGameObject.NetworkId.ToString());
-            //wMelonLogger.Warning($"OnNpcRemoved() Entry {entityNpcGameObject.NetworkId.ToString()} Removed");
+            //MelonLogger.Warning($"OnNpcRemoved() Entry {entityNpcGameObject.NetworkId.ToString()} Removed");
         }
         catch (Exception e)
         {

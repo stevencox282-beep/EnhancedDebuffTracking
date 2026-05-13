@@ -18,6 +18,7 @@ public static class EntityStatusLogicHook
         {
             if (__instance == null)
                 return;
+
             // Throttle this so it doesnt fire every frame
             _timeSinceLastUpdate += UnityEngine.Time.deltaTime;
             if (_timeSinceLastUpdate >= UpdateInterval)

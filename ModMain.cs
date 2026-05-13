@@ -378,7 +378,7 @@ namespace EnhancedDebuffTracking
                 return;
             }
 
-            /MelonLogger.Warning($"OffensiveTargetSelected 5");
+            //MelonLogger.Warning($"OffensiveTargetSelected 5");
             // Reset the panel, we must do this to clear the window when somebody switches to a new target
             gDebuffPanel.ResetDebuffPanel();
             gDebuffPanel.UpdateDebuffPanel(entityData);

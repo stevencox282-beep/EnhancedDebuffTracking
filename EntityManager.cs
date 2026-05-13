@@ -380,7 +380,8 @@ public static class EntityManager
             // TODO - Get rid of the black list and the error showing buffs found on monsters loaded
             string[] debuffBlacklist = { "Mana Guzzle", "Taunt Immunity", "Feared" };
             // Pick up any traits if they exist
-            // TOD - Do we want to pick up existing deuffs on monsters
+            // TODO - Do we want to pick up existing deuffs on monsters
+            bool isFirst = true;
             foreach (ActiveBuff activeBuff in entityNpcGameObject.Buffs.myActiveBuffs)
             {
                 string activeBuffName = activeBuff.BuffData.DisplayName.ToString();
@@ -389,7 +390,16 @@ public static class EntityManager
                     string[] result = activeBuffName.Split("Trait: ");
                     if (result.Length > 1)
                     {
-                        newMonster.traits = result[1] + " ";
+                        // We have a trait.  if this is the first trait, we dont want the leading comma
+                        if (isFirst == true)
+                        {
+                            newMonster.traits = result[1];
+                            isFirst = false;
+                        }
+                        else
+                        {
+                            newMonster.traits = newMonster.traits + ", " + result[1];
+                        }
                     }
                 }
                 else
@@ -400,6 +410,8 @@ public static class EntityManager
                         MelonLogger.Error($"OnNpcAdded() MONSTER WITH DEBUFF {activeBuffName} FOUND, DO WE WANT TO TRACK THIS ?");
                     }
                 }
+                // Increment the index
+                
             }
             newMonster.isDead = entityNpcGameObject.Status.IsDead();
             

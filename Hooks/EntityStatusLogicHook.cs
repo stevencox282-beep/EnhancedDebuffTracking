@@ -1,7 +1,6 @@
 ﻿using EnhancedDebuffTracking;
 using HarmonyLib;
 using Il2Cpp;
-using MelonLoader;
 
 namespace PantheonMetrics.Hooks;
 
@@ -25,8 +24,14 @@ public static class EntityStatusLogicHook
             {
                 // Update this immediatly so we dont flood in here
                 _timeSinceLastUpdate = 0f;
-                //MelonLogger.Warning($"EntityStatusLogicHook() .Nameplate.IsAlive = {__instance.Entity.Nameplate.isDead} networkId = {__instance.Entity.NetworkId.ToString()}");
-                ModMain.UpdateEnemyDeadStatus(__instance.Entity.NetworkId.ToString(), __instance.Entity.Nameplate.isDead);
+
+                // On zone change/exiting this API continues to fire despite everything being torn down around it, it probably should not,
+                // or perhaps I should not be using this API call but either way this inevitably causing exceptions, we need to handle them                
+                try
+                {
+                    EntityManager.UpdateEnemyDeadStatus(__instance);
+                }
+                catch (Exception e) { }
             }
         }
     }

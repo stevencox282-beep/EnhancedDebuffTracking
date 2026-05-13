@@ -3,6 +3,8 @@ using Il2CppPantheonPersist;
 using Il2CppServiceStack;
 using MelonLoader;
 using Unity.Collections;
+using Unity.Entities;
+using static MelonLoader.MelonLogger;
 using static UnityEngine.Rendering.HighDefinition.DebugDisplaySettings;
 
 
@@ -313,8 +315,14 @@ public static class EntityManager
         }
     }
 
-    public static void UpdateEnemyDeadStatus(string networkId, bool isDead)
+    public static void UpdateEnemyDeadStatus(EntityStatus.Logic entityStatusLogic)
     {
+        if (entityStatusLogic == null)
+            return;
+
+        string networkId = entityStatusLogic.Entity.NetworkId.ToString();
+        bool isDead = entityStatusLogic.Entity.Nameplate.isDead;
+
         if (gMonsterDebuffDictionary.ContainsKey(networkId.ToString()))
         {
             //MelonLogger.Warning($"MarkEnemyAsDead  networkId = {networkId}, isDead = {isDead}");

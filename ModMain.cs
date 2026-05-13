@@ -179,11 +179,6 @@ namespace EnhancedDebuffTracking
             return (buff.BuffData.CategoryType == BuffCategoryType.Harmful) ? true : false;
         }
 
-        public static void UpdateEnemyDeadStatus(string networkId, bool isDead)
-        {
-            EntityManager.UpdateEnemyDeadStatus(networkId, isDead);
-        }
-
         // This function is called in the following conditions (at least)
         // Make sure we dont re-add an existing buff to the buff list and you handle all the different conditions it can be called
         public static void OnAddOrRefreshBuff(double time, ActiveBuff buff, bool inBackground, bool isRefresh, bool isItemBuff)

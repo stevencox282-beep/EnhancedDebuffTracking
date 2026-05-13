@@ -187,12 +187,12 @@ public static class EntityManager
 
                 // Update encounter uptime for this specific debuff in the list of all monster debuffs
                 EntityData monster = gMonsterDebuffDictionary[monsterNetworkId];
-//                MelonLogger.Warning($"UpdateEncounterUpTime() monster.monsterNetworkId = {monster.monsterNetworkId}, monsterNetworkId = {monsterNetworkId}, monster.debuffData.Count = {monster.debuffData.Count}");
-                monster.monsterNetworkId = monsterNetworkId; // TODO - Workout why this is not populated
+                monster.monsterNetworkId = monsterNetworkId;
 
-                // For every debuff
+                // For every debuff on a monster
                 foreach (DebuffData debuff in monster.debuffData)
                 {
+                    // If the debuff on the monster is the debuff we are looking for
                     if (debuff.debuffName == currentHistoricDebuffName)
                     {
                         // Match found, increase the encounter uptime only if the current duration remaining on the buff is > 0
@@ -202,24 +202,18 @@ public static class EntityManager
                             debuff.consolidatedEncounterUptime = EntityManager.GetConsolidatedUptime(monster.monsterNetworkId, debuff.debuffName);
                         }
                         
-//                        MelonLogger.Warning($"UpdateEncounterUpTime() debuff.debuffName = {debuff.debuffName}, debuff.totalEncounterUptime = {debuff.consolidatedEncounterUptime}");
                         // OnUpdate will certainly run before we can target and engage a monster in range, prevent a possible DIV0
                         if (monster.encounterStartTime == 0L)
                         {
                             debuff.consolidatedEncounterUptimePercent = 0L;
-//                            MelonLogger.Warning($"UpdateEncounterUpTime() debuff.debuffName = {debuff.debuffName}, encounterStartTime = 0");
                         }
                         else
                         {
                             // Get the time in seconds the encounter has been running
                             long currentTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-//                            MelonLogger.Warning($"UpdateEncounterUpTime() debuff.debuffName = {debuff.debuffName}, currentTime = {currentTime}");
-//                            MelonLogger.Warning($"UpdateEncounterUpTime() debuff.debuffName = {debuff.debuffName}, monster.encounterStartTime = {monster.encounterStartTime}");
                             float currentEncounterDurationS = (float)(currentTime - monster.encounterStartTime);
-//                            MelonLogger.Warning($"UpdateEncounterUpTime() debuff.debuffName = {debuff.debuffName}, currentEncounterDurationS = {currentEncounterDurationS}");
                             debuff.consolidatedEncounterUptimePercent = (float)(debuff.consolidatedEncounterUptime / (float)(currentTime - monster.encounterStartTime)) * 100;
-//                            MelonLogger.Warning($"UpdateEncounterUpTime() debuff.debuffName = {debuff.debuffName}, debuff.totalEncounterUptimePercent = {debuff.consolidatedEncounterUptimePercent}");
-                            // Cap % at 100, this handles the case when the combat start time and current time are the same
+                            // Cap at 100 and 0, this handles the case when the combat start time and current time are the same
                             if (debuff.consolidatedEncounterUptimePercent > 100)
                             {
                                 debuff.consolidatedEncounterUptimePercent = 100;

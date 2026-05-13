@@ -94,22 +94,15 @@ namespace EnhancedDebuffTracking
                     // Update this immediatly so we dont flood in here
                     _timeSinceLastUpdate = 0f;
 
+                    // Update the progress bars
                     EntityManager.UpdateDurationRemaining();
-                    // Removed Zombied Debuffs (possibly not needed)
-                    //EntityManager.RemoveZombiedDebuffs();
-
-                    // Call the entitiy manager and get it to update the uptime timers
-                    //EntityManager.UpdateLocalUpTime();
 
                     // Call the entitiy manager and get it to update the uptime timers
                     EntityManager.UpdateEncounterUpTime();
 
-//                    MelonLogger.Warning($"OnUpdate() 1b gCurrentTargetNetworkId = {gCurrentTargetNetworkId}");
                     // If gCurrentTargetNetworkId is not populated there is no point updating the display
                     if (!gCurrentTargetNetworkId.Equals(""))
                     {
-//                        MelonLogger.Warning($"OnUpdate 2 gCurrentTargetNetworkId = {gCurrentTargetNetworkId.ToString()}");
-
                         // Do not update the screen for dead enemies
                         EntityData entityData = EntityManager.GetEntityData(gCurrentTargetNetworkId);
                         // If the current network id despawns whilst targetted, dont try and update anything
@@ -120,7 +113,6 @@ namespace EnhancedDebuffTracking
                             return;
                         }
 
-//                        MelonLogger.Warning($"OnUpdate() 2 entityData.isDead = {entityData.isDead}");
                         // We do not update the screen if the entity is dead
                         if (entityData.isDead == false)
                         {

@@ -5,6 +5,7 @@ using MelonLoader;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace EnhancedDebuffTracking
 {
@@ -153,7 +154,6 @@ namespace EnhancedDebuffTracking
             return returnColor;
         }
 
-
         // Displays a panel with to contain the data we want
         public void DisplayPanel(string panelName, Transform parentPanel, Vector2 panelSize)
         {
@@ -168,22 +168,48 @@ namespace EnhancedDebuffTracking
             CanvasGroup    canvasGroup    = gameObject.AddComponent<CanvasGroup>();
             UIDraggable    uiDraggable    = gameObject.AddComponent<UIDraggable>();
             RectTransform  rectTransform  = gameObject.AddComponent<RectTransform>();
+            UIResizeHandle resizeHandle   = gameObject.AddComponent<UIResizeHandle>();
+
             gUiWindowPanel = gameObject.AddComponent<UIWindowPanel>();
+            
 
             // Block Raycasts to work around wonky click detection on the close button due other UI elements overlapping the close button image
             // I am not going to spend time making all my TextMesh's layout perfectly for this mod so block raycasts instead
             canvasGroup.blocksRaycasts = true;
+            canvasGroup.interactable = true;
 
             // Setup the Window Panel
             uiDraggable._windowPanel = gUiWindowPanel;
             gUiWindowPanel.CanvasGroup = canvasGroup;
             gUiWindowPanel._displayName = panelName;
+            gUiWindowPanel.Resizable = true;
 
             // Setup the default position of the panel and its general parameters
             rectTransform.sizeDelta = panelSize;
-            rectTransform.pivot = new Vector2(0, 1);
+            //rectTransform.pivot = new Vector2(0, 1);
+            rectTransform.pivot = new Vector2(1, 0);
             rectTransform.anchoredPosition = new Vector2(-(panelSize.x / 2), panelSize.y / 2);
-            
+            resizeHandle.ContainerRect = rectTransform;
+
+
+
+
+
+            var mainChatWindow = UIChatWindows.Instance.mainWindow;
+            var mainChatRectHandle = mainChatWindow.GetComponentInChildren<UIResizeHandle>();
+
+            var resizeCopy = Object.Instantiate(mainChatRectHandle, mainChatRectHandle.transform.position, mainChatRectHandle.transform.rotation, rectTransform);
+            var copyHandle = resizeCopy.GetComponent<UIResizeHandle>();
+            copyHandle.ContainerRect = rectTransform;
+            copyHandle.MaxSize = new Vector2(Globals.PanelWidth+200, Globals.PanelHeight+200);
+            copyHandle.MinSize = new Vector2(Globals.PanelWidth, Globals.PanelHeight);
+
+            var copyRect = resizeCopy.GetComponent<RectTransform>();
+            copyRect.pivot = new Vector2(1, 0);
+            copyRect.sizeDelta = new Vector2(25, 25);
+            copyRect.anchoredPosition = new Vector2(-5, 4);
+
+            MelonLogger.Warning($"DisplayPanel() 1true, dragable");
             // Add the MANDATORY elements to a panel, the compilor will not error if you don't do this but nothing will work
             BuildCloseButtonAndBackground(parentPanel, gameObject);
 
@@ -200,12 +226,11 @@ namespace EnhancedDebuffTracking
         // Tidy up the alloated resources when we logout
         public void RemovePanel()
         {
-//            MelonLogger.Warning($"RemovePanel() 1");
             // On a /camp out and logging back in the static variables persist and are not garbage collected, explicitly clear them out, we will rebuild them on loading into a zone
             textMeshObjects.Clear();
             timeTextMeshObjects.Clear();
             imageObjects.Clear();
-//            MelonLogger.Warning($"RemovePanel() 2");
+
         }
 
         // Constructs the close button and set the background
@@ -271,7 +296,7 @@ namespace EnhancedDebuffTracking
             rectTransformOne.anchorMax = new Vector2(widthOffset, heightOffset);
             rectTransformOne.anchoredPosition = new Vector2(0f, 0f);
             rectTransformOne.pivot = new Vector2(0f, 0f);
-                    }
+        }
 
         // Builder function to create an Image
         private void BuildImage(string name, float height, float width, float heightOffset, float widthOffset)

@@ -1,5 +1,6 @@
 ﻿using Il2Cpp;
 using Il2CppServiceStack;
+using Il2CppSystem.Security.Cryptography;
 using Il2CppTMPro;
 using MelonLoader;
 using UnityEngine;
@@ -36,6 +37,16 @@ namespace EnhancedDebuffTracking
         private static string nameEighteen = "EDT_NameEighteen_EDT";
         private static string nameNineteen = "EDT_NameNineteen_EDT";
         private static string nameTwenty = "EDT_NameTwenty_EDT";
+        private static string nameTwentyOne = "EDT_NameTwentyOne_EDT";
+        private static string nameTwentyTwo = "EDT_NameTwentyTwo_EDT";
+        private static string nameTwentyThree = "EDT_NameTwentyThree_EDT";
+        private static string nameTwentyFour = "EDT_NameTwentyFour_EDT";
+        private static string nameTwentyFive = "EDT_NameTwentyFive_EDT";
+        private static string nameTwentySix = "EDT_NameTwentySix_EDT";
+        private static string nameTwentySeven = "EDT_NameTwentySeven_EDT";
+        private static string nameTwentyEight = "EDT_NameTwentyEight_EDT";
+        private static string nameTwentyNine = "EDT_NameTwentyNine_EDT";
+        private static string nameThirty = "EDT_NameThirty_EDT";
         // Names to be used for time textmesh game objects, helps with calls to Find()
         private static string timeNameOne = "EDT_TimeNameOne_EDT";
         private static string timeNameTwo = "EDT_TimeNameTwo_EDT";
@@ -57,6 +68,16 @@ namespace EnhancedDebuffTracking
         private static string timeNameEighteen = "EDT_TimeNameEighteen_EDT";
         private static string timeNameNineteen = "EDT_TimeNameNineteen_EDT";
         private static string timeNameTwenty = "EDT_TimeNameTwenty_EDT";
+        private static string timeNameTwentyOne = "EDT_TimeNameTwentyOne_EDT";
+        private static string timeNameTwentyTwo = "EDT_TimeNameTwentyTwo_EDT";
+        private static string timeNameTwentyThree = "EDT_TimeNameTwentyThree_EDT";
+        private static string timeNameTwentyFour = "EDT_TimeNameTwentyFour_EDT";
+        private static string timeNameTwentyFive = "EDT_TimeNameTwentyFive_EDT";
+        private static string timeNameTwentySix = "EDT_TimeNameTwentySix_EDT";
+        private static string timeNameTwentySeven = "EDT_TimeNameTwentySeven_EDT";
+        private static string timeNameTwentyEight = "EDT_TimeNameTwentyEight_EDT";
+        private static string timeNameTwentyNine = "EDT_TimeNameTwentyNine_EDT";
+        private static string timeNameThirty = "EDT_TimeNameThirty_EDT";
 
         // Names to be used for image game objects, helps with calls to Find()
         private static string imageNameOne = "EDT_ImageNameOne_EDT";
@@ -79,6 +100,16 @@ namespace EnhancedDebuffTracking
         private static string imageNameEighteen = "EDT_ImageNameEighteen_EDT";
         private static string imageNameNineteen = "EDT_ImageNameNineteen_EDT";
         private static string imageNameTwenty = "EDT_ImageNameTwenty_EDT";
+        private static string imageNameTwentyOne = "EDT_ImageNameTwentyOne_EDT";
+        private static string imageNameTwentyTwo = "EDT_ImageNameTwentyTwo_EDT";
+        private static string imageNameTwentyThree = "EDT_ImageNameTwentyThree_EDT";
+        private static string imageNameTwentyFour = "EDT_ImageNameTwentyFour_EDT";
+        private static string imageNameTwentyFive = "EDT_ImageNameTwentyFive_EDT";
+        private static string imageNameTwentySix = "EDT_ImageNameTwentySix_EDT";
+        private static string imageNameTwentySeven = "EDT_ImageNameTwentySeven_EDT";
+        private static string imageNameTwentyEight = "EDT_ImageNameTwentyEight_EDT";
+        private static string imageNameTwentyNine = "EDT_ImageNameTwentyNine_EDT";
+        private static string imageNameThirty = "EDT_ImageNameThirty_EDT";
 
         // Setup lists to aid in the accessing of transform data later on
         Transform targetNameTextMeshObject = new Transform();
@@ -154,6 +185,16 @@ namespace EnhancedDebuffTracking
             return returnColor;
         }
 
+        // Tidy up the alloated resources when we logout
+        public void RemovePanel()
+        {
+            // On a /camp out and logging back in the static variables persist and are not garbage collected, explicitly clear them out, we will rebuild them on loading into a zone
+            textMeshObjects.Clear();
+            timeTextMeshObjects.Clear();
+            imageObjects.Clear();
+
+        }
+
         // Displays a panel with to contain the data we want
         public void DisplayPanel(string panelName, Transform parentPanel, Vector2 panelSize)
         {
@@ -168,7 +209,7 @@ namespace EnhancedDebuffTracking
             CanvasGroup    canvasGroup    = gameObject.AddComponent<CanvasGroup>();
             UIDraggable    uiDraggable    = gameObject.AddComponent<UIDraggable>();
             RectTransform  rectTransform  = gameObject.AddComponent<RectTransform>();
-            UIResizeHandle resizeHandle   = gameObject.AddComponent<UIResizeHandle>();
+            RectMask2D  rectTransformMask = gameObject.AddComponent<RectMask2D>();
 
             gUiWindowPanel = gameObject.AddComponent<UIWindowPanel>();
             
@@ -176,7 +217,6 @@ namespace EnhancedDebuffTracking
             // Block Raycasts to work around wonky click detection on the close button due other UI elements overlapping the close button image
             // I am not going to spend time making all my TextMesh's layout perfectly for this mod so block raycasts instead
             canvasGroup.blocksRaycasts = true;
-            canvasGroup.interactable = true;
 
             // Setup the Window Panel
             uiDraggable._windowPanel = gUiWindowPanel;
@@ -186,30 +226,23 @@ namespace EnhancedDebuffTracking
 
             // Setup the default position of the panel and its general parameters
             rectTransform.sizeDelta = panelSize;
-            //rectTransform.pivot = new Vector2(0, 1);
-            rectTransform.pivot = new Vector2(1, 0);
+            rectTransform.pivot = new Vector2(0, 1);
             rectTransform.anchoredPosition = new Vector2(-(panelSize.x / 2), panelSize.y / 2);
-            resizeHandle.ContainerRect = rectTransform;
+            rectTransform.localScale = new Vector3(1, 1, 1);
+            
+            // Setup the 2DRect Mask to prevent elements outide the pannel to not be rendered
+            RectTransform maskRectTransform = rectTransformMask.rectTransform;
+            maskRectTransform.sizeDelta = panelSize;
+            maskRectTransform.pivot = new Vector2(0, 1);
+            maskRectTransform.anchoredPosition = new Vector2(-(panelSize.x / 2), panelSize.y / 2);
 
+            ContentSizeFitter contentSizeFitter = gameObject.AddComponent<ContentSizeFitter>();
+            contentSizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            contentSizeFitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
 
+            // Adds the resize control to the Panel, hijacked from the chat box
+            AddResizeControl(rectTransform, panelSize);
 
-
-
-            var mainChatWindow = UIChatWindows.Instance.mainWindow;
-            var mainChatRectHandle = mainChatWindow.GetComponentInChildren<UIResizeHandle>();
-
-            var resizeCopy = Object.Instantiate(mainChatRectHandle, mainChatRectHandle.transform.position, mainChatRectHandle.transform.rotation, rectTransform);
-            var copyHandle = resizeCopy.GetComponent<UIResizeHandle>();
-            copyHandle.ContainerRect = rectTransform;
-            copyHandle.MaxSize = new Vector2(Globals.PanelWidth+200, Globals.PanelHeight+200);
-            copyHandle.MinSize = new Vector2(Globals.PanelWidth, Globals.PanelHeight);
-
-            var copyRect = resizeCopy.GetComponent<RectTransform>();
-            copyRect.pivot = new Vector2(1, 0);
-            copyRect.sizeDelta = new Vector2(25, 25);
-            copyRect.anchoredPosition = new Vector2(-5, 4);
-
-            MelonLogger.Warning($"DisplayPanel() 1true, dragable");
             // Add the MANDATORY elements to a panel, the compilor will not error if you don't do this but nothing will work
             BuildCloseButtonAndBackground(parentPanel, gameObject);
 
@@ -223,15 +256,24 @@ namespace EnhancedDebuffTracking
             gUiWindowPanel.Show();
         }
 
-        // Tidy up the alloated resources when we logout
-        public void RemovePanel()
+        private void AddResizeControl(RectTransform rectTransform, Vector2 panelSize)
         {
-            // On a /camp out and logging back in the static variables persist and are not garbage collected, explicitly clear them out, we will rebuild them on loading into a zone
-            textMeshObjects.Clear();
-            timeTextMeshObjects.Clear();
-            imageObjects.Clear();
+            // Get the resizable panel by borrowing configuration from the chat window
+            var mainChatWindow = UIChatWindows.Instance.mainWindow;
+            var mainChatRectHandle = mainChatWindow.GetComponentInChildren<UIResizeHandle>();
 
-        }
+            UIResizeHandle resizeHandleCopy = Object.Instantiate(mainChatRectHandle, mainChatRectHandle.transform.position, mainChatRectHandle.transform.rotation, rectTransform);
+            UIResizeHandle copyHandle = resizeHandleCopy.GetComponent<UIResizeHandle>();
+            copyHandle.ContainerRect = rectTransform;
+            copyHandle.MaxSize = panelSize;
+            copyHandle.MinSize = new Vector2(0, 0);
+
+            // This is the resize icon at the bottom right
+            var copyRect = resizeHandleCopy.GetComponent<RectTransform>();
+            copyRect.pivot = new Vector2(1, 0);
+            copyRect.sizeDelta = new Vector2(50, 50);
+            copyRect.anchoredPosition = new Vector2(-5, 4);
+         }
 
         // Constructs the close button and set the background
         private void BuildCloseButtonAndBackground(Transform parentPanel, GameObject gameObject)
@@ -278,16 +320,21 @@ namespace EnhancedDebuffTracking
             textMesh.fontSize = Globals.FontSize;
             textMesh.color = Color.white;
             textMesh.text = "";
+            textMesh.autoSizeTextContainer = false;
+            textMesh.enableAutoSizing = false;
             
             return textMesh;
         }
 
         // Builder function to create an TextMesh
-        private void BuildTextMesh(string name, float height, float width, float heightOffset, float widthOffset)
+        private void BuildTextMesh(string name, int height, int width, float heightOffset, float widthOffset)
         {
             GameObject gameObject = new GameObject(name);
             // Set its parent to the new window panel (which is parented to Mid)
             gameObject.transform.SetParent(gUiWindowPanel.transform, false);
+            ContentSizeFitter contentSizeFitter = gameObject.AddComponent<ContentSizeFitter>();
+            contentSizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            contentSizeFitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
 
             TextMeshProUGUI textMesh = BuildTextMeshComponent(gameObject);
             var rectTransformOne = textMesh.rectTransform;
@@ -299,13 +346,16 @@ namespace EnhancedDebuffTracking
         }
 
         // Builder function to create an Image
-        private void BuildImage(string name, float height, float width, float heightOffset, float widthOffset)
+        private void BuildImage(string name, int height, int width, float heightOffset, float widthOffset)
         {
             GameObject gameObject = new GameObject(name);
             // Set its parent to the new window panel (which is parented to Mid)
             gameObject.transform.SetParent(gUiWindowPanel.transform, false);
-            Image image = BuildImageComponent(gameObject);
+            ContentSizeFitter contentSizeFitter = gameObject.AddComponent<ContentSizeFitter>();
+            contentSizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            contentSizeFitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
 
+            Image image = BuildImageComponent(gameObject);
             var transform = image.rectTransform;
             transform.sizeDelta = new Vector2(width, height);
             transform.anchorMin = new Vector2(widthOffset, heightOffset);
@@ -358,6 +408,16 @@ namespace EnhancedDebuffTracking
             BuildImage(imageNameEighteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightEighteenOffset, Globals.RowLeftMargin);
             BuildImage(imageNameNineteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightNineteenOffset, Globals.RowLeftMargin);
             BuildImage(imageNameTwenty, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyOffset, Globals.RowLeftMargin);
+//            BuildImage(imageNameTwentyOne, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyOneOffset, Globals.RowLeftMargin);
+//            BuildImage(imageNameTwentyTwo, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyTwoOffset, Globals.RowLeftMargin);
+//            BuildImage(imageNameTwentyThree, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyThreeOffset, Globals.RowLeftMargin);
+//            BuildImage(imageNameTwentyFour, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyFourOffset, Globals.RowLeftMargin);
+//            BuildImage(imageNameTwentyFive, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyFiveOffset, Globals.RowLeftMargin);
+//            BuildImage(imageNameTwentySix, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentySixOffset, Globals.RowLeftMargin);
+//            BuildImage(imageNameTwentySeven, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentySevenOffset, Globals.RowLeftMargin);
+//            BuildImage(imageNameTwentyEight, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyEightOffset, Globals.RowLeftMargin);
+//            BuildImage(imageNameTwentyNine, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyNineOffset, Globals.RowLeftMargin);
+//            BuildImage(imageNameThirty, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightThirtyOffset, Globals.RowLeftMargin);
 
             // Save these for use later 
             imageObjects.Add(gUiWindowPanel.transform.Find(imageNameOne));
@@ -380,6 +440,16 @@ namespace EnhancedDebuffTracking
             imageObjects.Add(gUiWindowPanel.transform.Find(imageNameEighteen));
             imageObjects.Add(gUiWindowPanel.transform.Find(imageNameNineteen));
             imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwenty));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwentyOne));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwentyTwo));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwentyThree));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwentyFour));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwentyFive));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwentySix));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwentySeven));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwentyEight));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwentyNine));
+            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameThirty));
         }
 
         // Builds all TextMeshes (debuff/time) to be display in the panel
@@ -409,6 +479,16 @@ namespace EnhancedDebuffTracking
             BuildTextMesh(nameEighteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightEighteenOffset, Globals.RowLeftMargin);
             BuildTextMesh(nameNineteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightNineteenOffset, Globals.RowLeftMargin);
             BuildTextMesh(nameTwenty, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyOffset, Globals.RowLeftMargin);
+//            BuildTextMesh(nameTwentyOne, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyOneOffset, Globals.RowLeftMargin);
+//            BuildTextMesh(nameTwentyTwo, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyTwoOffset, Globals.RowLeftMargin);
+//            BuildTextMesh(nameTwentyThree, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyThreeOffset, Globals.RowLeftMargin);
+//            BuildTextMesh(nameTwentyFour, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyFourOffset, Globals.RowLeftMargin);
+//            BuildTextMesh(nameTwentyFive, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyFiveOffset, Globals.RowLeftMargin);
+//            BuildTextMesh(nameTwentySix, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentySixOffset, Globals.RowLeftMargin);
+//            BuildTextMesh(nameTwentySeven, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentySevenOffset, Globals.RowLeftMargin);
+//            BuildTextMesh(nameTwentyEight, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyEightOffset, Globals.RowLeftMargin);
+//            BuildTextMesh(nameTwentyNine, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyNineOffset, Globals.RowLeftMargin);
+//            BuildTextMesh(nameThirty, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightThirtyOffset, Globals.RowLeftMargin);
 
             BuildTextMesh(timeNameOne, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightOneOffset, Globals.TimeLeftMargin);
             BuildTextMesh(timeNameTwo, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwoOffset, Globals.TimeLeftMargin);
@@ -430,6 +510,16 @@ namespace EnhancedDebuffTracking
             BuildTextMesh(timeNameEighteen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightEighteenOffset, Globals.TimeLeftMargin);
             BuildTextMesh(timeNameNineteen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightNineteenOffset, Globals.TimeLeftMargin);
             BuildTextMesh(timeNameTwenty, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyOffset, Globals.TimeLeftMargin);
+//            BuildTextMesh(timeNameTwentyOne, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyOneOffset, Globals.TimeLeftMargin);
+//            BuildTextMesh(timeNameTwentyTwo, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyTwoOffset, Globals.TimeLeftMargin);
+//            BuildTextMesh(timeNameTwentyThree, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyThreeOffset, Globals.TimeLeftMargin);
+//            BuildTextMesh(timeNameTwentyFour, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyFourOffset, Globals.TimeLeftMargin);
+//            BuildTextMesh(timeNameTwentyFive, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyFiveOffset, Globals.TimeLeftMargin);
+//            BuildTextMesh(timeNameTwentySix, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentySixOffset, Globals.TimeLeftMargin);
+//            BuildTextMesh(timeNameTwentySeven, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentySevenOffset, Globals.TimeLeftMargin);
+//            BuildTextMesh(timeNameTwentyEight, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyEightOffset, Globals.TimeLeftMargin);
+//            BuildTextMesh(timeNameTwentyNine, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyNineOffset, Globals.TimeLeftMargin);
+//            BuildTextMesh(timeNameThirty, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightThirtyOffset, Globals.TimeLeftMargin);
 
             // Save these for use later 
             targetNameTextMeshObject = gUiWindowPanel.transform.Find(targetName);

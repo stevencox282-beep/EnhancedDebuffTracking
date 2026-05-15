@@ -21,7 +21,7 @@ public static class Globals
 
     // Panel / TextMesh Constants
     public static float RowLeftMargin = 0.05f;
-    public static int PanelHeight = 600;
+    public static int PanelHeight = 700;
     public static int PanelWidth = 400;
     public static int NameMeshWidth = (PanelWidth - 120); // Give space for the time textmesh
     public static int NameMeshHeight = 20;

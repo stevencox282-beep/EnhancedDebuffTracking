@@ -77,8 +77,70 @@ namespace EnhancedDebuffTracking
         private static string TraitSubString = "Trait: ";
         private static readonly string[] Blacklist = { TraitSubString, "Mana Guzzle", "Taunt Immunity", "Feared", "Temporary Invulnerability" };
         private static string debuffPanelName = "EDT_DebuffPanel_EDT";
+        private static EntityData testData = new EntityData();
 
-        public override void OnInitializeMelon() { }
+        public override void OnInitializeMelon()
+        {
+            // Setup test data here
+            testData.monsterNetworkId = "12345";
+            testData.isDead = false;
+            testData.encounterStartTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+            testData.debuffData.Add(MakeTestDebuffData("One"));
+            testData.debuffData.Add(MakeTestDebuffData("Two"));
+            testData.debuffData.Add(MakeTestDebuffData("Three"));
+            testData.debuffData.Add(MakeTestDebuffData("Four"));
+            testData.debuffData.Add(MakeTestDebuffData("Five"));
+            testData.debuffData.Add(MakeTestDebuffData("Six"));
+            testData.debuffData.Add(MakeTestDebuffData("Seven"));
+            testData.debuffData.Add(MakeTestDebuffData("Eight"));
+            testData.debuffData.Add(MakeTestDebuffData("Nine"));
+            testData.debuffData.Add(MakeTestDebuffData("Ten"));
+            testData.debuffData.Add(MakeTestDebuffData("Eleven"));
+            testData.debuffData.Add(MakeTestDebuffData("Twelve"));
+            testData.debuffData.Add(MakeTestDebuffData("Thirteen"));
+            testData.debuffData.Add(MakeTestDebuffData("Fourteen"));
+            testData.debuffData.Add(MakeTestDebuffData("Fithteen"));
+            testData.debuffData.Add(MakeTestDebuffData("Sixteen"));
+            testData.debuffData.Add(MakeTestDebuffData("Seventeen"));
+            testData.debuffData.Add(MakeTestDebuffData("Eighteen"));
+            testData.debuffData.Add(MakeTestDebuffData("Nineteen"));
+            testData.debuffData.Add(MakeTestDebuffData("Twenty"));
+//            testData.debuffData.Add(MakeTestDebuffData("TwentyOne"));
+//            testData.debuffData.Add(MakeTestDebuffData("TwentyTwo"));
+//            testData.debuffData.Add(MakeTestDebuffData("TwentyThree"));
+//            testData.debuffData.Add(MakeTestDebuffData("TwentyFour"));
+//            testData.debuffData.Add(MakeTestDebuffData("TwentyFive"));
+//            testData.debuffData.Add(MakeTestDebuffData("TwentySix"));
+//            testData.debuffData.Add(MakeTestDebuffData("TwentySeven"));
+//            testData.debuffData.Add(MakeTestDebuffData("TwentyEight"));
+//            testData.debuffData.Add(MakeTestDebuffData("TwentyNine"));
+//            testData.debuffData.Add(MakeTestDebuffData("Thirty"));
+
+        }
+
+        private DebuffData MakeTestDebuffData(string text)
+        {
+            DebuffData newDebuff = new DebuffData();
+            newDebuff.casterName = "CasterName";
+            newDebuff.casterNetworkId = "CasterNID";
+            newDebuff.targetName = "TargetName";
+            newDebuff.targetNetworkId = "TargetNID";
+            newDebuff.targetClass = "TargetClass";
+            newDebuff.targetKind = "TargetKind";
+            newDebuff.debuffName = $"Debuff{text}";
+            newDebuff.debuffType = "Detrimental"; // Not especially useful but its something at least
+            newDebuff.debuffDuration = 30.0f;
+            newDebuff.debuffDurationRemaining = 30.0f;
+            newDebuff.debuffDescription = $"Description{text}";
+            newDebuff.numStacks = 1;
+            newDebuff.maxStacks = 1;
+            newDebuff.numTicks = 1;
+            newDebuff.tickIntervalS = 1;
+            newDebuff.spellType = SpellType.Conjuration; 
+
+            return newDebuff;
+        }
 
         // Updates the duration timers on the panel.
         // WARNING:  This could be a problem if we get other process Hooks firing whilst updating the Lists through OnUpdate
@@ -117,7 +179,8 @@ namespace EnhancedDebuffTracking
                         if (entityData.isDead == false)
                         {
                             // If we have a valid debuff list for the current target, update the screen
-                            gDebuffPanel.UpdateDebuffPanel(entityData);
+                            //gDebuffPanel.UpdateDebuffPanel(entityData);
+                            gDebuffPanel.UpdateDebuffPanel(testData);
                         }
                     }
                 }
@@ -196,11 +259,8 @@ namespace EnhancedDebuffTracking
                 EntityData entityData = EntityManager.GetEntityData(buff.Target.NetworkId.ToString());
                 if (entityData == null)
                 {
-                    MelonLogger.Error($"OnAddOrRefreshBuff() NULL ENTRY FOUND FOR Target = {buff.Target?.Nameplate?.nameText.text}, Source = {buff.Caster?.Nameplate?.nameText.text} {buff.BuffData.DisplayName.ToString()}, MAKING NOW. TODO GET RID OF THIS AND SEE IF IT ACTUALLY MATTERS OR WHY THIS EVEN HAPPENS"); // TODO - What happens if we just return here instead and say tough shit
+                    MelonLogger.Error($"OnAddOrRefreshBuff() NULL ENTRY FOUND FOR Target = {buff.Target?.Nameplate?.nameText.text}, Source = {buff.Caster?.Nameplate?.nameText.text} {buff.BuffData.DisplayName.ToString()}, DOES THIS EVEN MATTERS?");
                     return;
-//                    EntityManager.AddMonsterIfMissing(buff.Target.NetworkId.ToString());
-//                    entityData = EntityManager.GetEntityData(buff.Target.NetworkId.ToString());
-//                    entityData.monsterNetworkId = buff.Target.NetworkId.ToString();
                 }
 
                 // Get the number of seconds since EPOCH from when the very first debuff lands
@@ -226,7 +286,8 @@ namespace EnhancedDebuffTracking
                         found = true;
                         debuff.debuffDurationRemaining = buff.BuffData.Duration;
                         gDebuffPanel.ResetDebuffPanel();
-                        gDebuffPanel.UpdateDebuffPanel(entityData);
+                        //gDebuffPanel.UpdateDebuffPanel(entityData);
+                        gDebuffPanel.UpdateDebuffPanel(testData);
 
                     }
                 }
@@ -276,7 +337,8 @@ namespace EnhancedDebuffTracking
                     if (gCurrentTargetNetworkId.Equals(buff.Target?.NetworkId.ToString()))
                     {
                         EntityManager.addMonsterToUniqueDebuffs(buff.Target?.NetworkId.ToString(), newDebuff.debuffName);
-                        gDebuffPanel.UpdateDebuffPanel(entityData);
+                        //gDebuffPanel.UpdateDebuffPanel(entityData);
+                        gDebuffPanel.UpdateDebuffPanel(testData);
                     }
                 }
             }
@@ -328,7 +390,8 @@ namespace EnhancedDebuffTracking
                 }
 
                 gDebuffPanel.ResetDebuffPanel();
-                gDebuffPanel.UpdateDebuffPanel(entityData);
+                //gDebuffPanel.UpdateDebuffPanel(entityData);
+                gDebuffPanel.UpdateDebuffPanel(testData);
             }
         }
 
@@ -368,7 +431,8 @@ namespace EnhancedDebuffTracking
             //MelonLogger.Warning($"OffensiveTargetSelected 5");
             // Reset the panel, we must do this to clear the window when somebody switches to a new target
             gDebuffPanel.ResetDebuffPanel();
-            gDebuffPanel.UpdateDebuffPanel(entityData);
+            //gDebuffPanel.UpdateDebuffPanel(entityData);
+            gDebuffPanel.UpdateDebuffPanel(testData);
 
             // Store this for use in OnUpdate()
             //MelonLogger.Warning($"OffensiveTargetSelected 6 targetLogic.Offensive.NetworkId.ToString() = {targetLogic.Offensive.NetworkId.ToString()}");

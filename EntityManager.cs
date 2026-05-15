@@ -380,7 +380,7 @@ public static class EntityManager
             newMonster.debuffData = new List<DebuffData>();
 
             // TODO - Get rid of the black list and the error showing buffs found on monsters loaded
-            string[] debuffBlacklist = { "Mana Guzzle", "Taunt Immunity", "Feared" };
+            string[] debuffBlacklist = { "Mana Guzzle", "Taunt Immunity", "Feared", "Temporary Invulnerability" };
             // Pick up any traits if they exist
             // TODO - Do we want to pick up existing deuffs on monsters
             bool isFirst = true;

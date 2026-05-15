@@ -1,8 +1,8 @@
 ﻿using Il2Cpp;
 using Il2CppServiceStack;
-using Il2CppSystem.Security.Cryptography;
 using Il2CppTMPro;
 using MelonLoader;
+using Unity.VectorGraphics;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -209,7 +209,8 @@ namespace EnhancedDebuffTracking
             CanvasGroup    canvasGroup    = gameObject.AddComponent<CanvasGroup>();
             UIDraggable    uiDraggable    = gameObject.AddComponent<UIDraggable>();
             RectTransform  rectTransform  = gameObject.AddComponent<RectTransform>();
-            RectMask2D  rectTransformMask = gameObject.AddComponent<RectMask2D>();
+            RectMask2D         rectMask2D = gameObject.AddComponent<RectMask2D>();
+            ScrollRect         scrollRect = gameObject.AddComponent<ScrollRect>();
 
             gUiWindowPanel = gameObject.AddComponent<UIWindowPanel>();
             
@@ -224,6 +225,12 @@ namespace EnhancedDebuffTracking
             gUiWindowPanel._displayName = panelName;
             gUiWindowPanel.Resizable = true;
 
+
+            // The content that can be scrolled. It should be a child of the GameObject with ScrollRect on it.
+            scrollRect.content = rectTransform;
+            scrollRect.vertical = true;
+            scrollRect.horizontal = false;
+            
             // Setup the default position of the panel and its general parameters
             rectTransform.sizeDelta = panelSize;
             rectTransform.pivot = new Vector2(0, 1);
@@ -231,14 +238,15 @@ namespace EnhancedDebuffTracking
             rectTransform.localScale = new Vector3(1, 1, 1);
             
             // Setup the 2DRect Mask to prevent elements outide the pannel to not be rendered
-            RectTransform maskRectTransform = rectTransformMask.rectTransform;
-            maskRectTransform.sizeDelta = panelSize;
-            maskRectTransform.pivot = new Vector2(0, 1);
-            maskRectTransform.anchoredPosition = new Vector2(-(panelSize.x / 2), panelSize.y / 2);
+            RectTransform rectMask2DTransform = rectMask2D.rectTransform;
+            rectMask2DTransform.sizeDelta = new Vector2(200,200); // Allows clipping outside this range
+            rectMask2DTransform.pivot = new Vector2(0, 1);
+            rectMask2DTransform.anchoredPosition = new Vector2(-(panelSize.x / 2), panelSize.y / 2);
 
-            ContentSizeFitter contentSizeFitter = gameObject.AddComponent<ContentSizeFitter>();
-            contentSizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-            contentSizeFitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+            // TODO - Is this actually necessary?
+            //ContentSizeFitter contentSizeFitter = gameObject.AddComponent<ContentSizeFitter>();
+            //contentSizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            //ontentSizeFitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
 
             // Adds the resize control to the Panel, hijacked from the chat box
             AddResizeControl(rectTransform, panelSize);
@@ -263,10 +271,10 @@ namespace EnhancedDebuffTracking
             var mainChatRectHandle = mainChatWindow.GetComponentInChildren<UIResizeHandle>();
 
             UIResizeHandle resizeHandleCopy = Object.Instantiate(mainChatRectHandle, mainChatRectHandle.transform.position, mainChatRectHandle.transform.rotation, rectTransform);
-            UIResizeHandle copyHandle = resizeHandleCopy.GetComponent<UIResizeHandle>();
-            copyHandle.ContainerRect = rectTransform;
-            copyHandle.MaxSize = panelSize;
-            copyHandle.MinSize = new Vector2(0, 0);
+            UIResizeHandle copyUIResizeHandle = resizeHandleCopy.GetComponent<UIResizeHandle>();
+            copyUIResizeHandle.ContainerRect = rectTransform;
+            copyUIResizeHandle.MaxSize = panelSize;
+            copyUIResizeHandle.MinSize = new Vector2(0, 0);
 
             // This is the resize icon at the bottom right
             var copyRect = resizeHandleCopy.GetComponent<RectTransform>();

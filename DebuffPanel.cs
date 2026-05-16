@@ -1,5 +1,6 @@
 ﻿using Il2Cpp;
 using Il2CppServiceStack;
+using Il2CppSystem.Security.Cryptography;
 using Il2CppTMPro;
 using MelonLoader;
 using Unity.VectorGraphics;
@@ -111,6 +112,9 @@ namespace EnhancedDebuffTracking
         private static string imageNameTwentyNine = "EDT_ImageNameTwentyNine_EDT";
         private static string imageNameThirty = "EDT_ImageNameThirty_EDT";
 
+        public static Scrollbar xScrollBar = new Scrollbar();
+        public static Scrollbar yScrollBar = new Scrollbar();
+
         // Setup lists to aid in the accessing of transform data later on
         Transform targetNameTextMeshObject = new Transform();
         List<Transform> textMeshObjects = new List<Transform>();
@@ -209,11 +213,9 @@ namespace EnhancedDebuffTracking
             CanvasGroup    canvasGroup    = gameObject.AddComponent<CanvasGroup>();
             UIDraggable    uiDraggable    = gameObject.AddComponent<UIDraggable>();
             RectTransform  rectTransform  = gameObject.AddComponent<RectTransform>();
-            RectMask2D         rectMask2D = gameObject.AddComponent<RectMask2D>();
-            ScrollRect         scrollRect = gameObject.AddComponent<ScrollRect>();
+            //RectMask2D     rectMask2D = gameObject.AddComponent<RectMask2D>(); // ADDING THIS IN CAUSES THE CLOSE BUTTON TO DISSAPEAR
 
             gUiWindowPanel = gameObject.AddComponent<UIWindowPanel>();
-            
 
             // Block Raycasts to work around wonky click detection on the close button due other UI elements overlapping the close button image
             // I am not going to spend time making all my TextMesh's layout perfectly for this mod so block raycasts instead
@@ -225,12 +227,6 @@ namespace EnhancedDebuffTracking
             gUiWindowPanel._displayName = panelName;
             gUiWindowPanel.Resizable = true;
 
-
-            // The content that can be scrolled. It should be a child of the GameObject with ScrollRect on it.
-            scrollRect.content = rectTransform;
-            scrollRect.vertical = true;
-            scrollRect.horizontal = false;
-            
             // Setup the default position of the panel and its general parameters
             rectTransform.sizeDelta = panelSize;
             rectTransform.pivot = new Vector2(0, 1);
@@ -238,27 +234,54 @@ namespace EnhancedDebuffTracking
             rectTransform.localScale = new Vector3(1, 1, 1);
             
             // Setup the 2DRect Mask to prevent elements outide the pannel to not be rendered
-            RectTransform rectMask2DTransform = rectMask2D.rectTransform;
-            rectMask2DTransform.sizeDelta = new Vector2(200,200); // Allows clipping outside this range
-            rectMask2DTransform.pivot = new Vector2(0, 1);
-            rectMask2DTransform.anchoredPosition = new Vector2(-(panelSize.x / 2), panelSize.y / 2);
+//            RectTransform rectMask2DTransform = rectMask2D.rectTransform;
+//            rectMask2DTransform.sizeDelta = new Vector2(5000,5000); // Allows clipping outside this range
+//            rectMask2DTransform.pivot = new Vector2(0, 1);
+//            rectMask2DTransform.anchoredPosition = new Vector2(-(panelSize.x / 2), panelSize.y / 2);
 
-            // TODO - Is this actually necessary?
-            //ContentSizeFitter contentSizeFitter = gameObject.AddComponent<ContentSizeFitter>();
-            //contentSizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-            //ontentSizeFitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+            string scrollRectGameObjectname = "IAMFISH";
+            GameObject scrollRectGameObject = new GameObject(scrollRectGameObjectname);
+            scrollRectGameObject.transform.SetParent(rectTransform);
+            scrollRectGameObject.layer = Layers.UI;
+
+            ScrollRect scrollRect = scrollRectGameObject.AddComponent<ScrollRect>();
+            scrollRect.horizontalScrollbar = xScrollBar; 
+            scrollRect.verticalScrollbar = yScrollBar;
+
+            RectTransform scrollRectTransform = scrollRect.rectTransform; // Content must be placed here
+            scrollRectTransform.sizeDelta = new Vector2(rectTransform.rect.height, rectTransform.rect.width);
+            scrollRectTransform.pivot = new Vector2(0.065f, 1.0f);
+            scrollRectTransform.anchoredPosition = new Vector2(1.0f, 0.0f);
+            scrollRectTransform.anchorMax = new Vector2(1, 1); // Upper Right
+            scrollRectTransform.anchorMin = new Vector2(0, 0); // Lower Left
+            scrollRectTransform.localScale = rectTransform.localScale;
+
+            if (scrollRect == null)
+            {
+                MelonLogger.Warning($"DisplayPanel() 7a");
+            }
+            // The content that can be scrolled. It should be a child of the GameObject with ScrollRect on it.
+            scrollRect.content = scrollRectTransform;
+            scrollRect.vertical = false;
+            scrollRect.horizontal = false;
+            scrollRect.elasticity = 0.0f;
+            scrollRect.inertia = false;
+            scrollRect.movementType = ScrollRect.MovementType.Clamped;
+            scrollRect.viewport = rectTransform;
+
 
             // Adds the resize control to the Panel, hijacked from the chat box
             AddResizeControl(rectTransform, panelSize);
 
             // Add the MANDATORY elements to a panel, the compilor will not error if you don't do this but nothing will work
-            BuildCloseButtonAndBackground(parentPanel, gameObject);
+            BuildCloseButtonAndBackground(rectTransform, gameObject);
 
             // Add in the images that will be the progress bars
-            BuildImages();
+            BuildImages(scrollRectTransform);
 
             // Add in Text Meshs that display the data
-            BuildTextMeshs();
+            BuildTextMeshs(scrollRectTransform);
 
             // Ensure the panel is displayed immediatly
             gUiWindowPanel.Show();
@@ -273,8 +296,6 @@ namespace EnhancedDebuffTracking
             UIResizeHandle resizeHandleCopy = Object.Instantiate(mainChatRectHandle, mainChatRectHandle.transform.position, mainChatRectHandle.transform.rotation, rectTransform);
             UIResizeHandle copyUIResizeHandle = resizeHandleCopy.GetComponent<UIResizeHandle>();
             copyUIResizeHandle.ContainerRect = rectTransform;
-            copyUIResizeHandle.MaxSize = panelSize;
-            copyUIResizeHandle.MinSize = new Vector2(0, 0);
 
             // This is the resize icon at the bottom right
             var copyRect = resizeHandleCopy.GetComponent<RectTransform>();
@@ -335,11 +356,11 @@ namespace EnhancedDebuffTracking
         }
 
         // Builder function to create an TextMesh
-        private void BuildTextMesh(string name, int height, int width, float heightOffset, float widthOffset)
+        private void BuildTextMesh(RectTransform scrollRectTransform, string name, int height, int width, float heightOffset, float widthOffset)
         {
             GameObject gameObject = new GameObject(name);
             // Set its parent to the new window panel (which is parented to Mid)
-            gameObject.transform.SetParent(gUiWindowPanel.transform, false);
+            gameObject.transform.SetParent(scrollRectTransform, false);
             ContentSizeFitter contentSizeFitter = gameObject.AddComponent<ContentSizeFitter>();
             contentSizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
             contentSizeFitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
@@ -354,11 +375,11 @@ namespace EnhancedDebuffTracking
         }
 
         // Builder function to create an Image
-        private void BuildImage(string name, int height, int width, float heightOffset, float widthOffset)
+        private void BuildImage(RectTransform rectTransform, string name, int height, int width, float heightOffset, float widthOffset)
         {
             GameObject gameObject = new GameObject(name);
             // Set its parent to the new window panel (which is parented to Mid)
-            gameObject.transform.SetParent(gUiWindowPanel.transform, false);
+            gameObject.transform.SetParent(rectTransform, false);
             ContentSizeFitter contentSizeFitter = gameObject.AddComponent<ContentSizeFitter>();
             contentSizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
             contentSizeFitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
@@ -393,186 +414,206 @@ namespace EnhancedDebuffTracking
         }
 
         // Builds all images (progress bars) to be display in the panel 
-        private void BuildImages() 
+        private void BuildImages(RectTransform scrollRectTransform) 
         {
             // Make all the progress bars
-            BuildImage(imageNameOne,   Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightOneOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameTwo,   Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwoOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameThree, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightThreeOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameFour,  Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFourOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameFive,  Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFiveOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameSix,   Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSixOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameSeven, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSevenOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameEight, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightEightOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameNine,  Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightNineOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameTen,   Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTenOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameEleven, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightElevenOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameTwelve, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwelveOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameThirteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightThirteenOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameFourteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFourteenOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameFithteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFithteenOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameSixteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSixteenOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameSeventeen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSeventeenOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameEighteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightEighteenOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameNineteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightNineteenOffset, Globals.RowLeftMargin);
-            BuildImage(imageNameTwenty, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyOffset, Globals.RowLeftMargin);
-//            BuildImage(imageNameTwentyOne, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyOneOffset, Globals.RowLeftMargin);
-//            BuildImage(imageNameTwentyTwo, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyTwoOffset, Globals.RowLeftMargin);
-//            BuildImage(imageNameTwentyThree, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyThreeOffset, Globals.RowLeftMargin);
-//            BuildImage(imageNameTwentyFour, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyFourOffset, Globals.RowLeftMargin);
-//            BuildImage(imageNameTwentyFive, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyFiveOffset, Globals.RowLeftMargin);
-//            BuildImage(imageNameTwentySix, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentySixOffset, Globals.RowLeftMargin);
-//            BuildImage(imageNameTwentySeven, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentySevenOffset, Globals.RowLeftMargin);
-//            BuildImage(imageNameTwentyEight, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyEightOffset, Globals.RowLeftMargin);
-//            BuildImage(imageNameTwentyNine, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyNineOffset, Globals.RowLeftMargin);
-//            BuildImage(imageNameThirty, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightThirtyOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameOne,   Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightOneOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameTwo,   Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwoOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameThree, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightThreeOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameFour,  Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFourOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameFive,  Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFiveOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameSix,   Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSixOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameSeven, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSevenOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameEight, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightEightOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameNine,  Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightNineOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameTen,   Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTenOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameEleven, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightElevenOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameTwelve, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwelveOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameThirteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightThirteenOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameFourteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFourteenOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameFithteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFithteenOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameSixteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSixteenOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameSeventeen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSeventeenOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameEighteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightEighteenOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameNineteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightNineteenOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameTwenty, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameTwentyOne, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyOneOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameTwentyTwo, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyTwoOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameTwentyThree, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyThreeOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameTwentyFour, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyFourOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameTwentyFive, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyFiveOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameTwentySix, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentySixOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameTwentySeven, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentySevenOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameTwentyEight, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyEightOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameTwentyNine, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyNineOffset, Globals.RowLeftMargin);
+            BuildImage(scrollRectTransform, imageNameThirty, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightThirtyOffset, Globals.RowLeftMargin);
 
             // Save these for use later 
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameOne));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwo));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameThree));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameFour));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameFive));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameSix));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameSeven));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameEight));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameNine));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTen));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameEleven));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwelve));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameThirteen));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameFourteen));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameFithteen));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameSixteen));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameSeventeen));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameEighteen));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameNineteen));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwenty));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwentyOne));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwentyTwo));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwentyThree));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwentyFour));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwentyFive));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwentySix));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwentySeven));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwentyEight));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameTwentyNine));
-            imageObjects.Add(gUiWindowPanel.transform.Find(imageNameThirty));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameOne));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameTwo));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameThree));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameFour));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameFive));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameSix));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameSeven));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameEight));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameNine));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameTen));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameEleven));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameTwelve));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameThirteen));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameFourteen));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameFithteen));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameSixteen));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameSeventeen));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameEighteen));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameNineteen));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameTwenty));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameTwentyOne));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameTwentyTwo));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameTwentyThree));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameTwentyFour));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameTwentyFive));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameTwentySix));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameTwentySeven));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameTwentyEight));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameTwentyNine));
+            imageObjects.Add(scrollRectTransform.transform.Find(imageNameThirty));
         }
 
         // Builds all TextMeshes (debuff/time) to be display in the panel
-        private void BuildTextMeshs()
+        private void BuildTextMeshs(RectTransform scrollRectTransform)
         {
             // Text Mesh for Target Name
-            BuildTextMesh(targetName, Globals.NameMeshHeight, Globals.NameMeshWidth, 1f, 0f);
+            BuildTextMesh(scrollRectTransform, targetName, Globals.NameMeshHeight, Globals.NameMeshWidth, 1f, 0.05f);
 
             // Make all the meshes that will sit on top of the bars
-            BuildTextMesh(nameOne, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightOneOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameTwo, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwoOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameThree, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightThreeOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameFour, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFourOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameFive, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFiveOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameSix, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSixOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameSeven, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSevenOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameEight, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightEightOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameNine, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightNineOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameTen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTenOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameEleven, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightElevenOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameTwelve, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwelveOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameThirteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightThirteenOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameFourteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFourteenOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameFithteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFithteenOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameSixteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSixteenOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameSeventeen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSeventeenOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameEighteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightEighteenOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameNineteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightNineteenOffset, Globals.RowLeftMargin);
-            BuildTextMesh(nameTwenty, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyOffset, Globals.RowLeftMargin);
-//            BuildTextMesh(nameTwentyOne, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyOneOffset, Globals.RowLeftMargin);
-//            BuildTextMesh(nameTwentyTwo, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyTwoOffset, Globals.RowLeftMargin);
-//            BuildTextMesh(nameTwentyThree, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyThreeOffset, Globals.RowLeftMargin);
-//            BuildTextMesh(nameTwentyFour, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyFourOffset, Globals.RowLeftMargin);
-//            BuildTextMesh(nameTwentyFive, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyFiveOffset, Globals.RowLeftMargin);
-//            BuildTextMesh(nameTwentySix, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentySixOffset, Globals.RowLeftMargin);
-//            BuildTextMesh(nameTwentySeven, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentySevenOffset, Globals.RowLeftMargin);
-//            BuildTextMesh(nameTwentyEight, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyEightOffset, Globals.RowLeftMargin);
-//            BuildTextMesh(nameTwentyNine, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyNineOffset, Globals.RowLeftMargin);
-//            BuildTextMesh(nameThirty, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightThirtyOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameOne, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightOneOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameTwo, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwoOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameThree, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightThreeOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameFour, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFourOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameFive, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFiveOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameSix, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSixOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameSeven, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSevenOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameEight, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightEightOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameNine, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightNineOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameTen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTenOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameEleven, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightElevenOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameTwelve, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwelveOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameThirteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightThirteenOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameFourteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFourteenOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameFithteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightFithteenOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameSixteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSixteenOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameSeventeen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightSeventeenOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameEighteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightEighteenOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameNineteen, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightNineteenOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameTwenty, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameTwentyOne, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyOneOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameTwentyTwo, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyTwoOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameTwentyThree, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyThreeOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameTwentyFour, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyFourOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameTwentyFive, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyFiveOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameTwentySix, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentySixOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameTwentySeven, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentySevenOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameTwentyEight, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyEightOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameTwentyNine, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightTwentyNineOffset, Globals.RowLeftMargin);
+            BuildTextMesh(scrollRectTransform, nameThirty, Globals.NameMeshHeight, Globals.NameMeshWidth, Globals.HeightThirtyOffset, Globals.RowLeftMargin);
 
-            BuildTextMesh(timeNameOne, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightOneOffset, Globals.TimeLeftMargin);
-            BuildTextMesh(timeNameTwo, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwoOffset, Globals.TimeLeftMargin);
-            BuildTextMesh(timeNameThree, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightThreeOffset, Globals.TimeLeftMargin);
-            BuildTextMesh(timeNameFour, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightFourOffset, Globals.TimeLeftMargin);
-            BuildTextMesh(timeNameFive, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightFiveOffset, Globals.TimeLeftMargin);
-            BuildTextMesh(timeNameSix, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightSixOffset, Globals.TimeLeftMargin);
-            BuildTextMesh(timeNameSeven, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightSevenOffset, Globals.TimeLeftMargin);
-            BuildTextMesh(timeNameEight, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightEightOffset, Globals.TimeLeftMargin);
-            BuildTextMesh(timeNameNine, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightNineOffset, Globals.TimeLeftMargin);
-            BuildTextMesh(timeNameTen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTenOffset, Globals.TimeLeftMargin);
-            BuildTextMesh(timeNameEleven, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightElevenOffset, Globals.TimeLeftMargin);
-            BuildTextMesh(timeNameTwelve, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwelveOffset, Globals.TimeLeftMargin);
-            BuildTextMesh(timeNameThirteen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightThirteenOffset, Globals.TimeLeftMargin);
-            BuildTextMesh(timeNameFourteen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightFourteenOffset, Globals.TimeLeftMargin);
-            BuildTextMesh(timeNameFithteen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightFithteenOffset, Globals.TimeLeftMargin);
-            BuildTextMesh(timeNameSixteen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightSixteenOffset, Globals.TimeLeftMargin);
-            BuildTextMesh(timeNameSeventeen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightSeventeenOffset, Globals.TimeLeftMargin);
-            BuildTextMesh(timeNameEighteen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightEighteenOffset, Globals.TimeLeftMargin);
-            BuildTextMesh(timeNameNineteen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightNineteenOffset, Globals.TimeLeftMargin);
-            BuildTextMesh(timeNameTwenty, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyOffset, Globals.TimeLeftMargin);
-//            BuildTextMesh(timeNameTwentyOne, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyOneOffset, Globals.TimeLeftMargin);
-//            BuildTextMesh(timeNameTwentyTwo, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyTwoOffset, Globals.TimeLeftMargin);
-//            BuildTextMesh(timeNameTwentyThree, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyThreeOffset, Globals.TimeLeftMargin);
-//            BuildTextMesh(timeNameTwentyFour, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyFourOffset, Globals.TimeLeftMargin);
-//            BuildTextMesh(timeNameTwentyFive, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyFiveOffset, Globals.TimeLeftMargin);
-//            BuildTextMesh(timeNameTwentySix, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentySixOffset, Globals.TimeLeftMargin);
-//            BuildTextMesh(timeNameTwentySeven, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentySevenOffset, Globals.TimeLeftMargin);
-//            BuildTextMesh(timeNameTwentyEight, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyEightOffset, Globals.TimeLeftMargin);
-//            BuildTextMesh(timeNameTwentyNine, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyNineOffset, Globals.TimeLeftMargin);
-//            BuildTextMesh(timeNameThirty, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightThirtyOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameOne, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightOneOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameTwo, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwoOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameThree, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightThreeOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameFour, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightFourOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameFive, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightFiveOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameSix, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightSixOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameSeven, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightSevenOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameEight, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightEightOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameNine, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightNineOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameTen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTenOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameEleven, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightElevenOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameTwelve, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwelveOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameThirteen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightThirteenOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameFourteen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightFourteenOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameFithteen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightFithteenOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameSixteen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightSixteenOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameSeventeen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightSeventeenOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameEighteen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightEighteenOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameNineteen, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightNineteenOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameTwenty, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameTwentyOne, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyOneOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameTwentyTwo, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyTwoOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameTwentyThree, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyThreeOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameTwentyFour, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyFourOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameTwentyFive, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyFiveOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameTwentySix, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentySixOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameTwentySeven, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentySevenOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameTwentyEight, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyEightOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameTwentyNine, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightTwentyNineOffset, Globals.TimeLeftMargin);
+            BuildTextMesh(scrollRectTransform, timeNameThirty, Globals.TimeMeshHeight, Globals.TimeMeshWidth, Globals.HeightThirtyOffset, Globals.TimeLeftMargin);
 
             // Save these for use later 
-            targetNameTextMeshObject = gUiWindowPanel.transform.Find(targetName);
+            targetNameTextMeshObject = scrollRectTransform.Find(targetName);
 
-            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameOne));
-            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameTwo));
-            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameThree));
-            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameFour));
-            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameFive));
-            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameSix));
-            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameSeven));
-            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameEight));
-            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameNine));
-            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameTen));
-            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameEleven));
-            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameTwelve));
-            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameThirteen));
-            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameFourteen));
-            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameFithteen));
-            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameSixteen));
-            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameSeventeen));
-            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameEighteen));
-            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameNineteen));
-            textMeshObjects.Add(gUiWindowPanel.transform.Find(nameTwenty));
+            textMeshObjects.Add(scrollRectTransform.Find(nameOne));
+            textMeshObjects.Add(scrollRectTransform.Find(nameTwo));
+            textMeshObjects.Add(scrollRectTransform.Find(nameThree));
+            textMeshObjects.Add(scrollRectTransform.Find(nameFour));
+            textMeshObjects.Add(scrollRectTransform.Find(nameFive));
+            textMeshObjects.Add(scrollRectTransform.Find(nameSix));
+            textMeshObjects.Add(scrollRectTransform.Find(nameSeven));
+            textMeshObjects.Add(scrollRectTransform.Find(nameEight));
+            textMeshObjects.Add(scrollRectTransform.Find(nameNine));
+            textMeshObjects.Add(scrollRectTransform.Find(nameTen));
+            textMeshObjects.Add(scrollRectTransform.Find(nameEleven));
+            textMeshObjects.Add(scrollRectTransform.Find(nameTwelve));
+            textMeshObjects.Add(scrollRectTransform.Find(nameThirteen));
+            textMeshObjects.Add(scrollRectTransform.Find(nameFourteen));
+            textMeshObjects.Add(scrollRectTransform.Find(nameFithteen));
+            textMeshObjects.Add(scrollRectTransform.Find(nameSixteen));
+            textMeshObjects.Add(scrollRectTransform.Find(nameSeventeen));
+            textMeshObjects.Add(scrollRectTransform.Find(nameEighteen));
+            textMeshObjects.Add(scrollRectTransform.Find(nameNineteen));
+            textMeshObjects.Add(scrollRectTransform.Find(nameTwenty));
+            textMeshObjects.Add(scrollRectTransform.Find(nameTwentyOne));
+            textMeshObjects.Add(scrollRectTransform.Find(nameTwentyTwo));
+            textMeshObjects.Add(scrollRectTransform.Find(nameTwentyThree));
+            textMeshObjects.Add(scrollRectTransform.Find(nameTwentyFour));
+            textMeshObjects.Add(scrollRectTransform.Find(nameTwentyFive));
+            textMeshObjects.Add(scrollRectTransform.Find(nameTwentySix));
+            textMeshObjects.Add(scrollRectTransform.Find(nameTwentySeven));
+            textMeshObjects.Add(scrollRectTransform.Find(nameTwentyEight));
+            textMeshObjects.Add(scrollRectTransform.Find(nameTwentyNine));
+            textMeshObjects.Add(scrollRectTransform.Find(nameThirty));
 
-            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameOne));
-            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameTwo));
-            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameThree));
-            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameFour));
-            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameFive));
-            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameSix));
-            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameSeven));
-            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameEight));
-            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameNine));
-            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameTen));
-            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameEleven));
-            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameTwelve));
-            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameThirteen));
-            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameFourteen));
-            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameFithteen));
-            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameSixteen));
-            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameSeventeen));
-            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameEighteen));
-            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameNineteen));
-            timeTextMeshObjects.Add(gUiWindowPanel.transform.Find(timeNameTwenty));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameOne));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameTwo));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameThree));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameFour));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameFive));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameSix));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameSeven));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameEight));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameNine));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameTen));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameEleven));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameTwelve));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameThirteen));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameFourteen));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameFithteen));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameSixteen));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameSeventeen));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameEighteen));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameNineteen));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameTwenty));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameTwentyOne));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameTwentyTwo));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameTwentyThree));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameTwentyFour));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameTwentyFive));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameTwentySix));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameTwentySeven));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameTwentyEight));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameTwentyNine));
+            timeTextMeshObjects.Add(scrollRectTransform.Find(timeNameThirty));
         }
 
 

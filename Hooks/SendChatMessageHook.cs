@@ -27,7 +27,7 @@ public class SendChatMessageHook
                 return false;
             }
 
-            if (message.Contains("/setdebuffrows"))
+            if (message.Contains($"/{Globals.SetNumberOfRowsCommand}"))
             {
                 ModMain.SetNumDebuffRows(message);
                 return false;

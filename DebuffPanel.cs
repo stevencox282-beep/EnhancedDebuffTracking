@@ -26,93 +26,43 @@ namespace EnhancedDebuffTracking
         public static Scrollbar yScrollBar = new Scrollbar();
 
         // Setup lists to aid in the accessing of transform data later on
-        Transform targetNameTextMeshObject = new Transform();
+        List<Transform> targetNameTextMeshObject = new List<Transform>();
         List<Transform> textMeshObjects = new List<Transform>();
         List<Transform> timeTextMeshObjects = new List<Transform>();
         List<Transform> imageObjects = new List<Transform>();
-
+        UITutorialPopup gTutorialPopup = new UITutorialPopup();
+        
         // Holds the panel
         private static UIWindowPanel gUiWindowPanel  = null;
 
-        private static Color getBarColours(string spellType)
-        {
-            Color returnColor = Color.black;
-            // List the string values for all MaxDisplayableDebuffs debuffs
-            switch (spellType)
-            {
-                case "Augmentation":
-                    returnColor = Color.darkBlue;
-                    break;
-                case "Fortification":
-                    returnColor = Color.darkGreen;
-                    break;
-                case "Manifestation":
-                    returnColor = Color.purple;
-                    break;
-                case "Conjuration":
-                    returnColor = Color.brown;
-                    break;
-                case "Evocation":
-                    returnColor = Color.red;
-                    break;
-                case "Expulsion":
-                    returnColor = Color.cadetBlue;
-                    break;
-                case "Restoration":
-                    returnColor = Color.green;
-                    break;
-                case "Invocation":
-                    returnColor = Color.indigo;
-                    break;
-                case "Illumination":
-                    returnColor = Color.lavender;
-                    break;
-                case "Enervation":
-                    returnColor = Color.limeGreen;
-                    break;
-                case "Corruption":
-                    returnColor = Color.navyBlue;
-                    break;
-                case "TricksOfTheTrade":
-                    returnColor = Color.oldLace;
-                    break;
-                case "Trapping":
-                    returnColor = Color.azure;
-                    break;
-                case "Naturalism":
-                    returnColor = Color.red;
-                    break;
-                case "FeignDeath":
-                    returnColor = Color.orange;
-                    break;
-                case "Warfare":
-                    returnColor = Color.olive;
-                    break;
-                case "None":
-                    returnColor = Color.yellowGreen;
-                    break;
-                default:
-                    returnColor = Color.black;
-                    break;
-            }
-
-            return returnColor;
-        }
+        
 
         // Tidy up the alloated resources when we logout
-        public void RemovePanelRows()
+        public void ClearPanelLists()
         {
             // Static variables can persist and not be garbage collected on zoning, logout or panel reloading so explicitly clear them out, we will rebuild them on loading into a zone
-            targetNameTextMeshObject = null;
+            targetNameTextMeshObject.Clear();
             textMeshObjects.Clear();
             timeTextMeshObjects.Clear();
             imageObjects.Clear();
 
         }
 
-        // Displays a panel with to contain the data we want
-        public void DisplayPanel(string panelName, Transform parentPanel, Vector2 panelSize)
+        public void PreserveRequiredTransforms()
         {
+            gTutorialPopup = UIPanelRoots.Instance.Mid.transform.GetComponentInChildren<UITutorialPopup>();
+        }
+
+        // Displays a panel with to contain the data we want
+        public void DisplayPanel(string panelName, Transform parentPanel)
+        {
+            // This allows us to remake the panel with any number of rows we want without having left over transforms corrupting the display
+            if (gUiWindowPanel != null)
+            {
+                Destroy(gUiWindowPanel.gameObject);
+                Destroy(gUiWindowPanel);
+            }
+
             // Setup the general panel parameters
             GameObject gameObject = new GameObject(panelName);
             // Add the panel to the Mid, this ensures we get rendered
@@ -121,9 +71,9 @@ namespace EnhancedDebuffTracking
 
             // Add the necessary component for a panel
             CanvasRenderer canvasRenderer = gameObject.AddComponent<CanvasRenderer>();
-            CanvasGroup    canvasGroup    = gameObject.AddComponent<CanvasGroup>();
-            UIDraggable    uiDraggable    = gameObject.AddComponent<UIDraggable>();
-            RectTransform  rectTransform  = gameObject.AddComponent<RectTransform>();
+            CanvasGroup canvasGroup = gameObject.AddComponent<CanvasGroup>();
+            UIDraggable uiDraggable = gameObject.AddComponent<UIDraggable>();
+            RectTransform rectTransform = gameObject.AddComponent<RectTransform>();
 
             gUiWindowPanel = gameObject.AddComponent<UIWindowPanel>();
 
@@ -139,51 +89,37 @@ namespace EnhancedDebuffTracking
             // Add the MANDATORY elements to a panel, the compilor will not error if you don't do this but nothing will work
             BuildCloseButtonAndBackground(rectTransform, gameObject);
 
-            rectTransform.pivot = new Vector2(0, 1);
-            rectTransform.anchoredPosition = new Vector2(-(panelSize.x / 2), panelSize.y / 2);
-            rectTransform.localScale = new Vector3(1, 1, 1);
-
             // Set the panel size based on the number of rows we have to draw
             SetPanelSize(panelName);
 
             // Add in the row data
-            DrawRows(panelName);
+            AddPanelRows(panelName);
 
             // Ensure the panel is displayed immediatly
             gUiWindowPanel.Show();
         }
 
+        // Sets the size of the panel based on the number of rows to add
         public void SetPanelSize(string panelName)
         {
             // Get the RectTransform to add the rows too
             GameObject gameObject = gUiWindowPanel.gameObject;
             RectTransform rectTransform = gameObject.transform.GetComponent<RectTransform>();
 
-            Vector2 panelSize = new Vector2();
-            if (Globals.NumDisplayableDebuffs == 35)
-            {
-                // Setup the default position of the panel and its general parameters based on the number of rows
-                panelSize = new Vector2(Globals.DefaultPanelWidth, Globals.DefaultPanelHeight);
-            }
-            else
-            {
-                MelonLogger.Warning($"SetPanelSize() 1");
-                // We need to know how much space each row takes up, then multiply that by the number of rows.
-                // The space we need per row 
-                int heightPerRow = Globals.NameMeshHeight;
-                MelonLogger.Warning($"SetPanelSize() 2 heightPerRow = {heightPerRow}, Globals.NumDisplayableDebuffs = {Globals.NumDisplayableDebuffs}");
-
-                int totalHeightNeeded = (heightPerRow + 5) * Globals.NumDisplayableDebuffs;
-                MelonLogger.Warning($"SetPanelSize() 3 totalHeightNeeded = {totalHeightNeeded}");
-                // We can not change the width, just the height
-                panelSize = new Vector2(Globals.DefaultPanelWidth, totalHeightNeeded);
-            }
-
-
+            // We need to know how much space each row takes up, then multiply that by the number of rows.
+            // The space we need per row 
+            int heightPerRow = Globals.NameMeshHeight;
+            int totalHeightNeeded = (heightPerRow + 6) * Globals.NumDisplayableDebuffs;
+            // We can not change the width, just the height
+            Vector2 panelSize = new Vector2(Globals.DefaultPanelWidth, totalHeightNeeded);
+            rectTransform.pivot = new Vector2(0, 1);
+            rectTransform.anchoredPosition = new Vector2(-(panelSize.x / 2), panelSize.y / 2);
+            rectTransform.localScale = new Vector3(1, 1, 1);
             rectTransform.sizeDelta = panelSize;
         }
 
-        public void DrawRows(string panelName)
+        // Adds all the images and text meshes to the panel
+        public void AddPanelRows(string panelName)
         {
             // Get the RectTransform to add the rows too
             GameObject gameObject = gUiWindowPanel.gameObject;
@@ -199,12 +135,11 @@ namespace EnhancedDebuffTracking
         // Constructs the close button and set the background
         private void BuildCloseButtonAndBackground(Transform parentPanel, GameObject gameObject)
         {
-            // Source for copying button and backgrounds
-            UITutorialPopup tutorialPopup = UIPanelRoots.Instance.Mid.transform.GetComponentInChildren<UITutorialPopup>();
-            Transform tutorialButton = tutorialPopup.transform.GetChild(0);
+            // Source for copying button and backgrounds            
+            Transform tutorialButton = gTutorialPopup.transform.GetChild(0);
 
             // Initialise the background for the new panel (MANDATORY)
-            Image imageToCopy = tutorialPopup.GetComponent<Image>();
+            Image imageToCopy = gTutorialPopup.GetComponent<Image>();
             var image = gameObject.AddComponent<Image>();
             image.type = Image.Type.Sliced;
             image.sprite = imageToCopy.sprite;
@@ -305,84 +240,14 @@ namespace EnhancedDebuffTracking
             return image;
         }
 
-
-        private void GetOffsetsForPanel(ref float heightOffset, ref float interBarOffset)
-        {
-            // Change the margins and offsets based on how many rows we have
-            switch (Globals.NumDisplayableDebuffs)
-            {
-                case 1:
-                    heightOffset = 1f - 0.9f;
-                    break;
-                case 2:
-                    heightOffset = 1f - 0.45f;
-                    interBarOffset = 0.45f;
-                    break;
-                case 3:
-                    heightOffset = 1f - 0.35f;
-                    interBarOffset = 0.30f;
-                    break;
-                case 4:
-                    heightOffset = 1f - 0.30f;
-                    interBarOffset = 0.20f;
-                    break;
-                case 5:
-                    heightOffset = 1f - 0.245f;
-                    interBarOffset = 0.175f;
-                    break;
-                case 6:
-                    heightOffset = 1f - 0.20f;
-                    interBarOffset = 0.15f;
-                    break;
-                case 7:
-                    heightOffset = 1f - 0.17f;
-                    interBarOffset = 0.13f;
-                    break;
-                case 8:
-                    heightOffset = 1f - 0.14f;
-                    interBarOffset = 0.115f;
-                    break;
-                case 9:
-                    heightOffset = 1f - 0.13f;
-                    interBarOffset = 0.105f;
-                    break;
-                case 10:
-                    heightOffset = 1f - 0.13f;
-                    interBarOffset = 0.09f;
-                    break;
-                case 15:
-                    heightOffset = 1f - 0.08f;
-                    interBarOffset = 0.08f;
-                    break;
-                case 20:
-                    heightOffset = 1f - 0.06f;
-                    interBarOffset = 0.05f;
-                    break;
-                case 25:
-                    heightOffset = 1f - 0.05f;
-                    interBarOffset = 0.039f;
-                    break;
-                case 30:
-                    heightOffset = 1f - 0.04f;
-                    interBarOffset = 0.032f;
-                    break;
-                case 35:
-                    interBarOffset = 0.028f; // Globals.InterBarOffset
-                    heightOffset = 1f - 0.04f; // Globals.TopMargin
-                    break;
-
-            }
-        }
         // Builds all images (progress bars) to be display in the panel 
         private void BuildImages(RectTransform rectTransform) 
         {
             float heightOffset = 0.0f;
             float interBarOffset = 0.0f;
-
-            GetOffsetsForPanel(ref heightOffset, ref interBarOffset);
+            DebuffPanelUtils.GetOffsetsForPanel(ref heightOffset, ref interBarOffset);
 
             // Make all the progress bars
-            MelonLogger.Warning($"BuildImages() Globals.NumDisplayableDebuffs = {Globals.NumDisplayableDebuffs}");
             for (int i = 0 ; i < Globals.NumDisplayableDebuffs; i++)
             {
                 string imageName = $"{baseImageName} + {i}";
@@ -390,7 +255,6 @@ namespace EnhancedDebuffTracking
                 imageObjects.Add(rectTransform.transform.Find(imageName));
                 heightOffset = heightOffset - interBarOffset;
             }
-            MelonLogger.Warning($"BuildImages() imageObjects.Count = {imageObjects.Count}");
         }
 
         // Builds all TextMeshes (debuff/time) to be display in the panel
@@ -398,14 +262,13 @@ namespace EnhancedDebuffTracking
         {
             // Text Mesh for Target Name
             BuildTextMesh(rectTransform, baseTargetName, Globals.NameMeshHeight, Globals.NameMeshWidth, 1.0f, 0.0f);
-            targetNameTextMeshObject = rectTransform.Find(baseTargetName);
+            targetNameTextMeshObject.Add(rectTransform.Find(baseTargetName));
 
             // Build the meshes
             float heightOffset = 0.0f;
             float interBarOffset = 0.0f;
-            GetOffsetsForPanel(ref heightOffset, ref interBarOffset);
+            DebuffPanelUtils.GetOffsetsForPanel(ref heightOffset, ref interBarOffset);
 
-            MelonLogger.Warning($"BuildTextMeshs() Globals.NumDisplayableDebuffs = {Globals.NumDisplayableDebuffs}");
             for (int i = 0; i < Globals.NumDisplayableDebuffs; i++)
             {
                 string textName = $"{baseTextName} + {i}";
@@ -416,22 +279,20 @@ namespace EnhancedDebuffTracking
                 timeTextMeshObjects.Add(rectTransform.Find(timeTextName));
                 heightOffset = heightOffset - interBarOffset;
             }
-            MelonLogger.Warning($"BuildTextMeshs() textMeshObjects.Count = {textMeshObjects.Count}");
-            MelonLogger.Warning($"BuildTextMeshs() timeTextMeshObjects.Count = {timeTextMeshObjects.Count}");
         }
 
 
         // Update the text displayed in the Debuff Box
-        public void ResetDebuffPanel()
+        public void ClearPanel()
         { 
             // Try and stop unwanted access to the panel to prevent exceptions
             if (gUiWindowPanel != null && gUiWindowPanel.isActiveAndEnabled && gUiWindowPanel.IsVisible)
             {
+                targetNameTextMeshObject[0].GetComponent<TextMeshProUGUI>().text = "";
                 // Parse the list of all debuffs on the current target and display the first MaxDisplayableDebuffs
                 for (int i = 0; i < Globals.NumDisplayableDebuffs; i++)
                 {
                     // Reset to an clean list
-                    targetNameTextMeshObject.GetComponent<TextMeshProUGUI>().text = "";
                     textMeshObjects[i].GetComponent<TextMeshProUGUI>().text = "";
                     timeTextMeshObjects[i].GetComponent<TextMeshProUGUI>().text = "";
                     // Now update the progress bar colour and time
@@ -444,7 +305,7 @@ namespace EnhancedDebuffTracking
         }
 
         //Update the text displayed in the Debuff Box
-        public void UpdateDebuffPanel(EntityData entityData)
+        public void UpdatePanel(EntityData entityData)
         {
             // Try and stop unwanted access to the panel to prevent exceptions
             if (gUiWindowPanel != null && gUiWindowPanel.isActiveAndEnabled && gUiWindowPanel.IsVisible && entityData.monsterNetworkId != null & entityData.monsterNetworkId != "")
@@ -454,7 +315,7 @@ namespace EnhancedDebuffTracking
                 {
                     DebuffData debuff = entityData.debuffData[i];
 
-                    targetNameTextMeshObject.GetComponent<TextMeshProUGUI>().text = $" <b>Target:</b> {debuff.targetName.ToUpperSafe()}, {debuff.targetClass}, {debuff.targetKind},\n {entityData.traits}";
+                    targetNameTextMeshObject[0].GetComponent<TextMeshProUGUI>().text = $" <b>Target:</b> {debuff.targetName.ToUpperSafe()}, {debuff.targetClass}, {debuff.targetKind},\n {entityData.traits}";
                     // Update the target information, leave the leading space in
                     textMeshObjects[i].GetComponent<TextMeshProUGUI>().text = $" {debuff.debuffName} ({debuff.numStacks}/{debuff.maxStacks}), ({debuff.casterName})";
                     if (debuff.debuffDurationRemaining < 60)
@@ -474,7 +335,7 @@ namespace EnhancedDebuffTracking
                     Image image = imageObjects[i].transform.GetComponent<Image>();
 
                     // Set colour based on the spell type
-                    image.color = getBarColours(debuff.spellType.ToString());
+                    image.color = DebuffPanelUtils.getBarColours(debuff.spellType.ToString());
                     // Set the fill amount  1.0f is full, 0.0f is empty
                     image.fillAmount = ((1 / debuff.debuffDuration) * debuff.debuffDurationRemaining);
                 }

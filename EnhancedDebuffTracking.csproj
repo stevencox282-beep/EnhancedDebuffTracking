@@ -532,6 +532,7 @@
 
 	<ItemGroup>
 		<Compile Include="DebuffPanel.cs" />
+		<Compile Include="DebuffPanelUtils.cs" />
 		<Compile Include="EntityManager.cs" />
 		<Compile Include="Globals.cs" />
 		<Compile Include="Hooks\EntityNpcGameObjectHooks.cs" />

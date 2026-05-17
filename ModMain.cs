@@ -152,7 +152,7 @@ namespace EnhancedDebuffTracking
                         if (entityData.isDead == false)
                         {
                             // If we have a valid debuff list for the current target, update the screen
-                            gDebuffPanel.UpdateDebuffPanel(entityData);
+                            gDebuffPanel.UpdatePanel(entityData);
                             //gDebuffPanel.UpdateDebuffPanel(testData);
                         }
                     }
@@ -163,14 +163,17 @@ namespace EnhancedDebuffTracking
         // This function adds the new debuff panel to the UI
         public static void AddDebuffPanelToUI()
         {
+            // This is a nasty hack but is required because I am too dumb to get ScrollRect working
+            gDebuffPanel.PreserveRequiredTransforms();
+
             // Build the panel, attach it to the offensive target panel
-            gDebuffPanel.DisplayPanel(debuffPanelName, UIPanelRoots.Instance.Mid.transform, new Vector2(Globals.DefaultPanelWidth, Globals.DefaultPanelHeight));
+            gDebuffPanel.DisplayPanel(debuffPanelName, UIPanelRoots.Instance.Mid.transform);
         }
 
         // Used to tear down all the resources allocated by the panel on logout / character change
-        public static void RemoveDebuffPanelRows()
+        public static void ClearPanelLists()
         {
-            gDebuffPanel.RemovePanelRows();
+            gDebuffPanel.ClearPanelLists();
         }
 
         // Called to show the debuff panel
@@ -189,9 +192,10 @@ namespace EnhancedDebuffTracking
             gDebuffPanel.HideDebuffPanel();
         }
 
+        // This function takes the new number of rows and re-draws the panel with that number of rows
         public static void SetNumDebuffRows(string message)
         {
-            string[] result = message.Split("setdebuffrows");
+            string[] result = message.Split(Globals.SetNumberOfRowsCommand);
             int newNumRows = -1;
             // If we have something after the command name create that many rows
             if (result.Length > 1)
@@ -208,14 +212,13 @@ namespace EnhancedDebuffTracking
                 }
 
                 // Clear out the user visible data
-                gDebuffPanel.ResetDebuffPanel();
+                gDebuffPanel.ClearPanel();
                 // Clear out the row data from the panel
-                RemoveDebuffPanelRows();
+                ClearPanelLists();
+
                 // Set the new number of rows to be drawn (dont do this earlier, it can cause problems tearing down the correct number of TextMesh and Image tranforms)
                 Globals.NumDisplayableDebuffs = newNumRows;
-                gDebuffPanel.SetPanelSize(debuffPanelName);
-                // Redraw the number of rows we want based on the number provided by the user
-                gDebuffPanel.DrawRows(debuffPanelName);
+                gDebuffPanel.DisplayPanel(debuffPanelName, UIPanelRoots.Instance.Mid.transform);
             } // End of IF we have a value to parse
         }
 
@@ -281,7 +284,7 @@ namespace EnhancedDebuffTracking
                 if (entityData.debuffData == null)
                 {
                     // update the debuff list to be empty
-                    gDebuffPanel.ResetDebuffPanel();
+                    gDebuffPanel.ClearPanel();
                     return;
                 }
 
@@ -294,8 +297,8 @@ namespace EnhancedDebuffTracking
                         found = true;
                         debuff.debuffDurationRemaining = buff.BuffData.Duration;
                         //MelonLogger.Warning($"OnAddOrRefreshDebuff() 1 UpdateDebuffPanel entityData.monsterNetworkId = {entityData.monsterNetworkId}, buff.Target.NetworkId.ToString() = { buff.Target.NetworkId.ToString()}, gCurrentTargetNetworkId = {gCurrentTargetNetworkId.ToString()}");
-                        gDebuffPanel.ResetDebuffPanel();
-                        gDebuffPanel.UpdateDebuffPanel(entityData);
+                        gDebuffPanel.ClearPanel();
+                        gDebuffPanel.UpdatePanel(entityData);
                         //gDebuffPanel.UpdateDebuffPanel(testData);
 
                     }
@@ -347,7 +350,7 @@ namespace EnhancedDebuffTracking
                     {
                         //MelonLogger.Warning($"OnAddOrRefreshDebuff() 2 UpdateDebuffPanel entityData.monsterNetworkId = {entityData.monsterNetworkId}, buff.Target.NetworkId.ToString() = {buff.Target.NetworkId.ToString()}, gCurrentTargetNetworkId = {gCurrentTargetNetworkId.ToString()}");
                         EntityManager.addMonsterToUniqueDebuffs(buff.Target?.NetworkId.ToString(), newDebuff.debuffName);
-                        gDebuffPanel.UpdateDebuffPanel(entityData);
+                        gDebuffPanel.UpdatePanel(entityData);
                         //gDebuffPanel.UpdateDebuffPanel(testData);
                     }
                 }
@@ -400,8 +403,8 @@ namespace EnhancedDebuffTracking
                 }
 
                 MelonLogger.Warning($"OnRemoveBuff() UpdateDebuffPanel entityData.monsterNetworkId = {entityData.monsterNetworkId}");
-                gDebuffPanel.ResetDebuffPanel();
-                gDebuffPanel.UpdateDebuffPanel(entityData);
+                gDebuffPanel.ClearPanel();
+                gDebuffPanel.UpdatePanel(entityData);
                 //gDebuffPanel.UpdateDebuffPanel(testData);
             }
         }
@@ -417,7 +420,7 @@ namespace EnhancedDebuffTracking
                 //MelonLogger.Warning($"OffensiveTargetSelected 2");
                 // Either the user has pressed ESC so they are targetting nothing or something has gone wrong somewhere
                 gCurrentTargetNetworkId = "";
-                gDebuffPanel.ResetDebuffPanel();
+                gDebuffPanel.ClearPanel();
                 return;
             }
 
@@ -442,8 +445,8 @@ namespace EnhancedDebuffTracking
             //MelonLogger.Warning($"OffensiveTargetSelected 5");
             // Reset the panel, we must do this to clear the window when somebody switches to a new target
             //MelonLogger.Warning($"OffensiveTargetSelected() UpdateDebuffPanel entityData.monsterNetworkId = {entityData.monsterNetworkId}");
-            gDebuffPanel.ResetDebuffPanel();
-            gDebuffPanel.UpdateDebuffPanel(entityData);
+            gDebuffPanel.ClearPanel();
+            gDebuffPanel.UpdatePanel(entityData);
             //gDebuffPanel.UpdateDebuffPanel(testData);
 
             // Store this for use in OnUpdate()

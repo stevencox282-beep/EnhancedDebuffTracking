@@ -16,6 +16,7 @@ public static class Globals
     public static Dictionary<uint, EntityNpcGameObject> MonstersInRange = new Dictionary<uint, EntityNpcGameObject>();
     public static Dictionary<uint, Vector3> MonstersInRangeLastPosition = new Dictionary<uint, Vector3>();
 
+    public static string SetNumberOfRowsCommand = "setdebuffrows";
     public static int NumDisplayableDebuffs = 35;
     public static int MsToSeconds = 1000;
     public static Vector2 maxPanelSize = new Vector2(1000,1000);
@@ -24,9 +25,6 @@ public static class Globals
     public static float RowLeftMargin = 0.05f;
     public static int DefaultPanelHeight = 540; // y-axis
     public static int DefaultPanelWidth = 300; // x-axis
-
-//    public static int DefaultPanelHeight = 800; // y-axis
-//    public static int DefaultPanelWidth = 800; // x-axis
 
     public static int NameMeshWidth = 250;
     public static int NameMeshHeight = 12;

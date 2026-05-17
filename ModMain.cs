@@ -17,6 +17,7 @@ namespace EnhancedDebuffTracking
     public class EntityData()
     {
         public bool isDead;
+        public bool hasBeenDead; // The death status for a monster always changes changes to false when you move out of range, even if it is still dead, so now we track if it has ever been dead
         public List<DebuffData> debuffData = new List<DebuffData>();
         public long  encounterStartTime; // Total encounter time for this monster
         public string monsterNetworkId; // network id of this monster
@@ -85,6 +86,7 @@ namespace EnhancedDebuffTracking
             // Setup test data here
             testData.monsterNetworkId = "12345";
             testData.isDead = false;
+            testData.hasBeenDead = false;
             testData.encounterStartTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
             for (int i = 0; i < Globals.NumDisplayableDebuffs; i++)
@@ -129,6 +131,8 @@ namespace EnhancedDebuffTracking
                     // Update this immediatly so we dont flood in here
                     _timeSinceLastUpdate = 0f;
 
+//                    MelonLogger.Warning($"OnUpdate() 1");
+
                     // Update the progress bars
                     EntityManager.UpdateDurationRemaining();
 
@@ -149,8 +153,10 @@ namespace EnhancedDebuffTracking
                         }
 
                         // We do not update the screen if the entity is dead
-                        if (entityData.isDead == false)
+                        if (entityData.hasBeenDead == false && entityData.isDead == false)
                         {
+//                            MelonLogger.Warning($"OnUpdate() 2 Enemy reprted as dead");
+
                             // If we have a valid debuff list for the current target, update the screen
                             gDebuffPanel.UpdatePanel(entityData);
                             //gDebuffPanel.UpdateDebuffPanel(testData);
@@ -196,15 +202,15 @@ namespace EnhancedDebuffTracking
         public static void SetNumDebuffRows(string message)
         {
             string[] result = message.Split(Globals.SetNumberOfRowsCommand);
-            int newNumRows = -1;
+            int numRows = -1;
             // If we have something after the command name create that many rows
             if (result.Length > 1)
             {
                 try
                 {
                     // Minimum number of rows to display is 1
-                    newNumRows = Int32.Parse(result[1]);
-                    newNumRows = (newNumRows < 1) ? 1 : newNumRows;
+                    numRows = Int32.Parse(result[1]);
+                    SanitiseNumRows(ref numRows);
                 }
                 catch (FormatException)
                 {
@@ -217,9 +223,29 @@ namespace EnhancedDebuffTracking
                 ClearPanelLists();
 
                 // Set the new number of rows to be drawn (dont do this earlier, it can cause problems tearing down the correct number of TextMesh and Image tranforms)
-                Globals.NumDisplayableDebuffs = newNumRows;
+                Globals.NumDisplayableDebuffs = numRows;
                 gDebuffPanel.DisplayPanel(debuffPanelName, UIPanelRoots.Instance.Mid.transform);
             } // End of IF we have a value to parse
+        }
+
+        // Converts the provoided number to a valid number
+        // We support the following.  1..10,15,20,25,30,35
+        private static void SanitiseNumRows(ref int numRows)
+        {
+            // Ensure we have at least 1 row
+            numRows = (numRows < 1) ? 1 : numRows;
+            // Anything between 11 and 15 is set to 15
+            numRows = (numRows > 10 && numRows < 16) ? 15 : numRows;
+            // Anything between 16 and 20 is set to 20
+            numRows = (numRows > 15 && numRows < 21) ? 20 : numRows;
+            // Anything between 21 and 25 is set to 25
+            numRows = (numRows > 20 && numRows < 26) ? 25 : numRows;
+            // Anything between 26 and 30 is set to 30
+            numRows = (numRows > 25 && numRows < 31) ? 30 : numRows;
+            // Anything between 31 and 35 is set to 35
+            numRows = (numRows > 30 && numRows < 36 ) ? 35 : numRows;
+            // Ensure we have at least 1 row
+            numRows = (numRows > 35) ? 35 : numRows;
         }
 
         // Determines if the target for a buff is valid for us to track
@@ -244,8 +270,8 @@ namespace EnhancedDebuffTracking
         // Make sure we dont re-add an existing buff to the buff list and you handle all the different conditions it can be called
         public static void OnAddOrRefreshBuff(double time, ActiveBuff buff, bool inBackground, bool isRefresh, bool isItemBuff)
         {
-            //MelonLogger.Warning($"OnAddOrRefreshBuff() 0a buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}, isRefresh = {isRefresh}, inBackground = {inBackground}, isItemBuff = {isItemBuff}");
-            //MelonLogger.Warning($"OnAddOrRefreshBuff() 0b buff.Target?.NetworkId.ToString() = {buff.Target?.NetworkId.ToString()}, gCurrentTargetNetworkId = {gCurrentTargetNetworkId}");
+            MelonLogger.Warning($"OnAddOrRefreshBuff() 0a buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}, isRefresh = {isRefresh}, inBackground = {inBackground}, isItemBuff = {isItemBuff}");
+            MelonLogger.Warning($"OnAddOrRefreshBuff() 0b buff.Target?.NetworkId.ToString() = {buff.Target?.NetworkId.ToString()}, gCurrentTargetNetworkId = {gCurrentTargetNetworkId}");
 
             // Make sure we only track debuffs and only on monsters
             if (IsValidTarget(buff) && IsValidDebuff(buff))
@@ -362,8 +388,8 @@ namespace EnhancedDebuffTracking
         // 2) When a debuff expires an enemy you do not have targetted
         public static void OnRemoveBuff(double time, ActiveBuff buff, bool moveToBackground, bool isRefresh)
         {
-            //MelonLogger.Warning($"OnRemoveBuff() 1 buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}, isRefresh = {isRefresh}, inBackground = {moveToBackground}");
-            //MelonLogger.Warning($"OnRemoveBuff() 1 buff.Target?.Nameplate?.name.ToString()() = {buff.Target?.Nameplate?.name.ToString()}");
+            MelonLogger.Warning($"OnRemoveBuff() 1 buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}, isRefresh = {isRefresh}, inBackground = {moveToBackground}");
+            MelonLogger.Warning($"OnRemoveBuff() 1 buff.Target?.Nameplate?.name.ToString() = {buff.Target?.Nameplate?.name.ToString()}");
             // Make sure this is something we want to track
             if (IsValidTarget(buff))
             {
@@ -402,7 +428,7 @@ namespace EnhancedDebuffTracking
                     }
                 }
 
-                MelonLogger.Warning($"OnRemoveBuff() UpdateDebuffPanel entityData.monsterNetworkId = {entityData.monsterNetworkId}");
+                //MelonLogger.Warning($"OnRemoveBuff() UpdateDebuffPanel entityData.monsterNetworkId = {entityData.monsterNetworkId}");
                 gDebuffPanel.ClearPanel();
                 gDebuffPanel.UpdatePanel(entityData);
                 //gDebuffPanel.UpdateDebuffPanel(testData);
@@ -414,7 +440,7 @@ namespace EnhancedDebuffTracking
         // 2) Current selected moster despawns 
         public static void OffensiveTargetSelected(Targets.Logic targetLogic)
         {
-            //MelonLogger.Warning($"OffensiveTargetSelected 1 gCurrentTargetNetworkId = {gCurrentTargetNetworkId.ToString()}");
+            MelonLogger.Warning($"OffensiveTargetSelected 1 gCurrentTargetNetworkId = {gCurrentTargetNetworkId.ToString()}");
             if (targetLogic.Offensive == null)
             {
                 //MelonLogger.Warning($"OffensiveTargetSelected 2");
@@ -426,12 +452,16 @@ namespace EnhancedDebuffTracking
 
             //MelonLogger.Warning($"OffensiveTargetSelected 3 targetLogic.Offensive.NetworkId.ToString() = {targetLogic.Offensive.NetworkId.ToString()}");
             // Identify the new target, make sure we have a row in the dictionary for it, this is an explicit handling of a weakness in the detect of new NPC entities
-            EntityManager.AddMonsterIfMissing(targetLogic.Offensive.NetworkId.ToString());
+            MelonLogger.Warning($"OffensiveTargetSelected() 1 targetLogic.Offensive.NetworkId.ToString() = {targetLogic.Offensive.NetworkId.ToString()}");
+
+            
             // Get the entity data
             EntityData entityData = EntityManager.GetEntityData(targetLogic.Offensive.NetworkId.ToString());
             if (entityData == null)
             {
-                //MelonLogger.Warning($"OffensiveTargetSelected 3b");
+                MelonLogger.Error($"OffensiveTargetSelected 3b");
+                EntityManager.AddMonsterIfMissing(targetLogic.Offensive.NetworkId.ToString());
+                entityData = EntityManager.GetEntityData(targetLogic.Offensive.NetworkId.ToString());
             }
 
             //MelonLogger.Warning($"OffensiveTargetSelected 3");

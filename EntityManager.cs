@@ -301,8 +301,9 @@ public static class EntityManager
         {
             EntityData newMonster = new EntityData();
             newMonster.monsterNetworkId = targetNetworkId;
-            //MelonLogger.Warning("AddMonsterIfMissing() is Dead = False");
+            MelonLogger.Warning($"AddMonsterIfMissing() is Dead = False, targetNetworkId = {targetNetworkId.ToString()}");
             newMonster.isDead = false;
+            newMonster.hasBeenDead = false;
             newMonster.debuffData = new List<DebuffData>();
             gMonsterDebuffDictionary.Add(targetNetworkId, newMonster);
         }
@@ -318,8 +319,11 @@ public static class EntityManager
 
         if (gMonsterDebuffDictionary.ContainsKey(networkId.ToString()))
         {
-            //MelonLogger.Warning($"MarkEnemyAsDead  networkId = {networkId}, isDead = {isDead}");
             gMonsterDebuffDictionary[networkId].isDead = isDead;
+            if (isDead == true && gMonsterDebuffDictionary[networkId].hasBeenDead == false)
+            {
+                gMonsterDebuffDictionary[networkId].hasBeenDead = true; // Once set to true can NEVER be set to false
+            }
         }
     }
 
@@ -372,12 +376,27 @@ public static class EntityManager
                 return;
             }
 
+            MelonLogger.Warning($"OnNpcAdded() 0");
             Globals.MonstersInRange.Add(entityNpcGameObject.NetworkId.Value, entityNpcGameObject);
+            MelonLogger.Warning($"OnNpcAdded() 0a");
             Globals.MonstersInRangeLastPosition.Add(entityNpcGameObject.NetworkId.Value, entityNpcGameObject.transform.position);
 
-            string targetNetworkId = entityNpcGameObject.NetworkId.Value.ToString();
+            MelonLogger.Warning($"OnNpcAdded() 0b");
+            string targetNetworkId = entityNpcGameObject.NetworkId.ToString();
+            MelonLogger.Warning($"OnNpcAdded() 1 targetNetworkId = {targetNetworkId}");
+            if (gMonsterDebuffDictionary.ContainsKey(entityNpcGameObject.NetworkId.ToString()))
+            {
+                MelonLogger.Error($"OnNpcAdded() Entry {entityNpcGameObject.NetworkId.ToString()} already exists in the dictionary, this should never happen");
+            }
             AddMonsterIfMissing(targetNetworkId);
+            MelonLogger.Warning($"OnNpcAdded() 2");
             EntityData newMonster = GetEntityData(targetNetworkId);
+            MelonLogger.Warning($"OnNpcAdded() 3");
+            if (newMonster == null)
+            {
+                MelonLogger.Warning($"OnNpcAdded() 4");
+            }
+            MelonLogger.Warning($"OnNpcAdded() 5");
 
             // TODO - Get rid of the black list and the error showing buffs found on monsters loaded
             string[] debuffBlacklist = { "Mana Guzzle", "Taunt Immunity", "Feared", "Temporary Invulnerability" };
@@ -416,13 +435,6 @@ public static class EntityManager
                 
             }
             newMonster.isDead = entityNpcGameObject.Status.IsDead();
-            
-            if (gMonsterDebuffDictionary.ContainsKey(entityNpcGameObject.NetworkId.ToString()))
-            {
-                MelonLogger.Error($"OnNpcAdded() Entry {entityNpcGameObject.NetworkId.ToString()} already exists in the dictionary, this should never happen");
-            }
-            //MelonLogger.Warning($"OnNpcAdded() entityNpcGameObject.NetworkId.ToString() = {entityNpcGameObject.NetworkId.ToString()}");
-            gMonsterDebuffDictionary.Add(entityNpcGameObject.NetworkId.ToString(), newMonster);
         }
         else
         {

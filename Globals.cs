@@ -17,7 +17,7 @@ public static class Globals
     public static Dictionary<uint, Vector3> MonstersInRangeLastPosition = new Dictionary<uint, Vector3>();
 
     public static string SetNumberOfRowsCommand = "setdebuffrows";
-    public static int NumDisplayableDebuffs = 35;
+    public static int NumDisplayableDebuffs = 10;
     public static int MsToSeconds = 1000;
     public static Vector2 maxPanelSize = new Vector2(1000,1000);
 

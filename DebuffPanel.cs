@@ -35,8 +35,6 @@ namespace EnhancedDebuffTracking
         // Holds the panel
         private static UIWindowPanel gUiWindowPanel  = null;
 
-        
-
         // Tidy up the alloated resources when we logout
         public void ClearPanelLists()
         {
@@ -45,12 +43,28 @@ namespace EnhancedDebuffTracking
             textMeshObjects.Clear();
             timeTextMeshObjects.Clear();
             imageObjects.Clear();
-
         }
 
+        // Preserves the UIToutorial transform which is needed to re-make the close button on the window
         public void PreserveRequiredTransforms()
         {
             gTutorialPopup = UIPanelRoots.Instance.Mid.transform.GetComponentInChildren<UITutorialPopup>();
+        }
+
+        // Called by the closing of the offensive target window
+        public void HideDebuffPanel()
+        {
+            gUiWindowPanel.Hide();
+        }
+
+        // Called by the /debuff command and on offensive target select
+        public void ShowDebuffPanel()
+        {
+            // Display the panel if the gloabl is set to allow it
+            if (Globals.ShowDebuffPanel == true)
+            {
+                gUiWindowPanel.Show();
+            }
         }
 
         // Displays a panel with to contain the data we want
@@ -235,7 +249,7 @@ namespace EnhancedDebuffTracking
             image.sprite = sprite;
             image.type = Image.Type.Filled;
             image.fillMethod = Image.FillMethod.Horizontal;
-            image.color = Color.pink;
+            image.color = Color.black;
             image.fillAmount = 0.5f; // 1.0f is full 0.0f is empty
             return image;
         }
@@ -339,22 +353,6 @@ namespace EnhancedDebuffTracking
                     // Set the fill amount  1.0f is full, 0.0f is empty
                     image.fillAmount = ((1 / debuff.debuffDuration) * debuff.debuffDurationRemaining);
                 }
-            }
-        }
-
-        // Called by the closing of the offensive target window
-        public void HideDebuffPanel()
-        {
-            gUiWindowPanel.Hide();
-        }
-
-        // Called by the /debuff command and on offensive target select
-        public void ShowDebuffPanel()
-        {
-            // Display the panel if the gloabl is set to allow it
-            if (Globals.ShowDebuffPanel == true)
-            {
-                gUiWindowPanel.Show();
             }
         }
     }

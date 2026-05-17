@@ -11,7 +11,7 @@ public class SendChatMessageHook
     {
         if (Globals.PlayerIsLoaded == true)
         {
-            if (message == "/showdebuff")
+            if (message == "/showdebuffs")
             {
                 // The clock is already loaded and running via another hook, all we have to do is show it
                 Globals.ShowDebuffPanel = true;
@@ -19,13 +19,20 @@ public class SendChatMessageHook
                 return false;
             }
 
-            if (message == "/hidedebuff")
+            if (message == "/hidedebuffs")
             {
                 // The clock is already loaded and running via another hook, all we have to do is show it
                 Globals.ShowDebuffPanel = false;
                 ModMain.HideDebuffPanel();
                 return false;
             }
+
+            if (message.Contains("/setdebuffrows"))
+            {
+                ModMain.SetNumDebuffRows(message);
+                return false;
+            }
+            
         }
         return true;
     }

@@ -1,6 +1,6 @@
 # EnhancedDebuffTracking
 This Mod is for Pantheon: Rise of the Fallen. It displays the in game debuffs on monsters.
-It has added in new commands /showdebuff and /hidedebuff to enable / disable the display panel
+It has added in new commands /showdebuffs and /hidedebuffs to enable / disable the display panel
 
 ## Known Limitations
 If a player moves into rendering range of a monster with debuffs previous applied to it then those debuffs will not appear in the panel

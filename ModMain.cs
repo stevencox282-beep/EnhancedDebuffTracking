@@ -1,6 +1,7 @@
 ﻿using Il2Cpp;
 using Il2CppLogicalGraphNodes;
 using Il2CppPantheonPersist;
+using Il2CppServiceStack;
 using MelonLoader;
 using Unity.Entities;
 using UnityEngine;
@@ -86,37 +87,10 @@ namespace EnhancedDebuffTracking
             testData.isDead = false;
             testData.encounterStartTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-            testData.debuffData.Add(MakeTestDebuffData("One"));
-            testData.debuffData.Add(MakeTestDebuffData("Two"));
-            testData.debuffData.Add(MakeTestDebuffData("Three"));
-            testData.debuffData.Add(MakeTestDebuffData("Four"));
-            testData.debuffData.Add(MakeTestDebuffData("Five"));
-            testData.debuffData.Add(MakeTestDebuffData("Six"));
-            testData.debuffData.Add(MakeTestDebuffData("Seven"));
-            testData.debuffData.Add(MakeTestDebuffData("Eight"));
-            testData.debuffData.Add(MakeTestDebuffData("Nine"));
-            testData.debuffData.Add(MakeTestDebuffData("Ten"));
-            testData.debuffData.Add(MakeTestDebuffData("Eleven"));
-            testData.debuffData.Add(MakeTestDebuffData("Twelve"));
-            testData.debuffData.Add(MakeTestDebuffData("Thirteen"));
-            testData.debuffData.Add(MakeTestDebuffData("Fourteen"));
-            testData.debuffData.Add(MakeTestDebuffData("Fithteen"));
-            testData.debuffData.Add(MakeTestDebuffData("Sixteen"));
-            testData.debuffData.Add(MakeTestDebuffData("Seventeen"));
-            testData.debuffData.Add(MakeTestDebuffData("Eighteen"));
-            testData.debuffData.Add(MakeTestDebuffData("Nineteen"));
-            testData.debuffData.Add(MakeTestDebuffData("Twenty"));
-            testData.debuffData.Add(MakeTestDebuffData("TwentyOne"));
-            testData.debuffData.Add(MakeTestDebuffData("TwentyTwo"));
-            testData.debuffData.Add(MakeTestDebuffData("TwentyThree"));
-            testData.debuffData.Add(MakeTestDebuffData("TwentyFour"));
-            testData.debuffData.Add(MakeTestDebuffData("TwentyFive"));
-            testData.debuffData.Add(MakeTestDebuffData("TwentySix"));
-            testData.debuffData.Add(MakeTestDebuffData("TwentySeven"));
-            testData.debuffData.Add(MakeTestDebuffData("TwentyEight"));
-            testData.debuffData.Add(MakeTestDebuffData("TwentyNine"));
-            testData.debuffData.Add(MakeTestDebuffData("Thirty"));
-
+            for (int i = 0; i < Globals.NumDisplayableDebuffs; i++)
+            {
+                testData.debuffData.Add(MakeTestDebuffData($"TestData_{i}"));
+            }
         }
 
         private DebuffData MakeTestDebuffData(string text)
@@ -194,9 +168,9 @@ namespace EnhancedDebuffTracking
         }
 
         // Used to tear down all the resources allocated by the panel on logout / character change
-        public static void RemoveDebuffPanelFromUI()
+        public static void RemoveDebuffPanelRows()
         {
-            gDebuffPanel.RemovePanel();
+            gDebuffPanel.RemovePanelRows();
         }
 
         // Called to show the debuff panel
@@ -213,6 +187,36 @@ namespace EnhancedDebuffTracking
         public static void HideDebuffPanel()
         {
             gDebuffPanel.HideDebuffPanel();
+        }
+
+        public static void SetNumDebuffRows(string message)
+        {
+            string[] result = message.Split("setdebuffrows");
+            int newNumRows = -1;
+            // If we have something after the command name create that many rows
+            if (result.Length > 1)
+            {
+                try
+                {
+                    // Minimum number of rows to display is 1
+                    newNumRows = Int32.Parse(result[1]);
+                    newNumRows = (newNumRows < 1) ? 1 : newNumRows;
+                }
+                catch (FormatException)
+                {
+                    return;
+                }
+
+                // Clear out the user visible data
+                gDebuffPanel.ResetDebuffPanel();
+                // Clear out the row data from the panel
+                RemoveDebuffPanelRows();
+                // Set the new number of rows to be drawn (dont do this earlier, it can cause problems tearing down the correct number of TextMesh and Image tranforms)
+                Globals.NumDisplayableDebuffs = newNumRows;
+                gDebuffPanel.SetPanelSize(debuffPanelName);
+                // Redraw the number of rows we want based on the number provided by the user
+                gDebuffPanel.DrawRows(debuffPanelName);
+            } // End of IF we have a value to parse
         }
 
         // Determines if the target for a buff is valid for us to track
@@ -262,6 +266,12 @@ namespace EnhancedDebuffTracking
                     return;
                 }
 
+                if (entityData.monsterNetworkId.IsEmpty() || entityData.monsterNetworkId.ToString().Equals(""))
+                {
+                    MelonLogger.Error($"OnAddOrRefreshBuff() entityData.monsterNetworkId is NULL");
+                    return;
+                }
+
                 // Get the number of seconds since EPOCH from when the very first debuff lands
                 if (entityData.encounterStartTime == 0L)
                 {
@@ -281,9 +291,9 @@ namespace EnhancedDebuffTracking
                 {
                     if (debuff.debuffName == buff.BuffData.DisplayName.ToString())
                     {
-                        //MelonLogger.Warning($"OnAddOrRefreshBuff 1 (isRefresh = {isRefresh}, debuff.debuffName = {debuff.debuffName}, buff.BuffData.DisplayName.ToString() = {buff.BuffData.DisplayName.ToString()}");
                         found = true;
                         debuff.debuffDurationRemaining = buff.BuffData.Duration;
+                        //MelonLogger.Warning($"OnAddOrRefreshDebuff() 1 UpdateDebuffPanel entityData.monsterNetworkId = {entityData.monsterNetworkId}, buff.Target.NetworkId.ToString() = { buff.Target.NetworkId.ToString()}, gCurrentTargetNetworkId = {gCurrentTargetNetworkId.ToString()}");
                         gDebuffPanel.ResetDebuffPanel();
                         gDebuffPanel.UpdateDebuffPanel(entityData);
                         //gDebuffPanel.UpdateDebuffPanel(testData);
@@ -335,6 +345,7 @@ namespace EnhancedDebuffTracking
                     // Update the debuff list, dont update the display if this debuf isnt for the active target
                     if (gCurrentTargetNetworkId.Equals(buff.Target?.NetworkId.ToString()))
                     {
+                        //MelonLogger.Warning($"OnAddOrRefreshDebuff() 2 UpdateDebuffPanel entityData.monsterNetworkId = {entityData.monsterNetworkId}, buff.Target.NetworkId.ToString() = {buff.Target.NetworkId.ToString()}, gCurrentTargetNetworkId = {gCurrentTargetNetworkId.ToString()}");
                         EntityManager.addMonsterToUniqueDebuffs(buff.Target?.NetworkId.ToString(), newDebuff.debuffName);
                         gDebuffPanel.UpdateDebuffPanel(entityData);
                         //gDebuffPanel.UpdateDebuffPanel(testData);
@@ -388,6 +399,7 @@ namespace EnhancedDebuffTracking
                     }
                 }
 
+                MelonLogger.Warning($"OnRemoveBuff() UpdateDebuffPanel entityData.monsterNetworkId = {entityData.monsterNetworkId}");
                 gDebuffPanel.ResetDebuffPanel();
                 gDebuffPanel.UpdateDebuffPanel(entityData);
                 //gDebuffPanel.UpdateDebuffPanel(testData);
@@ -429,6 +441,7 @@ namespace EnhancedDebuffTracking
 
             //MelonLogger.Warning($"OffensiveTargetSelected 5");
             // Reset the panel, we must do this to clear the window when somebody switches to a new target
+            //MelonLogger.Warning($"OffensiveTargetSelected() UpdateDebuffPanel entityData.monsterNetworkId = {entityData.monsterNetworkId}");
             gDebuffPanel.ResetDebuffPanel();
             gDebuffPanel.UpdateDebuffPanel(entityData);
             //gDebuffPanel.UpdateDebuffPanel(testData);

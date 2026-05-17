@@ -299,7 +299,6 @@ public static class EntityManager
         // Make a new entity if one does not exist
         if (entityData == null)
         {
-            MelonLogger.Error("AddMonsterIfMissing() ADDING MISSING MONSTER");
             EntityData newMonster = new EntityData();
             newMonster.monsterNetworkId = targetNetworkId;
             //MelonLogger.Warning("AddMonsterIfMissing() is Dead = False");
@@ -376,8 +375,9 @@ public static class EntityManager
             Globals.MonstersInRange.Add(entityNpcGameObject.NetworkId.Value, entityNpcGameObject);
             Globals.MonstersInRangeLastPosition.Add(entityNpcGameObject.NetworkId.Value, entityNpcGameObject.transform.position);
 
-            EntityData newMonster = new EntityData();
-            newMonster.debuffData = new List<DebuffData>();
+            string targetNetworkId = entityNpcGameObject.NetworkId.Value.ToString();
+            AddMonsterIfMissing(targetNetworkId);
+            EntityData newMonster = GetEntityData(targetNetworkId);
 
             // TODO - Get rid of the black list and the error showing buffs found on monsters loaded
             string[] debuffBlacklist = { "Mana Guzzle", "Taunt Immunity", "Feared", "Temporary Invulnerability" };
@@ -421,6 +421,7 @@ public static class EntityManager
             {
                 MelonLogger.Error($"OnNpcAdded() Entry {entityNpcGameObject.NetworkId.ToString()} already exists in the dictionary, this should never happen");
             }
+            //MelonLogger.Warning($"OnNpcAdded() entityNpcGameObject.NetworkId.ToString() = {entityNpcGameObject.NetworkId.ToString()}");
             gMonsterDebuffDictionary.Add(entityNpcGameObject.NetworkId.ToString(), newMonster);
         }
         else

@@ -3,7 +3,7 @@ using Il2Cpp;
 
 namespace EnhancedDebuffTracking.Hooks;
 
-// User selects a new offensive target
+// This Hook fires when an offensive target is selected / reselected
 [HarmonyPatch(typeof(Targets.Logic), nameof(Targets.Logic.SetOffensive))]
 public class TargetSetOffensiveHook
 {

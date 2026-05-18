@@ -1,41 +1,32 @@
 ﻿using Il2Cpp;
 using Il2CppServiceStack;
-using Il2CppSystem.Data;
-using Il2CppSystem.Security.Cryptography;
 using Il2CppTMPro;
-using MelonLoader;
-using Unity.Collections;
-using Unity.VectorGraphics;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using Object = UnityEngine.Object;
 
 namespace EnhancedDebuffTracking
 {
-    // Box on the screen with 3 labels inside it
+    // Debuff Panel 
     public class DebuffPanel : MonoBehaviour
     {
-        // textmesh to display the targetName
+        // basis for the nNames of the transforms we are going to create
         private static string baseTargetName = "EDT_TargetName_EDT_";
         private static string baseTextName = "EDT_TextName_EDT_";
         private static string baseTimeTextName = "EDT_TimeTextName_EDT_";
         private static string baseImageName = "EDT_ImageName_EDT_";
 
-        public static Scrollbar xScrollBar = new Scrollbar();
-        public static Scrollbar yScrollBar = new Scrollbar();
-
-        // Setup lists to aid in the accessing of transform data later on
+        // Setup lists that will hold all our transforms
         List<Transform> targetNameTextMeshObject = new List<Transform>();
         List<Transform> textMeshObjects = new List<Transform>();
         List<Transform> timeTextMeshObjects = new List<Transform>();
         List<Transform> imageObjects = new List<Transform>();
         UITutorialPopup gTutorialPopup = new UITutorialPopup();
         
-        // Holds the panel
+        // Holds the debuff window
         private static UIWindowPanel gUiWindowPanel  = null;
 
-        // Tidy up the alloated resources when we logout
+        // Tidy up the alloated resources when we logout / rechange the number of rows in the panel
         public void ClearPanelLists()
         {
             // Static variables can persist and not be garbage collected on zoning, logout or panel reloading so explicitly clear them out, we will rebuild them on loading into a zone
@@ -73,6 +64,7 @@ namespace EnhancedDebuffTracking
             // This allows us to remake the panel with any number of rows we want without having left over transforms corrupting the display
             if (gUiWindowPanel != null)
             {
+                // PROBLEM?  This removes UITotorialPopup from Mid?  If any other mod is using Mid and UITotorialPopup will this ruin their party?
                 Destroy(gUiWindowPanel.gameObject);
                 Destroy(gUiWindowPanel);
             }
@@ -120,10 +112,9 @@ namespace EnhancedDebuffTracking
             GameObject gameObject = gUiWindowPanel.gameObject;
             RectTransform rectTransform = gameObject.transform.GetComponent<RectTransform>();
 
-            // We need to know how much space each row takes up, then multiply that by the number of rows.
             // The space we need per row 
             int heightPerRow = Globals.NameMeshHeight;
-            int totalHeightNeeded = (heightPerRow + 6) * Globals.NumDisplayableDebuffs;
+            int totalHeightNeeded = (heightPerRow + Globals.PixelsToAdd) * Globals.NumDisplayableDebuffs;
             // We can not change the width, just the height
             Vector2 panelSize = new Vector2(Globals.DefaultPanelWidth, totalHeightNeeded);
             rectTransform.pivot = new Vector2(0, 1);
@@ -296,9 +287,9 @@ namespace EnhancedDebuffTracking
         }
 
 
-        // Update the text displayed in the Debuff Box
+        // Clears the text displayed in the Debuff Box
         public void ClearPanel()
-        { 
+        {
             // Try and stop unwanted access to the panel to prevent exceptions
             if (gUiWindowPanel != null && gUiWindowPanel.isActiveAndEnabled && gUiWindowPanel.IsVisible)
             {
@@ -318,13 +309,13 @@ namespace EnhancedDebuffTracking
             }
         }
 
-        //Update the text displayed in the Debuff Box
+        // Update the text displayed in the Debuff Box
         public void UpdatePanel(EntityData entityData)
         {
             // Try and stop unwanted access to the panel to prevent exceptions
             if (gUiWindowPanel != null && gUiWindowPanel.isActiveAndEnabled && gUiWindowPanel.IsVisible && entityData.monsterNetworkId != null & entityData.monsterNetworkId != "")
             {
-                // Parse the list of all debuffs on the current target and display the first MaxDisplayableDebuffs
+                // Parse the list of all debuffs on the current target and display up to NumxDisplayableDebuffs rows
                 for (int i = 0; (i < entityData.debuffData.Count && i < Globals.NumDisplayableDebuffs); i++)
                 {
                     DebuffData debuff = entityData.debuffData[i];

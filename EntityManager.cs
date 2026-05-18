@@ -19,19 +19,20 @@ public class ConsolidatedUptime()
 
 public static class EntityManager
 {
-    
-
     private static readonly string[] Blacklist = { "Banner of Arms", "Banner of Onslaught", "Challenger's Banner", "Rallying Banner", "Shieldman's Banner", "ghostly riddler" };
     // Global to hold the list of all debuffs for a monster, it accesses a List of debuffs via a unique monster id
     private static Dictionary<string, EntityData> gMonsterDebuffDictionary = new Dictionary<string, EntityData>(); // MonsterId, EntityData>
 
-    // TODO - These are very similar, can they be reduced to a single dictionary?
+    // Holds the data for calculating Uptime for each debuff
     private static Dictionary<string, List<ConsolidatedUptime>> consolidatedUptimeDictionary = new Dictionary<string, List<ConsolidatedUptime>>(); // MonsterId, List<debuffName, uptime>
     private static Dictionary<string, List<string>> uniqueDebuffsDictionary = new Dictionary<string, List<string>>(); // MonsterId, List<debuffName>
 
+    // Create lists for the entity manger to track monsters in range
     private static readonly List<EntityNpcGameObject> Monsters = new();
     private static readonly List<EntityNpcGameObject> FriendlyNPCs = new();
-
+    
+    // List of debuffs to ignore on the entity
+    private static string[] debuffBlacklist = { "Mana Guzzle", "Taunt Immunity", "Feared", "Temporary Invulnerability" };
 
     public static EntityData GetEntityData(string targetNetworkId)
     {
@@ -41,8 +42,8 @@ public static class EntityManager
             return null;
         }
 
-        // EntityManager will remove entries from the Dictionary on death, not on despawn, so for now we just have to ignore all failures to find an enemy in the database
-        // Not ideal as this will mask genuine problems but there is nothing we can do about it, it is how the hook for managing NPCs works
+        // EntityManager will remove entities from the Dictionary on entity death, not on entity despawn, so for now we just have to ignore all failures to find an enemy in the database
+        // Not ideal as this will mask genuine problems but there is nothing we can do about it, it is how the Hook for managing NPC entities works
         if (gMonsterDebuffDictionary.ContainsKey(targetNetworkId))
         {
             return gMonsterDebuffDictionary[targetNetworkId];
@@ -53,11 +54,10 @@ public static class EntityManager
         }
     }
 
-    // Adds entry to calculate consolidated uptime for
+    // Adds entry to calculate consolidated uptime
     public static void AddConsolidatedUptime(string monsterNetworkId, DebuffData debuffData)
     {
-        //MelonLogger.Warning($"AddConsolidatedUptime() monsterNetworkId = {monsterNetworkId}, debuffName = {debuffData.debuffName}");
-        // if we do not have this debuff in our uptime dictionary, add it
+        // If we do not have this debuff in our uptime dictionary, add it
         if (!consolidatedUptimeDictionary.ContainsKey(monsterNetworkId))
         {
             // Add a new entry with uptime of 0
@@ -71,6 +71,7 @@ public static class EntityManager
         }
         else
         {
+            // Update the existing row for this debuff
             List<ConsolidatedUptime> consolidatedUptimeList = consolidatedUptimeDictionary[monsterNetworkId];
             foreach(var temp in consolidatedUptimeList)
             {
@@ -123,7 +124,7 @@ public static class EntityManager
 
 
     // Adds a debuff to the list of unique monsters debuffs, creates a new mosnter row if needed
-    public static void addMonsterToUniqueDebuffs(string monsterNetworkId, string debuffName)
+    public static void AddMonsterToUniqueDebuffs(string monsterNetworkId, string debuffName)
     {
         // Add a new monster to the list if this is the first time we are putting debuffs on it
         if (!uniqueDebuffsDictionary.ContainsKey(monsterNetworkId))
@@ -140,7 +141,7 @@ public static class EntityManager
     }
 
     // This removes a monster from the list of monsters with unique debuffs
-    public static void removeMonsterFromUniqueBuffs(string monsterNetworkId)
+    public static void RemoveMonsterFromUniqueBuffs(string monsterNetworkId)
     {
         if (uniqueDebuffsDictionary.ContainsKey(monsterNetworkId)) {
             uniqueDebuffsDictionary.Remove(monsterNetworkId);
@@ -229,48 +230,7 @@ public static class EntityManager
         }
     }
 
-
-    // This function updates the uptime for all active debuffs for all monsters
-    public static void UpdateLocalUpTime()
-    {
-        for (int i = 0; i < gMonsterDebuffDictionary.Count; i++)
-        {
-            EntityData entityData = gMonsterDebuffDictionary.ElementAt(i).Value;
-            List<DebuffData> debuffData = entityData.debuffData;
-
-            // For all debuffs for this monster
-            for (int j = 0; j < debuffData.Count; j++)
-            {
-                DebuffData debuff = debuffData.ElementAt(j);
-                // Update uptime in seconds
-                debuff.localUptime++;
-
-                // OnUpdate will certainly run before we can target and engage a monster in range, prevent a possible DIV0
-                if (entityData.encounterStartTime == 0L)
-                {
-                    debuff.localUptimePercent = 0L;
-                }
-                else
-                {
-                    // Get the time in seconds the encounter has been running
-                    long currentTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                    float currentEncounterDurationS = (float)(currentTime - entityData.encounterStartTime);
-                    debuff.localUptimePercent = (float)(debuff.localUptime / (float)(currentTime - entityData.encounterStartTime)) * 100;
-                    // Cap % at 100, this handles the case when the combat start time and current time are the same
-                    if (debuff.localUptimePercent > 100)
-                    {
-                        debuff.localUptimePercent = 100;
-                    }
-                    else if (debuff.localUptimePercent < 0)
-                    {
-                        debuff.localUptimePercent = 0;
-                    }
-                }
-            } // End of FOR all debuffs for a monster
-        } // End of FOR all monsters
-    }
-
-    // This function parses the list of all debuffs on all monsters and if something has hit -1 seconds and we havent received an event to remove it, we remove it manually
+    // This function parses the list of all debuffs on all monsters and if something has hit -1 seconds and we remove it manually
     public static void RemoveZombiedDebuffs()
     {
         for (int i = 0; i < gMonsterDebuffDictionary.Count; i++)
@@ -292,7 +252,7 @@ public static class EntityManager
         }
     }
 
-    // This function checks is there is an entry in the dictionary for casterNetworkId and if not makes one, prevent exceptions if something unexpected happens
+    // This function checks is there is an entry in the dictionary for casterNetworkId and if not makes one
     public static void AddMonsterIfMissing(string targetNetworkId)
     {
         EntityData entityData = EntityManager.GetEntityData(targetNetworkId);        
@@ -301,14 +261,13 @@ public static class EntityManager
         {
             EntityData newMonster = new EntityData();
             newMonster.monsterNetworkId = targetNetworkId;
-            MelonLogger.Warning($"AddMonsterIfMissing() is Dead = False, targetNetworkId = {targetNetworkId.ToString()}");
             newMonster.isDead = false;
-            newMonster.hasBeenDead = false;
             newMonster.debuffData = new List<DebuffData>();
             gMonsterDebuffDictionary.Add(targetNetworkId, newMonster);
         }
     }
 
+    // Updates the isDead status for a monster
     public static void UpdateEnemyDeadStatus(EntityStatus.Logic entityStatusLogic)
     {
         if (entityStatusLogic == null)
@@ -319,14 +278,15 @@ public static class EntityManager
 
         if (gMonsterDebuffDictionary.ContainsKey(networkId.ToString()))
         {
-            gMonsterDebuffDictionary[networkId].isDead = isDead;
-            if (isDead == true && gMonsterDebuffDictionary[networkId].hasBeenDead == false)
+            // The API used reports dead enemies as alive when you move out of range, never go back from dead to not dead
+            if (isDead == true && gMonsterDebuffDictionary[networkId].isDead == false)
             {
-                gMonsterDebuffDictionary[networkId].hasBeenDead = true; // Once set to true can NEVER be set to false
+                gMonsterDebuffDictionary[networkId].isDead = true; // Once set to true can NEVER be set to false
             }
         }
     }
 
+    // Add a monster that has come into render range, including when changing zones and login
     public static void OnNpcAdded(EntityNpcGameObject entityNpcGameObject)
     {
         if (Monsters.Contains(entityNpcGameObject) || FriendlyNPCs.Contains(entityNpcGameObject))
@@ -376,32 +336,23 @@ public static class EntityManager
                 return;
             }
 
-            MelonLogger.Warning($"OnNpcAdded() 0");
             Globals.MonstersInRange.Add(entityNpcGameObject.NetworkId.Value, entityNpcGameObject);
-            MelonLogger.Warning($"OnNpcAdded() 0a");
             Globals.MonstersInRangeLastPosition.Add(entityNpcGameObject.NetworkId.Value, entityNpcGameObject.transform.position);
 
-            MelonLogger.Warning($"OnNpcAdded() 0b");
+            // Add this monster to the list of all monsters fo the panel
             string targetNetworkId = entityNpcGameObject.NetworkId.ToString();
-            MelonLogger.Warning($"OnNpcAdded() 1 targetNetworkId = {targetNetworkId}");
             if (gMonsterDebuffDictionary.ContainsKey(entityNpcGameObject.NetworkId.ToString()))
             {
+                // We can't do anything about this, but we should log it anyway and return, we do not want dupliicate entries in our dictionary
                 MelonLogger.Error($"OnNpcAdded() Entry {entityNpcGameObject.NetworkId.ToString()} already exists in the dictionary, this should never happen");
+                return;
             }
-            AddMonsterIfMissing(targetNetworkId);
-            MelonLogger.Warning($"OnNpcAdded() 2");
-            EntityData newMonster = GetEntityData(targetNetworkId);
-            MelonLogger.Warning($"OnNpcAdded() 3");
-            if (newMonster == null)
-            {
-                MelonLogger.Warning($"OnNpcAdded() 4");
-            }
-            MelonLogger.Warning($"OnNpcAdded() 5");
 
-            // TODO - Get rid of the black list and the error showing buffs found on monsters loaded
-            string[] debuffBlacklist = { "Mana Guzzle", "Taunt Immunity", "Feared", "Temporary Invulnerability" };
+            // We do not have this monster in our list, add it
+            AddMonsterIfMissing(targetNetworkId);
+            EntityData newMonster = GetEntityData(targetNetworkId);
+
             // Pick up any traits if they exist
-            // TODO - Do we want to pick up existing deuffs on monsters
             bool isFirst = true;
             foreach (ActiveBuff activeBuff in entityNpcGameObject.Buffs.myActiveBuffs)
             {
@@ -428,12 +379,12 @@ public static class EntityManager
                     // Do not process anything in the blacklist
                     if (!debuffBlacklist.Contains(activeBuffName.ToString()))
                     {
+                        // Do we do anything about this?
                         MelonLogger.Error($"OnNpcAdded() MONSTER WITH DEBUFF {activeBuffName} FOUND, DO WE WANT TO TRACK THIS ?");
                     }
                 }
-                // Increment the index
-                
             }
+            // Set the death state
             newMonster.isDead = entityNpcGameObject.Status.IsDead();
         }
         else
@@ -442,6 +393,7 @@ public static class EntityManager
         }
     }
 
+    // Removes an emey from the list, on zone, moving out of range or logging out
     public static void OnNpcRemoved(EntityNpcGameObject entityNpcGameObject)
     {
         Monsters.Remove(entityNpcGameObject);
@@ -450,13 +402,12 @@ public static class EntityManager
         //  Remove an entry from the dictionary based on the network id
         try
         {
-            removeMonsterFromUniqueBuffs(entityNpcGameObject.NetworkId.ToString());
+            RemoveMonsterFromUniqueBuffs(entityNpcGameObject.NetworkId.ToString());
             gMonsterDebuffDictionary.Remove(entityNpcGameObject.NetworkId.ToString());
-            //MelonLogger.Warning($"OnNpcRemoved() Entry {entityNpcGameObject.NetworkId.ToString()} Removed");
         }
         catch (Exception e)
         {
-            MelonLogger.Warning($"OnNpcRemoved() Entry {entityNpcGameObject.NetworkId.ToString()} does not exist");
+            MelonLogger.Error($"OnNpcRemoved() Entry {entityNpcGameObject.NetworkId.ToString()} does not exist");
         }
         
     }

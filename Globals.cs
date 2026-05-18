@@ -32,6 +32,7 @@ public static class Globals
     public static int   TimeMeshHeight = NameMeshHeight;
     public static int TimeMeshWidth = 75;
     public static int FontSize = 10;
+    public static int PixelsToAdd = 6; // Number of pixels to add create enough height for a row to be separate from the one above and below
 
     // Progress Bar Display Co-ordinates
     public static float TopMargin         = 0.04f;

@@ -4,6 +4,7 @@ using Il2CppViNL;
 
 namespace EnhancedDebuffTracking.Hooks;
 
+// This Hook is fired on login (after character selection) and change of zone
 [HarmonyPatch(typeof(EntityNpcGameObject))]
 [HarmonyPatch(nameof(EntityNpcGameObject.NetworkStart))]
 public class NetworkStart
@@ -14,6 +15,7 @@ public class NetworkStart
     }
 }
 
+// This Hook is fired on log out change of zone
 [HarmonyPatch(typeof(EntityNpcGameObject))]
 [HarmonyPatch(nameof(EntityNpcGameObject.NetworkStop))]
 public class NetworkStop

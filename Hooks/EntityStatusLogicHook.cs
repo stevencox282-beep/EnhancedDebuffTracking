@@ -9,7 +9,10 @@ public static class EntityStatusLogicHook
     private const float UpdateInterval = 0.75f; // Update interval in seconds
     private static float _timeSinceLastUpdate;
 
-    // This HarmonyPatch fires every frame which is not optimal for our use but isDead ALWAYS returns false and isDeadOrNearDead NEVER fires
+    // This HarmonyPatch fires every frame which is too frequent for our use so we throttle it.
+    // This Hook has a unwanted behaviour, it has a range that is smaller than the render range so when you kill a monster
+    //   and move away from it, before it is un-rendered this Hook starts reporting the monster is alive, even though it is very clearly dead on the screen still.
+    // We can not use Hook isDead which ALWAYS returns false, Hook isDeadOrNearDead NEVER fires
     [HarmonyPatch(typeof(EntityStatus.Logic), nameof(EntityStatus.Logic.IsAlive))]
     public class EntityStausIsDeadLogicHook
     {
@@ -25,14 +28,15 @@ public static class EntityStatusLogicHook
                 // Update this immediatly so we dont flood in here
                 _timeSinceLastUpdate = 0f;
 
-                // On zone change/exiting this API continues to fire despite everything being torn down around it, it probably should not,
-                // or perhaps I should not be using this API call but either way this inevitably causing exceptions, we need to handle them                
+                // We must use TRY here, on zone change/exiting this API continues to fire despite everything being torn down around it, it probably should not.
+                // Perhaps I should not be using this API call but this is the best way to handle death notifications I can find
                 try
                 {
                     EntityManager.UpdateEnemyDeadStatus(__instance);
                 }
                 catch (Exception e) { }
             }
+            return;
         }
     }
 }

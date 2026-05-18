@@ -3,6 +3,7 @@ using Il2Cpp;
 
 namespace EnhancedDebuffTracking.Hooks;
 
+// This Hook fires when your character enters in the world (after character selection) or change of zone
 [HarmonyPatch(typeof(EntityPlayerGameObject), nameof(EntityPlayerGameObject.NetworkStart))]
 public class PlayerNetworkStart
 {
@@ -22,6 +23,7 @@ public class PlayerNetworkStart
     }
 }
 
+// This Hook fires when you character exits the game or exits a zone
 [HarmonyPatch(typeof(EntityPlayerGameObject), nameof(EntityPlayerGameObject.NetworkStop))]
 public class PlayerNetworkStop
 {

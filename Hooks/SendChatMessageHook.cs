@@ -4,6 +4,7 @@ using Il2CppPantheonPersist;
 
 namespace EnhancedDebuffTracking.Hooks;
 
+// This Hook fires when a message is typed into the chat box
 [HarmonyPatch(typeof(EntityClientMessaging.Logic), nameof(EntityClientMessaging.Logic.SendChatMessage), typeof(string), typeof(ChatChannelType))]
 public class SendChatMessageHook
 {
@@ -13,7 +14,7 @@ public class SendChatMessageHook
         {
             if (message == "/showdebuffs")
             {
-                // The clock is already loaded and running via another hook, all we have to do is show it
+                // Sets show debuffs to true then show the debuff panel
                 Globals.ShowDebuffPanel = true;
                 ModMain.ShowDebuffPanel();
                 return false;
@@ -21,12 +22,13 @@ public class SendChatMessageHook
 
             if (message == "/hidedebuffs")
             {
-                // The clock is already loaded and running via another hook, all we have to do is show it
+                // Set show debuffs to false and hide the debuff panel
                 Globals.ShowDebuffPanel = false;
                 ModMain.HideDebuffPanel();
                 return false;
             }
 
+            // Change the number of rows inside the debuff panel
             if (message.Contains($"/{Globals.SetNumberOfRowsCommand}"))
             {
                 ModMain.SetNumDebuffRows(message);

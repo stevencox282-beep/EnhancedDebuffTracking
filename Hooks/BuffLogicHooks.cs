@@ -1,13 +1,9 @@
 ﻿using HarmonyLib;
 using Il2Cpp;
-using Il2CppInterop.Runtime.InteropTypes.Arrays;
-using Il2CppSystem;
-using Il2CppSystem.Threading;
-using Il2CppViNL;
-using MelonLoader;
 
 namespace EnhancedDebuffTracking.Hooks;
 
+// This hook fires when any entity in range receives any buff / debuff
 [HarmonyPatch(typeof(Buffs.Logic), nameof(Buffs.Logic.Add), typeof(double), typeof(ActiveBuff), typeof(bool), typeof(bool), typeof(bool))]
 public class BuffLogicAdd
 {

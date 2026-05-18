@@ -4,8 +4,10 @@ using UnityEngine.UI;
 
 namespace EnhancedDebuffTracking
 {
+    // Class that holds utility functiots used by the debuff panel
     public static class DebuffPanelUtils
     {
+        // Returns a Color for the progress bar based on the debuff spellType for that row
         public static Color getBarColours(string spellType)
         {
             Color returnColor = Color.black;
@@ -71,6 +73,7 @@ namespace EnhancedDebuffTracking
             return returnColor;
         }
 
+        // returns the offsets for the panel rows based on how many rows we have to render
         public static void GetOffsetsForPanel(ref float heightOffset, ref float interBarOffset)
         {
             // Change the margins and offsets based on how many rows we have
@@ -137,6 +140,44 @@ namespace EnhancedDebuffTracking
                     break;
 
             }
+        }
+
+        // Converts the provoided number of rows to a valid number
+        // We support the following.  5..10,15,20,25,30,35
+        public static int SanitiseNumRows(int numRows)
+        {
+            // Ensure we have at least 1 row
+            if (numRows < 5)
+            {
+                return 5;
+            }
+
+            if (numRows > 10 && numRows < 15)
+            {
+                return 15;
+            }
+
+            if (numRows > 15 && numRows < 20)
+            {
+                return 20;
+            }
+
+            if (numRows > 20 && numRows < 20)
+            {
+                return 25;
+            }
+
+            if (numRows > 25 && numRows < 30)
+            {
+                return 30;
+            }
+
+            if (numRows > 30 && numRows < 35)
+            {
+                return 35;
+            }
+
+            return numRows = (numRows > 35) ? 35 : numRows;
         }
     }
 }
